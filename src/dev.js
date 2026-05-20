@@ -13,6 +13,10 @@ function run(cmd, args, options = {}) {
       ...options,
     });
 
+    child.on("error", (error) => {
+      reject(error);
+    });
+
     child.on("exit", (code) => {
       if (code === 0) {
         resolve();
@@ -30,6 +34,10 @@ function resolveBin(name) {
     return localBin;
   }
   return name;
+}
+
+function resolveHttpServerEntry() {
+  return path.join(root, "node_modules", "http-server", "bin", "http-server");
 }
 
 async function main() {
@@ -67,9 +75,9 @@ async function main() {
     stdio: "inherit",
   });
 
-  const httpServerBin = resolveBin("http-server");
-  const server = spawn(httpServerBin, ["-p", "3003"], {
+  const server = spawn(nodeBin, [resolveHttpServerEntry(), "-p", "3003"], {
     cwd: root,
+    env: quietEnv,
     stdio: "inherit",
   });
 
@@ -92,10 +100,20 @@ async function main() {
     shutdown();
   });
 
+  watcher.on("error", (error) => {
+    console.error(`Dev: watcher failed to start: ${error.message}`);
+    shutdown();
+  });
+
   server.on("exit", (code) => {
     if (code && code !== 0) {
       console.error(`Dev: server exited with code ${code}`);
     }
+    shutdown();
+  });
+
+  server.on("error", (error) => {
+    console.error(`Dev: server failed to start: ${error.message}`);
     shutdown();
   });
 }

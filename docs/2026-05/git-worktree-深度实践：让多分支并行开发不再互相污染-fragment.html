@@ -1,0 +1,1061 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">Git Worktree 深度实践：让多分支并行开发不再互相污染</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/5/19</div>
+          <div class="post-category">2026-05</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><h2 id="摘要">摘要</h2>
+<p><code>git worktree</code> 是 Git 内置但经常被低估的多工作区能力。它允许一个仓库同时签出多个分支到不同目录，共享同一套对象数据库，却拥有彼此独立的工作目录、索引和 <code>HEAD</code>。对于需要同时处理需求开发、线上热修、代码评审、CI 复现、版本回归验证的开发者来说，worktree 比频繁 <code>stash</code>、反复切分支、复制仓库更稳定、更快，也更容易形成团队规范。</p>
+<p>本文从 Git worktree 的底层模型讲起，结合真实开发场景给出完整命令流程、目录规划、依赖隔离、清理维护、常见坑位和团队落地建议。读完后，你应该能判断什么时候该用 worktree，什么时候不该用，并能把它纳入日常开发工作流。</p>
+<h2 id="目录">目录</h2>
+<ul>
+<li>#git worktree 是什么</li>
+<li>#为什么它比 stash 和复制仓库更适合并行开发</li>
+<li>#核心模型主工作区链接工作区与裸仓库</li>
+<li>#常用命令从创建到清理</li>
+<li>#实战一需求开发与线上热修并行</li>
+<li>#实战二用 worktree 做代码评审和 CI 复现</li>
+<li>#实战三长期维护多个版本线</li>
+<li>#依赖与构建产物隔离</li>
+<li>#团队规范与目录设计</li>
+<li>#常见问题与排错</li>
+<li>#最佳实践清单</li>
+<li>#总结</li>
+</ul>
+<h2 id="正文">正文</h2>
+<h3 id="git-worktree-是什么">Git worktree 是什么</h3>
+<p>普通 Git 仓库通常只有一个工作目录。你在这个目录里切换分支：</p>
+<pre><code class="language-bash">git switch feature/pay
+git switch hotfix/login
+git switch main
+</code></pre>
+<p>每次切换时，Git 会更新工作区文件、索引和 <code>HEAD</code>。如果当前目录有未提交修改，切换分支可能失败；如果你强行处理，就需要 <code>stash</code>、临时提交或者复制一份仓库。</p>
+<p><code>git worktree</code> 解决的是另一个问题：<strong>让同一个 Git 仓库拥有多个并行工作目录</strong>。</p>
+<p>例如：</p>
+<pre><code class="language-bash">project/
+project.worktrees/
+  feature-pay/
+  hotfix-login/
+  review-pr-128/
+</code></pre>
+<p>这些目录可以分别签出不同分支：</p>
+<pre><code class="language-bash">project/                       -&gt; main
+project.worktrees/feature-pay/ -&gt; feature/pay
+project.worktrees/hotfix-login/ -&gt; hotfix/login
+</code></pre>
+<p>它们共享同一个仓库对象库，因此不会像复制仓库那样重复下载全部历史对象；但每个工作目录都有自己的文件状态、索引和当前分支，因此不会互相覆盖工作现场。</p>
+<p>一句话理解：<strong>worktree 是 Git 原生支持的“一个仓库，多套工作现场”。</strong></p>
+<h3 id="为什么它比-stash-和复制仓库更适合并行开发">为什么它比 stash 和复制仓库更适合并行开发</h3>
+<p>很多人第一次遇到并行开发时，会用三种方式解决：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>优点</th>
+<th>问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>git stash</code></td>
+<td>快，命令简单</td>
+<td>工作现场被压成栈，容易忘记、冲突或恢复错</td>
+</tr>
+<tr>
+<td>复制仓库</td>
+<td>隔离彻底</td>
+<td>占空间，拉取慢，远程配置和 hooks 容易不一致</td>
+</tr>
+<tr>
+<td>临时提交</td>
+<td>可追踪</td>
+<td>历史会混入大量 WIP，需要后续整理</td>
+</tr>
+<tr>
+<td><code>git worktree</code></td>
+<td>原生、多目录、共享对象、状态清晰</td>
+<td>需要理解工作区与分支绑定关系</td>
+</tr>
+</tbody></table>
+<p><code>stash</code> 的本质是把当前修改暂存起来，适合很短的上下文切换，不适合长期并行。尤其是同时维护多个未完成任务时，<code>stash list</code> 很快会变成难以判断的临时栈：</p>
+<pre><code class="language-bash">stash@{0}: WIP on feature/pay: ...
+stash@{1}: WIP on main: ...
+stash@{2}: WIP on hotfix/login: ...
+</code></pre>
+<p>复制仓库虽然直观，但代价也明显：</p>
+<ul>
+<li>大型仓库会重复占用磁盘空间。</li>
+<li>每个副本都要单独配置 remote、hooks、局部配置。</li>
+<li>多个副本的分支状态容易不一致。</li>
+<li>清理时很难知道哪些副本还有价值。</li>
+</ul>
+<p>worktree 的优势在于它让工作现场变成可见目录，而不是隐藏在 stash 栈里：</p>
+<pre><code class="language-bash">git worktree list
+</code></pre>
+<p>输出类似：</p>
+<pre><code class="language-text">D:/project/app                         abc1234 [main]
+D:/project/app.worktrees/feature-pay   def5678 [feature/pay]
+D:/project/app.worktrees/hotfix-login  89ab012 [hotfix/login]
+</code></pre>
+<p>你能一眼看到每个工作区对应的路径、提交和分支。</p>
+<h3 id="核心模型：主工作区、链接工作区与裸仓库">核心模型：主工作区、链接工作区与裸仓库</h3>
+<p>理解 worktree，关键是理解三个概念。</p>
+<h4 id="主工作区">主工作区</h4>
+<p>你平时 <code>git clone</code> 出来的目录就是主工作区：</p>
+<pre><code class="language-text">app/
+  .git/
+  src/
+  package.json
+</code></pre>
+<p>它包含工作目录和 <code>.git</code> 目录。主工作区可以继续像普通仓库一样使用。</p>
+<h4 id="链接工作区">链接工作区</h4>
+<p>通过 <code>git worktree add</code> 创建出来的目录叫 linked worktree。它看起来也是一个完整项目目录，但里面的 <code>.git</code> 不是目录，而是一个文本文件：</p>
+<pre><code class="language-text">gitdir: D:/project/app/.git/worktrees/feature-pay
+</code></pre>
+<p>真正的 Git 元数据仍然存放在主仓库的 <code>.git/worktrees/</code> 下。链接工作区通过这个指针找到自己的 Git 状态。</p>
+<p>这也是为什么不要手动复制、移动或删除 worktree 目录。Git 需要同时维护工作目录和 <code>.git/worktrees/</code> 里的元数据。</p>
+<h4 id="裸仓库模式">裸仓库模式</h4>
+<p>如果你把 worktree 当成长期工作流，也可以用 bare repository 作为中心仓库，只把所有实际开发目录都作为 worktree：</p>
+<pre><code class="language-text">app.git/                 # bare 仓库，只放 Git 数据
+app.worktrees/
+  main/
+  feature-pay/
+  hotfix-login/
+</code></pre>
+<p>这种模式更适合高级用户或团队工具化场景。日常开发中，从普通仓库创建 worktree 已经足够。</p>
+<h3 id="常用命令：从创建到清理">常用命令：从创建到清理</h3>
+<h4 id="查看当前-worktree">查看当前 worktree</h4>
+<pre><code class="language-bash">git worktree list
+</code></pre>
+<p>加上 <code>--porcelain</code> 可以得到脚本友好的格式：</p>
+<pre><code class="language-bash">git worktree list --porcelain
+</code></pre>
+<h4 id="为已有分支创建工作区">为已有分支创建工作区</h4>
+<pre><code class="language-bash">git worktree add ../app.worktrees/feature-pay feature/pay
+</code></pre>
+<p>含义是：把 <code>feature/pay</code> 分支签出到 <code>../app.worktrees/feature-pay</code>。</p>
+<h4 id="创建新分支并创建工作区">创建新分支并创建工作区</h4>
+<pre><code class="language-bash">git worktree add -b feature/refund ../app.worktrees/feature-refund main
+</code></pre>
+<p>含义是：基于 <code>main</code> 创建 <code>feature/refund</code>，并把它签出到指定目录。</p>
+<h4 id="从远程分支创建工作区">从远程分支创建工作区</h4>
+<pre><code class="language-bash">git fetch origin
+git worktree add ../app.worktrees/review-pr-128 origin/feature/pay
+</code></pre>
+<p>这会创建一个 detached HEAD 工作区，适合临时代码评审。如果你需要在本地提交修改，应显式创建本地分支：</p>
+<pre><code class="language-bash">git worktree add -b review/pr-128 ../app.worktrees/review-pr-128 origin/feature/pay
+</code></pre>
+<h4 id="删除工作区">删除工作区</h4>
+<p>优先使用：</p>
+<pre><code class="language-bash">git worktree remove ../app.worktrees/feature-pay
+</code></pre>
+<p>如果工作区有未提交修改，Git 会拒绝删除。确认不要这些修改时，才使用：</p>
+<pre><code class="language-bash">git worktree remove --force ../app.worktrees/feature-pay
+</code></pre>
+<h4 id="清理已经不存在的-worktree-记录">清理已经不存在的 worktree 记录</h4>
+<p>如果你手动删除了目录，Git 里可能还残留记录：</p>
+<pre><code class="language-bash">git worktree prune
+</code></pre>
+<p>建议先查看：</p>
+<pre><code class="language-bash">git worktree list
+</code></pre>
+<p>再清理，避免误判。</p>
+<h3 id="实战一：需求开发与线上热修并行">实战一：需求开发与线上热修并行</h3>
+<p>这是 worktree 最典型的场景。</p>
+<p>你正在 <code>feature/payment-v2</code> 分支开发支付改造，工作区里有大量未完成代码：</p>
+<pre><code class="language-bash">git status
+</code></pre>
+<p>输出可能是：</p>
+<pre><code class="language-text">On branch feature/payment-v2
+Changes not staged for commit:
+  modified: src/payment/PaymentService.java
+  modified: src/payment/PaymentConfig.java
+</code></pre>
+<p>此时线上突然出现登录问题，需要从 <code>main</code> 拉出热修分支。传统做法通常是 <code>stash</code> 当前修改，再切到 <code>main</code>，再建 hotfix。问题是支付改造现场被压进 stash，回来的时候还可能冲突。</p>
+<p>使用 worktree，可以保持当前目录完全不动：</p>
+<pre><code class="language-bash">git fetch origin
+git worktree add -b hotfix/login-timeout ../app.worktrees/hotfix-login-timeout origin/main
+</code></pre>
+<p>进入热修目录：</p>
+<pre><code class="language-bash">cd ../app.worktrees/hotfix-login-timeout
+</code></pre>
+<p>修复、测试、提交、推送：</p>
+<pre><code class="language-bash">git status
+git add src/login/LoginService.java
+git commit -m &quot;fix: handle login timeout correctly&quot;
+git push -u origin hotfix/login-timeout
+</code></pre>
+<p>热修完成后删除工作区：</p>
+<pre><code class="language-bash">cd ../../app
+git worktree remove ../app.worktrees/hotfix-login-timeout
+</code></pre>
+<p>整个过程中，原来的支付开发目录没有被切分支，也没有使用 stash。上下文切换从“保存现场”变成了“打开另一个现场”。</p>
+<h3 id="实战二：用-worktree-做代码评审和-ci-复现">实战二：用 worktree 做代码评审和 CI 复现</h3>
+<p>代码评审经常需要把别人的分支拉下来运行。如果直接在当前项目目录切分支，会污染本地状态；如果用临时 clone，又慢又占空间。</p>
+<p>推荐用固定目录保存评审工作区：</p>
+<pre><code class="language-bash">git fetch origin pull/128/head:review/pr-128
+git worktree add ../app.worktrees/review-pr-128 review/pr-128
+</code></pre>
+<p>然后在独立目录中安装依赖、运行测试：</p>
+<pre><code class="language-bash">cd ../app.worktrees/review-pr-128
+npm install
+npm test
+</code></pre>
+<p>评审结束：</p>
+<pre><code class="language-bash">cd ../../app
+git worktree remove ../app.worktrees/review-pr-128
+git branch -D review/pr-128
+</code></pre>
+<p>如果你只是查看代码，不准备提交，也可以直接基于远程分支创建 detached 工作区：</p>
+<pre><code class="language-bash">git worktree add --detach ../app.worktrees/review-pr-128 origin/feature/pay
+</code></pre>
+<p>detached HEAD 不适合长期开发，但非常适合一次性验证。</p>
+<h3 id="实战三：长期维护多个版本线">实战三：长期维护多个版本线</h3>
+<p>很多企业项目同时维护多个版本：</p>
+<ul>
+<li><code>main</code>：主干开发。</li>
+<li><code>release/2.3</code>：当前稳定版本。</li>
+<li><code>release/2.2</code>：仍在维护的旧版本。</li>
+<li><code>hotfix/*</code>：线上紧急修复。</li>
+</ul>
+<p>如果只用一个工作目录，你会频繁切换分支，依赖、构建缓存、IDE 索引都反复变化。用 worktree 可以把版本线固定下来：</p>
+<pre><code class="language-bash">git worktree add ../app.worktrees/main main
+git worktree add ../app.worktrees/release-2.3 release/2.3
+git worktree add ../app.worktrees/release-2.2 release/2.2
+</code></pre>
+<p>目录结构清晰后，日常维护会稳定很多：</p>
+<pre><code class="language-text">app.worktrees/
+  main/          # 新功能开发
+  release-2.3/   # 当前稳定版修复
+  release-2.2/   # 老版本客户问题
+</code></pre>
+<p>当一个 bug 需要同时修复多个版本时，也可以在不同目录中分别验证，再用 cherry-pick 控制变更传播：</p>
+<pre><code class="language-bash">cd ../app.worktrees/release-2.3
+git cherry-pick &lt;fix-commit&gt;
+
+cd ../release-2.2
+git cherry-pick &lt;fix-commit&gt;
+</code></pre>
+<p>这里要注意：worktree 解决的是工作目录并行问题，不自动解决版本间差异。补丁是否能直接 cherry-pick，仍然取决于代码差异和测试结果。</p>
+<h3 id="依赖与构建产物隔离">依赖与构建产物隔离</h3>
+<p>worktree 共享 Git 对象，但不共享工作目录文件。因此 <code>node_modules</code>、<code>target</code>、<code>build</code>、<code>.gradle</code>、<code>.idea</code> 这类本地文件默认是各自独立的。</p>
+<p>这既是优点，也是成本。</p>
+<p>优点是不同分支不会互相污染。例如一个分支升级了依赖，另一个分支仍使用旧版本：</p>
+<pre><code class="language-bash">app.worktrees/main/package-lock.json
+app.worktrees/feature-upgrade/package-lock.json
+</code></pre>
+<p>它们的 <code>node_modules</code> 可以完全不同。</p>
+<p>成本是磁盘占用可能增加。对于大型前端或 Java 项目，要提前规划缓存策略：</p>
+<ul>
+<li>Node.js 项目优先使用 lockfile，确保每个 worktree 可重复安装。</li>
+<li>Maven 和 Gradle 依赖缓存通常在用户目录下共享，不必复制。</li>
+<li>构建输出目录必须写入 <code>.gitignore</code>，避免误提交。</li>
+<li>IDE 配置如果包含绝对路径，尽量不要提交。</li>
+</ul>
+<p>Node 项目中可以这样处理：</p>
+<pre><code class="language-bash">cd ../app.worktrees/feature-pay
+npm ci
+npm test
+</code></pre>
+<p><code>npm ci</code> 更适合在独立 worktree 中重建依赖，因为它严格按照 lockfile 安装，能减少“我这里可以运行”的环境偏差。</p>
+<h3 id="团队规范与目录设计">团队规范与目录设计</h3>
+<p>worktree 真正好用，靠的不只是命令，还包括稳定的目录规范。</p>
+<p>推荐把 worktree 放在主仓库旁边，而不是放进主仓库里面：</p>
+<pre><code class="language-text">workspace/
+  app/
+  app.worktrees/
+    feature-pay/
+    hotfix-login/
+    review-pr-128/
+</code></pre>
+<p>不要这样放：</p>
+<pre><code class="language-text">app/
+  .git/
+  src/
+  worktrees/
+    feature-pay/
+</code></pre>
+<p>原因很简单：如果 worktree 目录在主仓库内部，容易被构建脚本、搜索工具、IDE、格式化工具、测试扫描误处理，也容易被误加入 Git 跟踪。</p>
+<p>命名建议：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>目录名示例</th>
+<th>分支名示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>功能开发</td>
+<td><code>feature-pay</code></td>
+<td><code>feature/pay</code></td>
+</tr>
+<tr>
+<td>热修</td>
+<td><code>hotfix-login-timeout</code></td>
+<td><code>hotfix/login-timeout</code></td>
+</tr>
+<tr>
+<td>评审</td>
+<td><code>review-pr-128</code></td>
+<td><code>review/pr-128</code></td>
+</tr>
+<tr>
+<td>版本线</td>
+<td><code>release-2.3</code></td>
+<td><code>release/2.3</code></td>
+</tr>
+</tbody></table>
+<p>团队还可以约定两个别名：</p>
+<pre><code class="language-bash">git config --global alias.wtl &quot;worktree list&quot;
+git config --global alias.wtp &quot;worktree prune&quot;
+</code></pre>
+<p>如果团队大量使用 worktree，可以再写一个轻量脚本统一创建路径，避免每个人目录结构不同。</p>
+<h3 id="常见问题与排错">常见问题与排错</h3>
+<h4 id="问题一：同一个分支不能同时签出到两个-worktree">问题一：同一个分支不能同时签出到两个 worktree</h4>
+<p>如果你执行：</p>
+<pre><code class="language-bash">git worktree add ../app.worktrees/main-copy main
+</code></pre>
+<p>可能看到类似错误：</p>
+<pre><code class="language-text">fatal: &#39;main&#39; is already checked out
+</code></pre>
+<p>Git 默认不允许同一个分支同时被两个工作区签出，因为两个目录都能移动同一个分支指针，容易造成混乱。</p>
+<p>如果只是想看同一个提交，用 detached HEAD：</p>
+<pre><code class="language-bash">git worktree add --detach ../app.worktrees/main-copy main
+</code></pre>
+<p>如果要独立开发，创建新分支：</p>
+<pre><code class="language-bash">git worktree add -b experiment/main-copy ../app.worktrees/main-copy main
+</code></pre>
+<h4 id="问题二：手动删除目录后-worktree-list-仍然存在">问题二：手动删除目录后 worktree list 仍然存在</h4>
+<p>先查看：</p>
+<pre><code class="language-bash">git worktree list
+</code></pre>
+<p>再清理失效记录：</p>
+<pre><code class="language-bash">git worktree prune
+</code></pre>
+<p>更好的习惯是始终用：</p>
+<pre><code class="language-bash">git worktree remove &lt;path&gt;
+</code></pre>
+<h4 id="问题三：删除-worktree-后分支还在">问题三：删除 worktree 后分支还在</h4>
+<p><code>git worktree remove</code> 删除的是工作目录，不会自动删除分支。需要你确认分支是否还要保留：</p>
+<pre><code class="language-bash">git branch -d feature/pay
+</code></pre>
+<p>如果分支未合并，Git 会拒绝删除。确认不需要时才使用：</p>
+<pre><code class="language-bash">git branch -D feature/pay
+</code></pre>
+<h4 id="问题四：ide-打开多个-worktree-后索引很慢">问题四：IDE 打开多个 worktree 后索引很慢</h4>
+<p>这是正常现象。每个 worktree 对 IDE 来说都是一个完整项目。建议：</p>
+<ul>
+<li>只打开当前需要工作的 worktree。</li>
+<li>把 <code>app.worktrees/</code> 放在主仓库外部。</li>
+<li>对大型项目关闭无关目录的自动索引。</li>
+<li>不要让 IDE 同时把主仓库和所有 worktree 当成一个超大工作区。</li>
+</ul>
+<h4 id="问题五：hooks-和配置是否共享">问题五：hooks 和配置是否共享</h4>
+<p>Git hooks 通常来自主仓库的 <code>.git/hooks</code> 或项目内的 hooks 管理工具。worktree 与主仓库共享 Git 数据目录，但每个 worktree 的工作目录文件不同。</p>
+<p>实践上要注意：</p>
+<ul>
+<li>如果 hooks 依赖工作目录中的脚本，确保每个 worktree 都安装了依赖。</li>
+<li>如果项目使用 Husky，通常需要依赖已安装后 hooks 才能正常执行。</li>
+<li>如果使用 <code>core.hooksPath</code>，确认路径是相对路径还是绝对路径。</li>
+</ul>
+<h3 id="最佳实践清单">最佳实践清单</h3>
+<p>把 worktree 用好，可以遵循下面这份清单：</p>
+<ul>
+<li>用 <code>git worktree add -b &lt;branch&gt; &lt;path&gt; &lt;base&gt;</code> 创建新任务工作区。</li>
+<li>把所有 worktree 放在主仓库同级的 <code>&lt;repo&gt;.worktrees/</code> 目录。</li>
+<li>用 <code>git worktree list</code> 定期检查当前工作区。</li>
+<li>用 <code>git worktree remove</code> 删除工作区，不直接删目录。</li>
+<li>临时代码评审优先使用 detached worktree。</li>
+<li>长期开发必须使用明确命名的本地分支。</li>
+<li>每个 worktree 单独安装依赖、单独运行测试。</li>
+<li>不把 worktree 目录放进主仓库内部。</li>
+<li>不用 worktree 掩盖分支过多、任务拆分混乱的问题。</li>
+<li>合并完成后及时删除工作区和无用分支。</li>
+</ul>
+<h3 id="什么时候不该使用-worktree">什么时候不该使用 worktree</h3>
+<p>worktree 很强，但不是所有场景都适合。</p>
+<p>如果你只是临时切换几分钟，当前工作区也没有复杂修改，直接 <code>git switch</code> 更简单。</p>
+<p>如果你只是保存一小段未完成修改，稍后马上恢复，<code>git stash push -m &quot;...&quot;</code> 也足够。</p>
+<p>如果你需要完全隔离 remote、Git 配置、hooks、子模块策略，单独 clone 可能更清晰。</p>
+<p>如果项目依赖大量不可共享的大型构建产物，多个 worktree 会增加磁盘压力，需要结合缓存策略使用。</p>
+<p>判断标准很简单：<strong>当上下文切换开始影响你的判断，或者多个任务需要同时保留可运行状态时，就该考虑 worktree。</strong></p>
+<h2 id="总结">总结</h2>
+<p><code>git worktree</code> 的价值不在于多一个 Git 命令，而在于它改变了多任务开发的组织方式。它把隐藏在 stash、临时提交、复制仓库里的上下文，变成了清晰可见、可运行、可删除的目录。</p>
+<p>对于个人开发，它能减少切分支和恢复现场的心理负担。对于团队协作，它能让热修、评审、版本维护和 CI 复现变得更加规范。真正落地时，建议从三个习惯开始：固定 worktree 目录、用命令删除工作区、为不同任务创建明确分支。</p>
+<p>当你的工作不再是“一个分支做完再做下一个”，而是每天都要在需求、bug、评审、发布之间切换时，worktree 就不是高级技巧，而是应该掌握的基础工程能力。</p>
+<h2 id="延伸阅读">延伸阅读</h2>
+<ul>
+<li><code>git help worktree</code></li>
+<li><code>git help switch</code></li>
+<li><code>git help branch</code></li>
+<li><code>git help stash</code></li>
+</ul>
+<h2 id="一句话记忆">一句话记忆</h2>
+<p><code>git worktree</code> 让一个仓库拥有多个独立工作现场：共享历史对象，隔离工作目录，用目录管理上下文，而不是用 stash 赌记忆力。</p>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>
