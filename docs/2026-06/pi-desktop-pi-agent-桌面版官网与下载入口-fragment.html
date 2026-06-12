@@ -1,0 +1,805 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">pi-desktop：pi 桌面版与 pi Agent 多项目工作台，官网与下载入口</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/6/12</div>
+          <div class="post-category">2026-06</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><h2 id="摘要">摘要</h2>
+<p><code>pi-desktop</code> 是我做的一个 pi 桌面版工具，也可以按 <code>pi desktop</code>、<code>pi agent desktop</code> 或常见误拼 <code>pi dekstop</code> 来理解：它用来在本地开发环境中管理多个 <code>pi agent</code> 会话。它不是 pi 的分支，也不替代 pi CLI，而是通过 Electron 启动多个 <code>pi --mode rpc</code> 进程，把项目管理、会话管理、文件抽屉、Git 分支、终端 Dock、模型配置、Skills 管理和工具调用展示整合到一个桌面应用里。</p>
+<p>如果你在搜索 <code>pi desktop</code>、<code>pi-desktop</code>、<code>pi agent</code>、<code>pi 桌面版</code>、<code>pi 编码助手桌面端</code>，甚至手滑搜成 <code>pi dekstop</code>，这篇文章就是入口说明。官网已经发布到 GitHub Pages：</p>
+<ul>
+<li>pi-desktop 官网：<a href="https://ayuayue.github.io/pi-desktop/">https://ayuayue.github.io/pi-desktop/</a></li>
+<li>GitHub 仓库：<a href="https://github.com/ayuayue/pi-desktop">https://github.com/ayuayue/pi-desktop</a></li>
+<li>下载地址：<a href="https://github.com/ayuayue/pi-desktop/releases">https://github.com/ayuayue/pi-desktop/releases</a></li>
+</ul>
+<h2 id="为什么做-pi-desktop">为什么做 pi-desktop</h2>
+<p>日常使用 pi 做本地编码任务时，我遇到的主要问题不是 Agent 能力不够，而是会话和项目管理越来越分散。</p>
+<p>典型场景包括：</p>
+<ul>
+<li>同时维护多个项目，每个项目都需要独立的 pi agent 会话。</li>
+<li>一个项目里既有功能开发，又有 bug 修复、配置调整、文档整理等不同上下文。</li>
+<li>想恢复历史会话，但命令行里找起来不够直观。</li>
+<li>想看本轮 Agent 改了哪些文件、用了哪些工具、当前 Git 分支是什么。</li>
+<li>想统一管理 models、auth、settings 和 Skills，而不是频繁打开配置文件。</li>
+<li>想在同一个界面里保留终端，方便执行命令和观察输出。</li>
+</ul>
+<p>所以 <code>pi-desktop</code> 的定位很明确：<strong>给 pi agent 加一个本地桌面工作台</strong>。Agent 能力仍然由 pi 原生提供，桌面端只负责把开发工作流组织得更清楚。</p>
+<h2 id="pi-desktop-是什么">pi-desktop 是什么</h2>
+<p>一句话概括：</p>
+<blockquote>
+<p>pi-desktop 是一个面向本地开发工作的 Electron 桌面应用，用于管理多个项目目录中的 pi RPC Agent 会话。</p>
+</blockquote>
+<p>它的核心设计是：</p>
+<pre><code class="language-text">一个 Agent Tab = 一个独立 pi --mode rpc 进程
+</code></pre>
+<p>这样做的好处是每个项目、每个会话都有相对清晰的边界。你可以在一个窗口里切换不同项目，但底层 Agent 进程不会混在一起。</p>
+<h2 id="主要功能">主要功能</h2>
+<h3 id="多项目工作区">多项目工作区</h3>
+<p>你可以把多个本地项目目录加入 pi-desktop，在左侧工作区里搜索、排序和切换。每个项目都可以独立启动 pi agent，会话之间保持隔离。</p>
+<p>这对同时处理多个仓库的人很有用。比如一个项目在修线上问题，另一个项目在写新功能，不需要来回切终端、切目录、找历史命令。</p>
+<h3 id="chat-入口">Chat 入口</h3>
+<p>除了项目目录，pi-desktop 还提供一个内置 Chat 入口。它适合用来做不绑定具体代码仓库的通用对话，例如整理思路、生成命令、解释报错、写文档草稿。</p>
+<h3 id="会话历史与恢复">会话历史与恢复</h3>
+<p>pi-desktop 会把历史会话放到更容易浏览的位置。你可以从项目历史里恢复旧会话，也可以重命名、导出 HTML 或关闭 Agent。</p>
+<p>对于长任务来说，这比只在命令行里找 session 文件更直观。</p>
+<h3 id="文件抽屉与本轮修改摘要">文件抽屉与本轮修改摘要</h3>
+<p>文件抽屉可以查看项目文件树和 Git 状态。Agent 每轮回答结束后，还会在回答下方展示本轮修改过的文件和大致行数。</p>
+<p>这个功能主要解决一个问题：你能快速判断 Agent 到底动了哪里，而不是在任务结束后再去翻 Git diff。</p>
+<h3 id="git-分支信息">Git 分支信息</h3>
+<p>顶部会显示当前分支，并提供本地和远程分支选择器。多项目、多会话时，分支信息放在对话区附近，可以减少误操作。</p>
+<h3 id="模型、配置与-skills-管理">模型、配置与 Skills 管理</h3>
+<p>pi-desktop 提供配置弹窗，可以可视化管理：</p>
+<ul>
+<li><code>models.json</code></li>
+<li><code>auth.json</code></li>
+<li><code>settings.json</code></li>
+<li>全局 Skills</li>
+</ul>
+<p>Skills 页面支持查看、创建模板、启用或禁用、删除和打开目录。对经常调整 pi 配置的人来说，这比手动找文件更省心。</p>
+<h3 id="终端-dock">终端 Dock</h3>
+<p>当前 Agent 可以绑定独立终端 tab。你可以在桌面应用里直接执行命令、观察输出、保留上下文。</p>
+<p>这让 pi agent 对话区、文件变化、Git 分支和终端输出集中在一个窗口里。</p>
+<h2 id="官网已经上线">官网已经上线</h2>
+<p>这次也给 pi-desktop 做了一个简单的官网和文档站，使用 VitePress 构建，并发布到了 GitHub Pages：</p>
+<p><a href="https://ayuayue.github.io/pi-desktop/">https://ayuayue.github.io/pi-desktop/</a></p>
+<p>官网主要包含：</p>
+<ul>
+<li>首页介绍</li>
+<li>快速开始</li>
+<li>功能说明</li>
+<li>配置与 Skills</li>
+<li>开发与打包</li>
+<li>更新日志入口</li>
+<li>GitHub Releases 下载入口</li>
+</ul>
+<p>如果只是想快速判断这个 pi 桌面版工具是不是适合你，可以先看官网首页和功能介绍。</p>
+<h2 id="如何下载安装">如何下载安装</h2>
+<p>预构建包发布在 GitHub Releases：</p>
+<p><a href="https://github.com/ayuayue/pi-desktop/releases">https://github.com/ayuayue/pi-desktop/releases</a></p>
+<p>当前目标是支持：</p>
+<ul>
+<li>Windows</li>
+<li>macOS</li>
+<li>Linux</li>
+</ul>
+<p>使用前需要单独安装 pi CLI，并确保系统能访问 <code>pi</code> 命令。</p>
+<p>可以先在终端验证：</p>
+<pre><code class="language-bash">pi --version
+pi --mode rpc
+</code></pre>
+<p>如果自动检测不到 pi 路径，可以在 pi-desktop 设置里手动填写。</p>
+<h2 id="从源码运行">从源码运行</h2>
+<p>如果你想自己构建或参与开发，可以从源码运行：</p>
+<pre><code class="language-bash">git clone https://github.com/ayuayue/pi-desktop.git
+cd pi-desktop
+npm install
+npm run make-icon
+npm run dev
+</code></pre>
+<p>常用开发命令：</p>
+<pre><code class="language-bash">npm run typecheck
+npm run build
+npm run dist
+</code></pre>
+<p>官网文档站的本地命令：</p>
+<pre><code class="language-bash">npm run docs:dev
+npm run docs:build
+npm run docs:preview
+</code></pre>
+<h2 id="pi-desktop、pi-desktop、pi-dekstop-的区别">pi desktop、pi-desktop、pi dekstop 的区别</h2>
+<p>这里顺便把几个容易混的关键词说明一下，方便搜索引擎和读者理解：</p>
+<ul>
+<li><code>pi</code>：原始 CLI 工具，负责 Agent 能力。</li>
+<li><code>pi agent</code>：通过 pi 启动的编码助手会话。</li>
+<li><code>pi desktop</code>：很多人会用这个词搜索 pi 的桌面端工作台。</li>
+<li><code>pi-desktop</code>：这个项目的正式名称。</li>
+<li><code>pi 桌面版</code>：中文搜索时更常见的叫法。</li>
+<li><code>pi dekstop</code>：<code>desktop</code> 的常见拼写错误，如果你是这样搜到的，实际要找的也是 <code>pi desktop</code> 或 <code>pi-desktop</code>。</li>
+</ul>
+<p>pi-desktop 的重点不是重新实现 pi agent，而是让 pi agent 在本地多项目开发时更容易管理。</p>
+<h2 id="适合谁使用">适合谁使用</h2>
+<p>pi-desktop 更适合这些场景：</p>
+<ul>
+<li>经常同时打开多个代码仓库。</li>
+<li>希望每个项目都有独立的 pi agent 会话。</li>
+<li>希望更直观看到历史会话、工具调用和文件修改。</li>
+<li>希望用 GUI 管理 pi 配置和 Skills。</li>
+<li>希望在桌面端集中查看聊天、文件、Git 分支和终端。</li>
+</ul>
+<p>如果你只偶尔用一次 pi CLI，直接命令行就足够。如果你每天都在多个项目里使用 pi agent，桌面工作台会更顺手。</p>
+<h2 id="总结">总结</h2>
+<p><code>pi-desktop</code> 是一个围绕 pi agent 本地开发体验做的桌面工作台。它不替代 pi，也不改变 pi 的 Agent 能力，而是把多项目、会话、文件、Git、配置、Skills 和终端组织到一个更稳定的桌面界面里。</p>
+<p>入口汇总：</p>
+<ul>
+<li>官网：<a href="https://ayuayue.github.io/pi-desktop/">https://ayuayue.github.io/pi-desktop/</a></li>
+<li>GitHub：<a href="https://github.com/ayuayue/pi-desktop">https://github.com/ayuayue/pi-desktop</a></li>
+<li>Releases 下载：<a href="https://github.com/ayuayue/pi-desktop/releases">https://github.com/ayuayue/pi-desktop/releases</a></li>
+</ul>
+<p>后续如果继续更新 pi 桌面版能力，我也会优先同步到官网和 GitHub Releases。</p>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>
