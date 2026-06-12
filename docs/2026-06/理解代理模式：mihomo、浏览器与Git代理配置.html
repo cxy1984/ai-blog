@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>理解代理模式：mihomo、浏览器与 Git 代理配置</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="理解代理模式：mihomo、浏览器与 Git 代理配置
+最近在推送 GitHub 仓库时遇到了连接超时、连接重置的问题。后来发现浏览器虽然能正常访问 GitHub，但 Git 命令并没有自动走代理。
+这篇文章用自己的环境做一次梳理：代理软件到底做了什么，浏览器为什么能走代理，Git 为什么不一定走代理，以及这次修改到底..." />
+    <meta name="keywords" content="理解代理模式, mihomo, 浏览器与, Git, 代理配置" />
+    <meta name="author" content="AI 个人笔记" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="理解代理模式：mihomo、浏览器与 Git 代理配置" />
+    <meta property="og:description" content="理解代理模式：mihomo、浏览器与 Git 代理配置
+最近在推送 GitHub 仓库时遇到了连接超时、连接重置的问题。后来发现浏览器虽然能正常访问 GitHub，但 Git 命令并没有自动走代理。
+这篇文章用自己的环境做一次梳理：代理软件到底做了什么，浏览器为什么能走代理，Git 为什么不一定走代理，以及这次修改到底..." />
+    <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-06/理解代理模式：mihomo、浏览器与Git代理配置.html" />
+    <meta property="og:site_name" content="AI 个人笔记" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="理解代理模式：mihomo、浏览器与 Git 代理配置" />
+    <meta property="twitter:description" content="理解代理模式：mihomo、浏览器与 Git 代理配置
+最近在推送 GitHub 仓库时遇到了连接超时、连接重置的问题。后来发现浏览器虽然能正常访问 GitHub，但 Git 命令并没有自动走代理。
+这篇文章用自己的环境做一次梳理：代理软件到底做了什么，浏览器为什么能走代理，Git 为什么不一定走代理，以及这次修改到底..." />
+    <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-06/理解代理模式：mihomo、浏览器与Git代理配置.html" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <style>
+      /* Google Fonts for better typography */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #f8f9fa;
+        --text-color: #34495e;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --hover-color: #f8f9fa;
+      }
+
+      :root.dark-mode {
+        --primary-color: #ecf0f1;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --card-bg: #2d2d2d;
+        --hover-color: #3a3a3a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", "Noto Sans SC", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      .header {
+        /* display: flex; */
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #24292e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .github-link:hover {
+        background: #000;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .theme-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: #ce3321;
+        transition: transform 0.3s ease;
+      }
+
+      .theme-toggle:hover svg {
+        transform: rotate(20deg);
+      }
+
+      :root.dark-mode .theme-toggle {
+        background: rgba(45, 45, 45, 0.95);
+        border-color: rgba(200, 200, 200, 0.3);
+      }
+
+      :root.dark-mode .theme-toggle svg {
+        color: #ffc107;
+      }
+
+      :root.dark-mode .theme-toggle:hover {
+        background: rgba(60, 60, 60, 1);
+      }
+
+      .main-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+      }
+
+      .post-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-title {
+        color: var(--primary-color);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+      }
+
+      :root.dark-mode .post-meta {
+        color: #a0a0a0;
+      }
+
+      .post-date {
+        background-color: #e3f2fd;
+        color: var(--secondary-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-date {
+        background-color: rgba(52, 152, 219, 0.2);
+        color: #64b5f6;
+      }
+
+      .post-category {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-category {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #81c784;
+      }
+
+      .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .post-content h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin: 35px 0 25px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      /* Table of Contents */
+      .toc-container {
+        width: 300px;
+        flex-shrink: 0;
+      }
+
+      .toc {
+        position: sticky;
+        top: 135px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .toc h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc ul ul {
+        padding-left: 20px;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+
+      .toc a:hover {
+        color: var(--secondary-color);
+      }
+
+      .toc a.active {
+        color: var(--secondary-color);
+        font-weight: 500;
+      }
+
+      .post-content h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content h3 {
+        color: #2980b9;
+        font-size: 1.3rem;
+        margin: 25px 0 15px 0;
+      }
+
+      .post-content p {
+        margin-bottom: 18px;
+      }
+
+      .post-content ul,
+      .post-content ol {
+        margin: 20px 0;
+        padding-left: 35px;
+      }
+
+      .post-content li {
+        margin-bottom: 10px;
+      }
+
+      .post-content code {
+        background-color: #e8eaed;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        color: #c0392b;
+        font-size: 0.9em;
+      }
+
+      :root.dark-mode .post-content code {
+        background-color: #e8eaed;
+        color: #ff7043;
+      }
+
+      .post-content pre {
+        background-color: #f6f8fa;
+        color: #24292e;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 25px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        border: 1px solid #e1e4e8;
+      }
+
+      :root.dark-mode .post-content pre {
+        background-color: #1e1e1e;
+        color: #f8f8f2;
+        border-color: #333333;
+      }
+
+      :root.dark-mode .post-content pre code {
+        color: #f8f8f2;
+        background-color: transparent;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f2020;
+        border: 1px solid #1f2020;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .copy-button:hover {
+        background: #4caf50;
+        border-color: #4caf50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .copy-button.copied {
+        background-color: #27ae60;
+      }
+
+      .post-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+      }
+
+      .post-content blockquote {
+        background-color: #eaf2f8;
+        border-left: 5px solid var(--secondary-color);
+        padding: 20px;
+        margin: 25px 0;
+        border-radius: 0 5px 5px 0;
+      }
+
+      :root.dark-mode .post-content blockquote {
+        background-color: rgba(52, 152, 219, 0.15);
+        color: #b3e5fc;
+      }
+
+      .post-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.95rem;
+        text-align: left;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        table-layout: auto; /* 让列宽根据内容自动调整 */
+      }
+
+      .post-content th,
+      .post-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        word-wrap: break-word; /* 确保长内容可以换行 */
+      }
+
+      .post-content th {
+        background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .post-content tbody tr {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      :root.dark-mode .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      :root.dark-mode .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      :root.dark-mode .post-content th,
+      :root.dark-mode .post-content td {
+        border: 1px solid var(--border-color);
+      }
+
+      .post-content a {
+        color: var(--secondary-color);
+        text-decoration: none;
+      }
+
+      .post-content a:hover {
+        text-decoration: underline;
+      }
+
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 25px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      :root.dark-mode .warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffd54f;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 40px;
+      }
+
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--secondary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+      }
+
+      /* Mermaid 图表样式 */
+      .mermaid {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      :root.dark-mode .mermaid {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post-title {
+          font-size: 1.6rem;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-content {
+          font-size: 1rem;
+        }
+
+        .post-content h1 {
+          font-size: 1.5rem;
+        }
+
+        .post-content h2 {
+          font-size: 1.3rem;
+        }
+
+        .post-content h3 {
+          font-size: 1.1rem;
+        }
+
+        .toc-container {
+          display: none;
+        }
+      }
+    </style>
+    <!-- 引入本地 Mermaid 库 -->
+    <script src="../../js/mermaid.min.js"></script>
+    <script>
+      // 初始化 Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        // 可以根据需要添加更多配置选项
+        securityLevel: "loose",
+      });
+
+      // 处理 Pandoc 生成的 Mermaid 代码块
+      // Pandoc 将 Mermaid 代码块转换为 <pre class="mermaid"><code>... 格式
+      // 我们需要将其转换为 <div class="mermaid">... 格式以便 Mermaid 渲染
+      document.addEventListener("DOMContentLoaded", function () {
+        const mermaidBlocks = document.querySelectorAll("pre.mermaid code");
+        mermaidBlocks.forEach(function (codeElement) {
+          // 创建新的 div 元素
+          const mermaidDiv = document.createElement("div");
+          mermaidDiv.className = "mermaid";
+          // 将代码内容移到 div 中
+          mermaidDiv.textContent = codeElement.textContent;
+          // 替换原来的 pre 元素
+          codeElement.parentNode.parentNode.replaceChild(
+            mermaidDiv,
+            codeElement.parentNode
+          );
+        });
+
+        // 重新启动 Mermaid 渲染
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+      });
+
+      // 为代码块添加复制按钮
+      function addCopyButtons() {
+        // 处理 Pandoc 生成的代码块结构 (<div class="sourceCode"><pre><code>)
+        const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+        sourceCodeBlocks.forEach(function (block) {
+          // 检查是否已经有复制按钮
+          if (block.querySelector(".copy-button")) return;
+
+          // 获取 pre 元素
+          const preElement = block.querySelector("pre");
+          if (!preElement) return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = preElement.querySelector("code");
+            const text = code ? code.innerText : preElement.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到 sourceCode div 中
+          block.appendChild(button);
+        });
+
+        // 处理普通的 pre 代码块 (非 Pandoc 生成的)
+        // 先获取所有非 mermaid 的 pre 元素
+        const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+        allPreBlocks.forEach(function (block) {
+          // 检查是否已经在 sourceCode div 中（Pandoc 生成的）或者已经有复制按钮
+          if (
+            block.closest(".sourceCode") ||
+            block.querySelector(".copy-button")
+          )
+            return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = block.querySelector("code");
+            const text = code ? code.innerText : block.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到代码块
+          block.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <article class="post">
+          <header class="post-header">
+            <h1 class="post-title">理解代理模式：mihomo、浏览器与 Git 代理配置</h1>
+            <div class="post-meta">
+              <div class="post-date">2026/6/12</div>
+              <div class="post-category">2026-06</div>
+            </div>
+          </header>
+          <div class="warning">
+            ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+          </div>
+          <div class="post-content" id="post-content"><h1 id="理解代理模式：mihomo、浏览器与-git-代理配置">理解代理模式：mihomo、浏览器与 Git 代理配置</h1>
+<p>最近在推送 GitHub 仓库时遇到了连接超时、连接重置的问题。后来发现浏览器虽然能正常访问 GitHub，但 Git 命令并没有自动走代理。</p>
+<p>这篇文章用自己的环境做一次梳理：代理软件到底做了什么，浏览器为什么能走代理，Git 为什么不一定走代理，以及这次修改到底改了哪里。</p>
+<h2 id="一句话结论">一句话结论</h2>
+<p>代理软件本身通常只是本机启动一个代理服务，例如：</p>
+<pre><code class="language-text">127.0.0.1:7890
+</code></pre>
+<p>真正决定某个软件是否走代理的，是这个软件有没有把网络请求发到这个本地端口。</p>
+<p>浏览器能走代理，是因为浏览器或系统代理配置指向了 <code>127.0.0.1:7890</code>。</p>
+<p>Git 之前不能稳定访问 GitHub，是因为 Git 没有配置自己的代理，所以它仍然在尝试直连 <code>github.com:443</code>。</p>
+<p>这次修改就是给 Git 单独增加了代理配置：</p>
+<pre><code class="language-powershell">git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+</code></pre>
+<h2 id="代理软件在电脑里做了什么">代理软件在电脑里做了什么</h2>
+<p>mihomo 这类代理软件通常会做两件事：</p>
+<ol>
+<li>读取节点配置和规则配置。</li>
+<li>在本机启动一个代理监听端口。</li>
+</ol>
+<p>你的 mixed port 是：</p>
+<pre><code class="language-text">127.0.0.1:7890
+</code></pre>
+<p>这个端口可以理解成一个“本地中转站”。</p>
+<p>应用程序如果直接访问：</p>
+<pre><code class="language-text">https://github.com
+</code></pre>
+<p>那就是直连。</p>
+<p>应用程序如果把请求交给：</p>
+<pre><code class="language-text">127.0.0.1:7890
+</code></pre>
+<p>mihomo 就会接管请求，然后根据规则判断：</p>
+<ul>
+<li>国内网站直连</li>
+<li>GitHub、Google 等特定网站走代理节点</li>
+<li>某些域名走指定节点</li>
+<li>某些流量拒绝或拦截</li>
+</ul>
+<p>所以代理软件不是自动接管所有程序。它只是提供了一个本地入口，程序要不要使用这个入口，取决于程序自己的网络配置，或者系统代理配置。</p>
+<h2 id="什么是规则模式">什么是“规则模式”</h2>
+<p>你之前说“做了一些网站配置，特定网站走代理”，这通常就是规则模式。</p>
+<p>规则模式大概是这样：</p>
+<pre><code class="language-text">github.com        -&gt; 走代理
+google.com        -&gt; 走代理
+baidu.com         -&gt; 直连
+qq.com            -&gt; 直连
+局域网地址         -&gt; 直连
+默认其他流量       -&gt; 按配置决定
+</code></pre>
+<p>实际配置里可能叫：</p>
+<pre><code class="language-text">rules
+Rule Mode
+规则模式
+绕过大陆
+全局模式
+直连模式
+</code></pre>
+<p>常见模式区别：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>直连模式</td>
+<td>所有流量都不走代理</td>
+</tr>
+<tr>
+<td>全局模式</td>
+<td>大部分流量都走代理</td>
+</tr>
+<tr>
+<td>规则模式</td>
+<td>按域名、IP、地区、进程等规则判断</td>
+</tr>
+</tbody></table>
+<p>你现在的情况更像规则模式：浏览器访问普通国内网站不受影响，访问 GitHub 这类网站会走代理。</p>
+<h2 id="浏览器为什么能走代理">浏览器为什么能走代理</h2>
+<p>浏览器能走代理，一般有三种可能：</p>
+<ol>
+<li>浏览器使用系统代理。</li>
+<li>浏览器装了代理插件，例如 SwitchyOmega。</li>
+<li>mihomo 开启了系统代理或 TUN 模式。</li>
+</ol>
+<p>如果是系统代理，Windows 里通常会把代理服务器设置成：</p>
+<pre><code class="language-text">127.0.0.1:7890
+</code></pre>
+<p>这样浏览器访问网页时，请求路径大概是：</p>
+<pre><code class="language-text">浏览器 -&gt; Windows 系统代理 -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; 代理节点或直连 -&gt; 目标网站
+</code></pre>
+<p>所以你会看到浏览器正常，但 Git 命令还是失败。原因是 Git 不一定完全跟随浏览器代理配置。</p>
+<h2 id="git-为什么没有自动走代理">Git 为什么没有自动走代理</h2>
+<p>Git for Windows 使用自己的网络库和配置系统。它可能读取一部分系统配置，但不能假设它一定会跟浏览器一样走代理。</p>
+<p>之前执行：</p>
+<pre><code class="language-powershell">git config --global --get http.proxy
+git config --global --get https.proxy
+</code></pre>
+<p>没有输出，说明 Git 全局没有配置代理。</p>
+<p>所以当执行：</p>
+<pre><code class="language-powershell">git pull
+git push
+</code></pre>
+<p>Git 实际在尝试：</p>
+<pre><code class="language-text">Git -&gt; github.com:443
+</code></pre>
+<p>而不是：</p>
+<pre><code class="language-text">Git -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; github.com
+</code></pre>
+<p>这就是为什么它报：</p>
+<pre><code class="language-text">Failed to connect to github.com port 443
+Recv failure: Connection was reset
+</code></pre>
+<h2 id="这次我修改了什么">这次我修改了什么</h2>
+<p>这次只修改了 Git 的全局配置。</p>
+<p>执行的是：</p>
+<pre><code class="language-powershell">git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+</code></pre>
+<p>它写入的是当前 Windows 用户的 Git 配置文件，通常是：</p>
+<pre><code class="language-text">C:\Users\&lt;你的用户名&gt;\.gitconfig
+</code></pre>
+<p>修改后的效果是：当前用户在这台电脑上执行的 Git HTTP/HTTPS 请求，都会优先走：</p>
+<pre><code class="language-text">http://127.0.0.1:7890
+</code></pre>
+<p>也就是：</p>
+<pre><code class="language-text">Git -&gt; mihomo mixed port -&gt; 按 mihomo 规则转发 -&gt; GitHub
+</code></pre>
+<h2 id="修改范围是什么">修改范围是什么</h2>
+<p>这次修改的范围是：</p>
+<pre><code class="language-text">Git 全局配置
+</code></pre>
+<p>也就是当前 Windows 用户下的所有 Git 仓库都会受影响。</p>
+<p>影响对象：</p>
+<ul>
+<li><code>git clone https://...</code></li>
+<li><code>git pull</code></li>
+<li><code>git push</code></li>
+<li><code>git fetch</code></li>
+<li>其他走 HTTP/HTTPS 的 Git 远程操作</li>
+</ul>
+<p>不影响对象：</p>
+<ul>
+<li>浏览器代理规则</li>
+<li>mihomo 节点配置</li>
+<li>mihomo 分流规则</li>
+<li>npm 代理配置</li>
+<li>PowerShell 自己的网络请求</li>
+<li>SSH 方式的 Git 地址，例如 <code>git@github.com:xxx/xxx.git</code></li>
+</ul>
+<p>所以这次没有修改你的代理节点，也没有修改你的 mihomo 规则，只是告诉 Git：以后访问 HTTPS 仓库时，先走本地 <code>7890</code> 端口。</p>
+<h2 id="怎么查看当前-git-代理">怎么查看当前 Git 代理</h2>
+<p>查看 Git 是否配置了代理：</p>
+<pre><code class="language-powershell">git config --global --get http.proxy
+git config --global --get https.proxy
+</code></pre>
+<p>如果输出：</p>
+<pre><code class="language-text">http://127.0.0.1:7890
+http://127.0.0.1:7890
+</code></pre>
+<p>说明 Git 已经走 mihomo 的 mixed port。</p>
+<h2 id="怎么取消这次修改">怎么取消这次修改</h2>
+<p>如果以后不想让 Git 走代理，可以取消：</p>
+<pre><code class="language-powershell">git config --global --unset http.proxy
+git config --global --unset https.proxy
+</code></pre>
+<p>取消后，Git 会回到默认行为。</p>
+<p>如果当前网络不能直连 GitHub，取消后 <code>git pull</code>、<code>git push</code> 可能又会失败。</p>
+<h2 id="怎么判断-7890-是否真的存在">怎么判断 7890 是否真的存在</h2>
+<p>可以看本机端口：</p>
+<pre><code class="language-powershell">netstat -ano | findstr &quot;:7890&quot;
+</code></pre>
+<p>如果看到：</p>
+<pre><code class="language-text">127.0.0.1:7890 LISTENING
+</code></pre>
+<p>说明 mihomo 正在监听这个端口。</p>
+<p>还可以测试 GitHub 连接：</p>
+<pre><code class="language-powershell">git ls-remote https://github.com/cxy1984/ai-blog.git
+</code></pre>
+<p>如果能返回远程分支或提交信息，说明 Git 能正常通过网络访问 GitHub。</p>
+<h2 id="为什么-pull-成功后-push-又失败了一次">为什么 pull 成功后 push 又失败了一次</h2>
+<p>配置代理后，<code>git pull --rebase origin main</code> 成功了，说明 Git 已经能通过代理访问 GitHub。</p>
+<p>但第一次 <code>git push</code> 报了：</p>
+<pre><code class="language-text">OpenSSL SSL_connect: SSL_ERROR_SYSCALL
+</code></pre>
+<p>这个错误通常不是配置写错，而是代理链路中途断了一下。重试后推送成功。</p>
+<p>这说明当前链路是可用的，但代理节点或网络本身可能偶尔不稳定。</p>
+<p>如果以后再遇到类似问题，可以先重试：</p>
+<pre><code class="language-powershell">git push
+</code></pre>
+<p>如果连续失败，再切换 mihomo 节点。</p>
+<h2 id="浏览器代理和-git-代理的区别">浏览器代理和 Git 代理的区别</h2>
+<p>可以把它们理解成两套独立配置。</p>
+<p>浏览器：</p>
+<pre><code class="language-text">浏览器设置或系统设置 -&gt; 127.0.0.1:7890
+</code></pre>
+<p>Git：</p>
+<pre><code class="language-text">Git 配置 -&gt; 127.0.0.1:7890
+</code></pre>
+<p>它们可以都走同一个 mihomo 端口，但配置位置不同。</p>
+<p>所以会出现这些情况：</p>
+<table>
+<thead>
+<tr>
+<th>浏览器</th>
+<th>Git</th>
+<th>现象</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>走代理</td>
+<td>不走代理</td>
+<td>浏览器能打开 GitHub，Git push 失败</td>
+</tr>
+<tr>
+<td>不走代理</td>
+<td>走代理</td>
+<td>浏览器可能打不开 GitHub，Git 正常</td>
+</tr>
+<tr>
+<td>都走代理</td>
+<td>都正常</td>
+<td></td>
+</tr>
+<tr>
+<td>都不走代理</td>
+<td>取决于当前网络能否直连 GitHub</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>你之前就是第一种。</p>
+<h2 id="当前博客项目的发布流程">当前博客项目的发布流程</h2>
+<p>现在写博客时，本地流程是：</p>
+<pre><code class="language-powershell">cd D:\code\ai-note
+npm run build
+git add .
+git commit -m &quot;add blog post&quot;
+git push
+</code></pre>
+<p><code>git push</code> 会走：</p>
+<pre><code class="language-text">Git -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
+</code></pre>
+<p>推送成功后，GitHub Pages 会部署到：</p>
+<pre><code class="language-text">https://cxy1984.github.io/ai-blog
+</code></pre>
+<h2 id="安全提醒">安全提醒</h2>
+<p>代理节点配置里的 password、uuid、订阅链接都属于敏感信息。</p>
+<p>不要把完整代理配置发到公开聊天、公开仓库或截图里。如果已经泄露，建议到服务商后台重置订阅链接或节点密码。</p>
+<h2 id="总结">总结</h2>
+<p>这次问题的根因是：浏览器配置了代理，但 Git 没有配置代理。</p>
+<p>解决方式是给 Git 单独配置：</p>
+<pre><code class="language-powershell">git config --global http.proxy http://127.0.0.1:7890
+git config --global https.proxy http://127.0.0.1:7890
+</code></pre>
+<p>这不会修改 mihomo 的节点和规则，只会影响当前 Windows 用户下 Git 的 HTTPS 网络请求。</p>
+<p>以后如果 GitHub push 失败，排查顺序可以是：</p>
+<ol>
+<li>mihomo 是否开启。</li>
+<li><code>127.0.0.1:7890</code> 是否监听。</li>
+<li>Git 是否配置了 <code>http.proxy</code> 和 <code>https.proxy</code>。</li>
+<li>当前节点是否稳定。</li>
+<li>GitHub 是否需要重新登录验证。</li>
+</ol>
+</div>
+        </article>
+      </div>
+
+      <div class="toc-container">
+        <nav class="toc" id="table-of-contents">
+          <h2>目录</h2>
+          <div id="toc-content"></div>
+        </nav>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="切换暗色模式">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+      // Dark mode toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const html = document.documentElement;
+
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem("theme-mode");
+      if (savedTheme === "dark") {
+        html.classList.add("dark-mode");
+      }
+
+      // Theme toggle click handler
+      themeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark-mode");
+        const isDarkMode = html.classList.contains("dark-mode");
+        localStorage.setItem("theme-mode", isDarkMode ? "dark" : "light");
+        console.log("主题切换为:", isDarkMode ? "暗色模式" : "亮色模式");
+      });
+
+      // Generate Table of Contents
+      function generateTOC() {
+        const tocContainer = document.getElementById("toc-content");
+        const content = document.querySelector(".post-content");
+        const headers = content.querySelectorAll("h1, h2, h3");
+
+        if (headers.length === 0) {
+          tocContainer.innerHTML = "<p>暂无目录</p>";
+          return;
+        }
+
+        const toc = document.createElement("ul");
+
+        headers.forEach((header, index) => {
+          // Add an id to the header if it doesn't have one
+          if (!header.id) {
+            header.id = "heading-" + index;
+          }
+
+          const li = document.createElement("li");
+          li.className = "toc-item";
+
+          const link = document.createElement("a");
+          link.href = "#" + header.id;
+          link.textContent = header.textContent;
+          link.className = "toc-link";
+
+          // Set indentation based on header level
+          const level = parseInt(header.tagName.charAt(1)) - 1;
+          li.style.marginLeft = level * 20 + "px";
+
+          li.appendChild(link);
+          toc.appendChild(li);
+        });
+
+        tocContainer.appendChild(toc);
+      }
+
+      // Adjust TOC height to match content
+      function adjustTOCHeight() {
+        const toc = document.getElementById("table-of-contents");
+        const post = document.querySelector(".post");
+
+        if (toc && post) {
+          // Get the height of the post area
+          const postHeight = post.offsetHeight;
+
+          // Set the max-height of the TOC to match the post height
+          // Leave some space for top margin and padding
+          toc.style.maxHeight =
+            Math.min(postHeight - 30, window.innerHeight * 0.8) + "px";
+        }
+      }
+
+      // Back to top button
+      const backToTopButton = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add("visible");
+        } else {
+          backToTopButton.classList.remove("visible");
+        }
+      });
+
+      backToTopButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Initialize TOC when page loads and adjust height
+      document.addEventListener("DOMContentLoaded", function () {
+        generateTOC();
+        adjustTOCHeight();
+
+        // Adjust height on window resize
+        window.addEventListener("resize", adjustTOCHeight);
+      });
+
+      // 页面加载完成后添加复制按钮
+      window.addEventListener("load", function () {
+        addCopyButtons();
+      });
+
+      // 监听可能的动态内容加载
+      const observer = new MutationObserver(function (mutations) {
+        let shouldAddButtons = false;
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              // 检查添加的节点是否是代码块或包含代码块
+              if (
+                (node.classList && node.classList.contains("sourceCode")) ||
+                (node.tagName === "PRE" &&
+                  !node.classList.contains("mermaid")) ||
+                node.querySelector(".sourceCode, pre:not(.mermaid)")
+              ) {
+                shouldAddButtons = true;
+              }
+            }
+          });
+        });
+        if (shouldAddButtons) {
+          // 延迟执行以确保DOM完全更新
+          setTimeout(addCopyButtons, 100);
+        }
+      });
+
+      // 开始监听DOM变化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      console.log("页面加载完成，AI 技术笔记已就绪");
+    </script>
+  </body>
+</html>
