@@ -1,5 +1,5 @@
-User-agent: *
+﻿User-agent: *
 Allow: /
 
 Sitemap: https://ayuayue.github.io/ai-note/sitemap.xml
-Sitemap: https://www.caoayu.top/sitemap.xml
+Sitemap: https://cxy1984.github.io/ai-blog/sitemap.xml

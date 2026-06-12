@@ -1,8 +1,8 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 const marked = require("marked");
-const SITE_BASE_URL = process.env.SITE_BASE_URL || "https://www.caoayu.top";
+const SITE_BASE_URL = process.env.SITE_BASE_URL || "https://cxy1984.github.io/ai-blog";
 let pandocChecked = false;
 let pandocAvailable = false;
 const isQuiet = process.env.QUIET === "1";
@@ -82,8 +82,8 @@ function markdownToHtmlWithPandoc(
   try {
     let htmlContent;
     if (isPandocAvailable()) {
-      // 使用 Pandoc 转换 Markdown 到 HTML
-      // 注意：我们使用 --mathjax 来支持数学公式，--highlight-style 来设置代码高亮
+      // 浣跨敤 Pandoc 杞崲 Markdown 鍒?HTML
+      // 娉ㄦ剰锛氭垜浠娇鐢?--mathjax 鏉ユ敮鎸佹暟瀛﹀叕寮忥紝--highlight-style 鏉ヨ缃唬鐮侀珮浜?
       const pandocCommand = `pandoc "${markdownFilePath}" -f markdown -t html --mathjax --highlight-style=tango`;
       htmlContent = execSync(pandocCommand, { encoding: "utf8" });
     } else {
@@ -404,3 +404,4 @@ module.exports = {
 if (require.main === module) {
   main();
 }
+

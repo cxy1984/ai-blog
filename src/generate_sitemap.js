@@ -1,7 +1,7 @@
-const fs = require("fs");
+﻿const fs = require("fs");
 const path = require("path");
 
-const SITE_BASE_URL = process.env.SITE_BASE_URL || "https://www.caoayu.top";
+const SITE_BASE_URL = process.env.SITE_BASE_URL || "https://cxy1984.github.io/ai-blog";
 
 function getFileDate(filePath) {
   try {
@@ -161,3 +161,4 @@ function main() {
 }
 
 main();
+

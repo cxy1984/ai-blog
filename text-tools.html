@@ -1,21 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文本处理工具 - AI 个人笔记</title>
+    <title>鏂囨湰澶勭悊宸ュ叿 - AI 涓汉绗旇</title>
     <!-- SEO Meta Tags -->
-    <meta name="description" content="文本处理工具 - 字数统计、大小写转换、格式化等功能">
-    <meta name="keywords" content="文本处理, 字数统计, 大小写转换, 文本格式化">
+    <meta name="description" content="鏂囨湰澶勭悊宸ュ叿 - 瀛楁暟缁熻銆佸ぇ灏忓啓杞崲銆佹牸寮忓寲绛夊姛鑳?>
+    <meta name="keywords" content="鏂囨湰澶勭悊, 瀛楁暟缁熻, 澶у皬鍐欒浆鎹? 鏂囨湰鏍煎紡鍖?>
     <meta name="robots" content="index, follow">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="文本处理工具 - AI 个人笔记">
-    <meta property="og:description" content="文本处理工具 - 字数统计、大小写转换、格式化等功能">
+    <meta property="og:title" content="鏂囨湰澶勭悊宸ュ叿 - AI 涓汉绗旇">
+    <meta property="og:description" content="鏂囨湰澶勭悊宸ュ叿 - 瀛楁暟缁熻銆佸ぇ灏忓啓杞崲銆佹牸寮忓寲绛夊姛鑳?>
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://caoayu.top/text-tools.html">
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/text-tools.html">
     
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -279,7 +279,7 @@
             transform: none !important;
         }
 
-        /* 新的布局样式 */
+        /* 鏂扮殑甯冨眬鏍峰紡 */
         .main-content {
             display: grid;
             grid-template-columns: 1fr 400px;
@@ -338,7 +338,7 @@
             top: 20px;
         }
 
-        /* 滚动条美化 */
+        /* 婊氬姩鏉＄編鍖?*/
         .operations-panel::-webkit-scrollbar {
             width: 6px;
         }
@@ -415,7 +415,7 @@
             display: block;
         }
 
-        /* 响应式设计 */
+        /* 鍝嶅簲寮忚璁?*/
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -503,147 +503,147 @@
 <body>
     <div class="container">
         <header class="header">
-            <h1>文本处理工具</h1>
-            <p>强大的文本处理工具，支持字数统计、大小写转换、格式化和文件保存等功能</p>
+            <h1>鏂囨湰澶勭悊宸ュ叿</h1>
+            <p>寮哄ぇ鐨勬枃鏈鐞嗗伐鍏凤紝鏀寔瀛楁暟缁熻銆佸ぇ灏忓啓杞崲銆佹牸寮忓寲鍜屾枃浠朵繚瀛樼瓑鍔熻兘</p>
             
             <div class="header-actions">
                 <a href="index.html" class="nav-button">
-                    ← 返回首页
+                    鈫?杩斿洖棣栭〉
                 </a>
                 <a href="tools.html" class="nav-button tools">
-                    🛠️ 工具中心
+                    馃洜锔?宸ュ叿涓績
                 </a>
             </div>
         </header>
 
         <div class="tools-container">
-            <!-- 主要内容区域：使用左右布局 -->
+            <!-- 涓昏鍐呭鍖哄煙锛氫娇鐢ㄥ乏鍙冲竷灞€ -->
             <div class="main-content">
-                <!-- 左侧：文本输入区域 -->
+                <!-- 宸︿晶锛氭枃鏈緭鍏ュ尯鍩?-->
                 <div class="text-input-section">
                     <div class="tool-section">
-                        <h3>📝 文本输入</h3>
+                        <h3>馃摑 鏂囨湰杈撳叆</h3>
                         <div class="input-group">
-                            <label class="input-label">文件保存名称（可选）</label>
-                            <input type="text" class="input-field" id="fileName" placeholder="例如：处理后的文档.txt">
+                            <label class="input-label">鏂囦欢淇濆瓨鍚嶇О锛堝彲閫夛級</label>
+                            <input type="text" class="input-field" id="fileName" placeholder="渚嬪锛氬鐞嗗悗鐨勬枃妗?txt">
                         </div>
 
                         <div class="input-group">
-                            <label class="input-label">请输入要处理的文本</label>
-                            <textarea class="textarea-field" id="inputText" placeholder="请输入要处理的文本..." oninput="updateStats()"></textarea>
+                            <label class="input-label">璇疯緭鍏ヨ澶勭悊鐨勬枃鏈?/label>
+                            <textarea class="textarea-field" id="inputText" placeholder="璇疯緭鍏ヨ澶勭悊鐨勬枃鏈?.." oninput="updateStats()"></textarea>
                         </div>
 
-                        <!-- 字数统计 -->
+                        <!-- 瀛楁暟缁熻 -->
                         <div class="stats-compact">
                             <div class="stats-grid" id="statsGrid">
                                 <div class="stat-item">
                                     <span class="stat-number" id="charCount">0</span>
-                                    <div class="stat-label">字符数</div>
+                                    <div class="stat-label">瀛楃鏁?/div>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-number" id="charCountNoSpace">0</span>
-                                    <div class="stat-label">字符数(无空格)</div>
+                                    <div class="stat-label">瀛楃鏁?鏃犵┖鏍?</div>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-number" id="wordCount">0</span>
-                                    <div class="stat-label">单词数</div>
+                                    <div class="stat-label">鍗曡瘝鏁?/div>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-number" id="lineCount">0</span>
-                                    <div class="stat-label">行数</div>
+                                    <div class="stat-label">琛屾暟</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 右侧：操作面板 -->
+                <!-- 鍙充晶锛氭搷浣滈潰鏉?-->
                 <div class="operations-panel">
                     <div class="sticky-operations">
-                        <!-- 快速操作 -->
+                        <!-- 蹇€熸搷浣?-->
                         <div class="tool-section">
-                            <h3>⚡ 快速操作</h3>
+                            <h3>鈿?蹇€熸搷浣?/h3>
                             <div class="button-group">
-                                <button class="btn btn-success" onclick="saveToFile()">💾 保存文件</button>
-                                <button class="btn btn-secondary" onclick="copyToClipboard()">📋 复制</button>
-                                <button class="btn btn-danger" onclick="clearAll()">🗑️ 清空</button>
+                                <button class="btn btn-success" onclick="saveToFile()">馃捑 淇濆瓨鏂囦欢</button>
+                                <button class="btn btn-secondary" onclick="copyToClipboard()">馃搵 澶嶅埗</button>
+                                <button class="btn btn-danger" onclick="clearAll()">馃棏锔?娓呯┖</button>
                             </div>
                         </div>
 
-                        <!-- 大小写转换 -->
+                        <!-- 澶у皬鍐欒浆鎹?-->
                         <div class="tool-section">
-                            <h3>🔤 大小写转换</h3>
+                            <h3>馃敜 澶у皬鍐欒浆鎹?/h3>
                             <div class="button-group">
-                                <button class="btn btn-primary" onclick="convertCase('upper')">转为大写</button>
-                                <button class="btn btn-primary" onclick="convertCase('lower')">转为小写</button>
-                                <button class="btn btn-primary" onclick="convertCase('capitalize')">首字母大写</button>
-                                <button class="btn btn-primary" onclick="convertCase('title')">标题格式</button>
+                                <button class="btn btn-primary" onclick="convertCase('upper')">杞负澶у啓</button>
+                                <button class="btn btn-primary" onclick="convertCase('lower')">杞负灏忓啓</button>
+                                <button class="btn btn-primary" onclick="convertCase('capitalize')">棣栧瓧姣嶅ぇ鍐?/button>
+                                <button class="btn btn-primary" onclick="convertCase('title')">鏍囬鏍煎紡</button>
                             </div>
                         </div>
 
-                        <!-- 文本清理 -->
+                        <!-- 鏂囨湰娓呯悊 -->
                         <div class="tool-section">
-                            <h3>🧹 文本清理</h3>
+                            <h3>馃Ч 鏂囨湰娓呯悊</h3>
                             <div class="button-group">
-                                <button class="btn btn-success" onclick="formatText('trim')">去除首尾空格</button>
-                                <button class="btn btn-success" onclick="formatText('removeExtraSpaces')">去除多余空格</button>
-                                <button class="btn btn-success" onclick="formatText('removeExtraLines')">去除多余空行</button>
-                                <button class="btn btn-success" onclick="formatText('removeEmptyLines')">删除空行</button>
+                                <button class="btn btn-success" onclick="formatText('trim')">鍘婚櫎棣栧熬绌烘牸</button>
+                                <button class="btn btn-success" onclick="formatText('removeExtraSpaces')">鍘婚櫎澶氫綑绌烘牸</button>
+                                <button class="btn btn-success" onclick="formatText('removeExtraLines')">鍘婚櫎澶氫綑绌鸿</button>
+                                <button class="btn btn-success" onclick="formatText('removeEmptyLines')">鍒犻櫎绌鸿</button>
                             </div>
                         </div>
 
-                        <!-- 转义处理 -->
+                        <!-- 杞箟澶勭悊 -->
                         <div class="tool-section">
-                            <h3>🔒 转义处理</h3>
+                            <h3>馃敀 杞箟澶勭悊</h3>
                             <div class="button-group">
-                                <button class="btn btn-warning" onclick="escapeText('html')">HTML转义</button>
-                                <button class="btn btn-warning" onclick="escapeText('url')">URL转义</button>
-                                <button class="btn btn-warning" onclick="escapeText('json')">JSON转义</button>
-                                <button class="btn btn-warning" onclick="escapeText('regex')">正则转义</button>
+                                <button class="btn btn-warning" onclick="escapeText('html')">HTML杞箟</button>
+                                <button class="btn btn-warning" onclick="escapeText('url')">URL杞箟</button>
+                                <button class="btn btn-warning" onclick="escapeText('json')">JSON杞箟</button>
+                                <button class="btn btn-warning" onclick="escapeText('regex')">姝ｅ垯杞箟</button>
                             </div>
                             <div class="button-group">
-                                <button class="btn btn-success" onclick="unescapeText('html')">HTML去转义</button>
-                                <button class="btn btn-success" onclick="unescapeText('url')">URL去转义</button>
-                                <button class="btn btn-success" onclick="unescapeText('json')">JSON去转义</button>
-                                <button class="btn btn-success" onclick="unescapeText('common')">常见转义还原</button>
+                                <button class="btn btn-success" onclick="unescapeText('html')">HTML鍘昏浆涔?/button>
+                                <button class="btn btn-success" onclick="unescapeText('url')">URL鍘昏浆涔?/button>
+                                <button class="btn btn-success" onclick="unescapeText('json')">JSON鍘昏浆涔?/button>
+                                <button class="btn btn-success" onclick="unescapeText('common')">甯歌杞箟杩樺師</button>
                             </div>
                         </div>
 
-                        <!-- 高级操作 -->
+                        <!-- 楂樼骇鎿嶄綔 -->
                         <div class="tool-section">
-                            <h3>🔧 高级操作</h3>
+                            <h3>馃敡 楂樼骇鎿嶄綔</h3>
                             <div class="button-group">
-                                <button class="btn btn-primary" onclick="processText('sortLines')">按行排序</button>
-                                <button class="btn btn-primary" onclick="processText('uniqueLines')">删除重复行</button>
-                                <button class="btn btn-primary" onclick="processText('addLineNumbers')">添加行号</button>
-                                <button class="btn btn-primary" onclick="processText('reverseLines')">行反转</button>
+                                <button class="btn btn-primary" onclick="processText('sortLines')">鎸夎鎺掑簭</button>
+                                <button class="btn btn-primary" onclick="processText('uniqueLines')">鍒犻櫎閲嶅琛?/button>
+                                <button class="btn btn-primary" onclick="processText('addLineNumbers')">娣诲姞琛屽彿</button>
+                                <button class="btn btn-primary" onclick="processText('reverseLines')">琛屽弽杞?/button>
                             </div>
                             <div class="button-group">
-                                <button class="btn btn-warning" onclick="processText('extractNumbers')">提取数字</button>
-                                <button class="btn btn-warning" onclick="processText('extractWords')">提取单词</button>
-                                <button class="btn btn-warning" onclick="processText('countChars')">字符频率</button>
-                                <button class="btn btn-warning" onclick="formatText('reverse')">文本反转</button>
+                                <button class="btn btn-warning" onclick="processText('extractNumbers')">鎻愬彇鏁板瓧</button>
+                                <button class="btn btn-warning" onclick="processText('extractWords')">鎻愬彇鍗曡瘝</button>
+                                <button class="btn btn-warning" onclick="processText('countChars')">瀛楃棰戠巼</button>
+                                <button class="btn btn-warning" onclick="formatText('reverse')">鏂囨湰鍙嶈浆</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- 结果显示区域 -->
+            <!-- 缁撴灉鏄剧ず鍖哄煙 -->
             <div class="result-section">
                 <div class="result-box" id="actionResult"></div>
             </div>
         </div>
         
         <footer class="footer">
-            <p>文本处理工具 &copy; 2025 | 让文本处理更简单高效</p>
+            <p>鏂囨湰澶勭悊宸ュ叿 &copy; 2025 | 璁╂枃鏈鐞嗘洿绠€鍗曢珮鏁?/p>
         </footer>
     </div>
     
-    <a href="#" class="back-to-top" id="backToTop">↑</a>
+    <a href="#" class="back-to-top" id="backToTop">鈫?/a>
     
     <script>
-        // 初始化
+        // 鍒濆鍖?
         document.addEventListener('DOMContentLoaded', function() {
             // Back to top button
             const backToTopButton = document.getElementById('backToTop');
@@ -662,29 +662,29 @@
             });
 
             updateStats();
-            console.log('文本处理工具已加载');
+            console.log('鏂囨湰澶勭悊宸ュ叿宸插姞杞?);
         });
 
-        // 更新字数统计
+        // 鏇存柊瀛楁暟缁熻
         function updateStats() {
             const text = document.getElementById('inputText').value;
             
-            // 基本统计
+            // 鍩烘湰缁熻
             document.getElementById('charCount').textContent = text.length;
             document.getElementById('charCountNoSpace').textContent = text.replace(/\s/g, '').length;
             document.getElementById('byteCount').textContent = new Blob([text]).size;
             document.getElementById('lineCount').textContent = text.split('\n').length;
             
-            // 段落数（以空行分隔）
+            // 娈佃惤鏁帮紙浠ョ┖琛屽垎闅旓級
             const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
             document.getElementById('paragraphCount').textContent = paragraphs.length;
             
-            // 单词数（以空格分隔）
+            // 鍗曡瘝鏁帮紙浠ョ┖鏍煎垎闅旓級
             const words = text.trim().split(/\s+/).filter(w => w.length > 0);
             document.getElementById('wordCount').textContent = words.length;
         }
 
-        // 大小写转换
+        // 澶у皬鍐欒浆鎹?
         function convertCase(type) {
             const textArea = document.getElementById('inputText');
             let text = textArea.value;
@@ -713,10 +713,10 @@
             
             textArea.value = text;
             updateStats();
-            showResult('大小写转换完成！');
+            showResult('澶у皬鍐欒浆鎹㈠畬鎴愶紒');
         }
 
-        // 文本格式化
+        // 鏂囨湰鏍煎紡鍖?
         function formatText(type) {
             const textArea = document.getElementById('inputText');
             let text = textArea.value;
@@ -756,10 +756,10 @@
             
             textArea.value = text;
             updateStats();
-            showResult('文本格式化完成！');
+            showResult('鏂囨湰鏍煎紡鍖栧畬鎴愶紒');
         }
 
-        // 文本处理
+        // 鏂囨湰澶勭悊
         function processText(type) {
             const textArea = document.getElementById('inputText');
             const text = textArea.value;
@@ -775,23 +775,23 @@
                         .slice(0, 20)
                         .map(([char, count]) => `${char}: ${count}`)
                         .join('\n');
-                    showResult('字符频率统计：\n' + result);
+                    showResult('瀛楃棰戠巼缁熻锛歕n' + result);
                     break;
                 case 'extractNumbers':
                     const numbers = text.match(/\d+/g);
                     if (numbers) {
                         textArea.value = numbers.join('\n');
                         updateStats();
-                        showResult('数字提取完成！');
+                        showResult('鏁板瓧鎻愬彇瀹屾垚锛?);
                     } else {
-                        showResult('未找到数字');
+                        showResult('鏈壘鍒版暟瀛?);
                     }
                     break;
                 case 'extractWords':
                     const words = text.toLowerCase().match(/\b\w+\b/g) || [];
                     textArea.value = [...new Set(words)].join('\n');
                     updateStats();
-                    showResult('单词提取完成！');
+                    showResult('鍗曡瘝鎻愬彇瀹屾垚锛?);
                     break;
                 case 'addLineNumbers':
                     const lines = text.split('\n');
@@ -800,27 +800,27 @@
                     );
                     textArea.value = numberedLines.join('\n');
                     updateStats();
-                    showResult('行号添加完成！');
+                    showResult('琛屽彿娣诲姞瀹屾垚锛?);
                     break;
                 case 'wrapLines':
                     textArea.value = text.split('\n').join(' ');
                     updateStats();
-                    showResult('换行处理完成！');
+                    showResult('鎹㈣澶勭悊瀹屾垚锛?);
                     break;
             }
         }
 
-        // 保存到文件
+        // 淇濆瓨鍒版枃浠?
         function saveToFile() {
             const content = document.getElementById('inputText').value;
             let filename = document.getElementById('fileName').value.trim();
             
             if (!content) {
-                alert('请输入要保存的文本内容');
+                alert('璇疯緭鍏ヨ淇濆瓨鐨勬枃鏈唴瀹?);
                 return;
             }
             
-            // 如果文件名为空，使用当前时间
+            // 濡傛灉鏂囦欢鍚嶄负绌猴紝浣跨敤褰撳墠鏃堕棿
             if (!filename) {
                 const now = new Date();
                 const timestamp = now.getFullYear() + '-' + 
@@ -832,7 +832,7 @@
                 filename = `text_${timestamp}.txt`;
             }
             
-            // 确保文件有扩展名
+            // 纭繚鏂囦欢鏈夋墿灞曞悕
             if (!filename.includes('.')) {
                 filename += '.txt';
             }
@@ -845,36 +845,36 @@
             a.click();
             URL.revokeObjectURL(url);
             
-            showResult(`文件 "${filename}" 下载成功！`);
+            showResult(`鏂囦欢 "${filename}" 涓嬭浇鎴愬姛锛乣);
         }
 
-        // 复制到剪贴板
+        // 澶嶅埗鍒板壀璐存澘
         function copyToClipboard() {
             const content = document.getElementById('inputText').value;
             
             if (!content) {
-                showResult('没有内容可复制');
+                showResult('娌℃湁鍐呭鍙鍒?);
                 return;
             }
             
             navigator.clipboard.writeText(content).then(() => {
-                showResult('内容已复制到剪贴板！');
+                showResult('鍐呭宸插鍒跺埌鍓创鏉匡紒');
             }).catch(() => {
-                showResult('复制失败，请手动复制');
+                showResult('澶嶅埗澶辫触锛岃鎵嬪姩澶嶅埗');
             });
         }
 
-        // 清空所有
+        // 娓呯┖鎵€鏈?
         function clearAll() {
-            if (confirm('确定要清空所有内容吗？')) {
+            if (confirm('纭畾瑕佹竻绌烘墍鏈夊唴瀹瑰悧锛?)) {
                 document.getElementById('fileName').value = '';
                 document.getElementById('inputText').value = '';
                 updateStats();
-                showResult('已清空所有内容');
+                showResult('宸叉竻绌烘墍鏈夊唴瀹?);
             }
         }
 
-        // 转义处理
+        // 杞箟澶勭悊
         function escapeText(type) {
             const textArea = document.getElementById('inputText');
             let text = textArea.value;
@@ -907,10 +907,10 @@
 
             textArea.value = text;
             updateStats();
-            showResult(`${type.toUpperCase()}转义完成！`);
+            showResult(`${type.toUpperCase()}杞箟瀹屾垚锛乣);
         }
 
-        // 去转义处理
+        // 鍘昏浆涔夊鐞?
         function unescapeText(type) {
             const textArea = document.getElementById('inputText');
             let text = textArea.value;
@@ -929,17 +929,17 @@
                     try {
                         text = decodeURIComponent(text);
                     } catch (e) {
-                        showResult('URL解码失败，请检查格式');
+                        showResult('URL瑙ｇ爜澶辫触锛岃妫€鏌ユ牸寮?);
                         return;
                     }
                     break;
                 case 'json':
                     try {
-                        // 先将JSON字符串转义，然后解析再重新获取
+                        // 鍏堝皢JSON瀛楃涓茶浆涔夛紝鐒跺悗瑙ｆ瀽鍐嶉噸鏂拌幏鍙?
                         const parsed = JSON.parse('"' + text + '"');
                         text = parsed;
                     } catch (e) {
-                        // 如果JSON解析失败，使用基本的去转义
+                        // 濡傛灉JSON瑙ｆ瀽澶辫触锛屼娇鐢ㄥ熀鏈殑鍘昏浆涔?
                         text = text.replace(/\\n/g, '\n')
                                   .replace(/\\r/g, '\r')
                                   .replace(/\\t/g, '\t')
@@ -948,7 +948,7 @@
                     }
                     break;
                 case 'common':
-                    // 常见转义字符还原
+                    // 甯歌杞箟瀛楃杩樺師
                     text = text.replace(/\\n/g, '\n')
                               .replace(/\\r/g, '\r')
                               .replace(/\\t/g, '\t')
@@ -966,16 +966,16 @@
 
             textArea.value = text;
             updateStats();
-            showResult(`${type.toUpperCase()}去转义完成！`);
+            showResult(`${type.toUpperCase()}鍘昏浆涔夊畬鎴愶紒`);
         }
 
-        // 显示结果
+        // 鏄剧ず缁撴灉
         function showResult(message) {
             const resultBox = document.getElementById('actionResult');
             resultBox.textContent = message;
             resultBox.classList.add('show');
 
-            // 3秒后自动隐藏结果
+            // 3绉掑悗鑷姩闅愯棌缁撴灉
             setTimeout(() => {
                 resultBox.classList.remove('show');
             }, 3000);
