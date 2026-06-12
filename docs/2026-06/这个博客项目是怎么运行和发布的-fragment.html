@@ -346,235 +346,224 @@
   <div class="main-content">
     <article class="post">
       <header class="post-header">
-        <h1 class="post-title">字符串转换工具sttr</h1>
+        <h1 class="post-title">这个博客项目是怎么运行和发布的</h1>
         <div class="post-meta">
           <div class="post-date">2026/6/12</div>
-          <div class="post-category">2025-08</div>
+          <div class="post-category">2026-06</div>
         </div>
       </header>
       <div class="warning">
         ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
       </div>
-      <div class="post-content" id="post-content"><h2 id="1-摘要（executive-summary）">1. 摘要（Executive Summary）</h2>
-<p>本报告对 <code>abhimanyu003/sttr</code> 这一命令行工具进行了深度分析，该工具旨在整合开发者日常工作中高频的字符串编解码、哈希及转换操作。我们的核心发现是，<code>sttr</code> <strong>成功地将一个 fragmented (碎片化) 且 often insecure (通常不安全) 的工作流整合到一个单一、跨平台、离线的二进制文件中</strong>。它不仅是传统 Unix 工具（如 <code>base64</code>, <code>md5sum</code>）的现代化聚合，更是对充斥着安全隐患的在线转换网站的直接替代。本报告断言，<code>sttr</code> 不仅仅是一个便利工具，它代表了向更安全、更高效、以 CLI 为中心的开发者工作流的战略转移，对于注重安全和效率的现代技术团队具有显著的采纳价值。</p>
-<h2 id="2-引言--背景介绍">2. 引言 / 背景介绍</h2>
-<p>在数字化工作流中，数据转换是无处不在的基础操作。开发者、DevOps 工程师和安全分析师每天都需要执行诸如 Base64 编码（用于 API 和 Kubernetes Secrets）、计算文件哈希（用于完整性校验）、URL 编码（用于 Web 请求）或大小写转换等任务。</p>
-<p>然而，执行这些任务的生态系统长期以来处于一种低效且割裂的状态：</p>
-<ul>
-<li><strong>传统 CLI 工具</strong>：在 Linux/macOS 上，存在 <code>base64</code>, <code>sha256sum</code>, <code>tr</code> 等原生工具，但它们命令分散、参数各异，且在 Windows 上通常需要额外安装（如 Git Bash 或 WSL）。</li>
-<li><strong>在线转换网站</strong>：虽然方便，但它们构成了巨大的<strong>安全风险</strong>。将敏感数据（如 API 密钥、密码、个人身份信息）粘贴到不受信任的第三方网站，无异于将数据拱手相让，这在企业环境中是绝对不可接受的。</li>
-<li><strong>自定义脚本</strong>：开发者常常编写一次性的 Python 或 Node.js 脚本来完成转换，但这会产生代码维护成本并降低即时性。</li>
-</ul>
-<p><code>sttr</code> (STring TRansform) 的出现，正是为了应对这一挑战。本报告旨在剖析 <code>sttr</code> 的技术架构、市场定位、核心优势及其在现代开发流程中的战略意义。</p>
-<h2 id="3-核心概念解析">3. 核心概念解析</h2>
-<p><code>sttr</code> 的核心定位是一个<strong>统一的、离线的字符串操作前端</strong>。它基于 Go 语言开发，这一技术选型是其成功的关键。</p>
-<ul>
-<li><strong>技术架构</strong>：<ul>
-<li><strong>Go 语言</strong>：使其能够被轻松交叉编译为适用于 Windows, macOS 和 Linux 的<strong>单一、无依赖的二进制文件</strong>。这意味着极高的便携性和极低的部署摩擦。</li>
-<li><strong>CLI 驱动</strong>：遵循标准的 <code>sttr [category] [action] [input]</code> 语法，学习曲线平缓，且极易集成到脚本和自动化流水线中。</li>
-</ul>
-</li>
-</ul>
-<h4 id="sttr-与传统工作流的对比"><strong><code>sttr</code> 与传统工作流的对比</strong></h4>
-<table>
-<thead>
-<tr>
-<th align="left">评估维度</th>
-<th align="left">传统工作流</th>
-<th align="left"><code>sttr</code> 工作流</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left"><strong>工具集</strong></td>
-<td align="left">分散的、多样的命令 (<code>base64</code>, <code>md5sum</code>, etc.)</td>
-<td align="left"><strong>单一命令</strong> (<code>sttr</code>)</td>
-</tr>
-<tr>
-<td align="left"><strong>跨平台性</strong></td>
-<td align="left">差 (Windows 平台原生缺失)</td>
-<td align="left"><strong>优秀</strong> (单一二进制文件全平台通用)</td>
-</tr>
-<tr>
-<td align="left"><strong>安全性</strong></td>
-<td align="left">依赖在线工具时为<strong>极低</strong></td>
-<td align="left"><strong>极高</strong> (完全离线操作)</td>
-</tr>
-<tr>
-<td align="left"><strong>学习曲线</strong></td>
-<td align="left">中等 (需记忆多个不同工具的语法)</td>
-<td align="left"><strong>低</strong> (语法模式统一)</td>
-</tr>
-<tr>
-<td align="left"><strong>脚本集成</strong></td>
-<td align="left">复杂 (需处理不同工具的输出格式)</td>
-<td align="left"><strong>简单</strong> (标准化输入输出)</td>
-</tr>
-</tbody></table>
-<h2 id="4-现状与深度分析">4. 现状与深度分析</h2>
-<h4 id="市场技术趋势：cli-工具的复兴与整合"><strong>市场/技术趋势：CLI 工具的复兴与整合</strong></h4>
-<p>我们正处在一个“终端复兴”的时代。随着 <code>iTerm2</code>, <code>Windows Terminal</code> 等现代终端的普及，以及 <code>fzf</code>, <code>rg</code>, <code>bat</code> 等新一代 CLI 工具的涌现，开发者越来越倾向于在终端内完成更多工作。<code>sttr</code> 完美契合了这一<strong>整合化、体验优先</strong>的 CLI 工具设计哲学。</p>
-<h4 id="关键驱动因素"><strong>关键驱动因素</strong></h4>
-<ol>
-<li><strong>数据安全意识的提升</strong>：GDPR, CCPA 等法规的出台以及频繁的数据泄露事件，使得企业和个人对将数据粘贴到在线工具的行为变得极其敏感。<code>sttr</code> 的离线特性是其最强大的护城河。</li>
-<li><strong>DevSecOps 的兴起</strong>：在自动化 CI/CD 流水线中嵌入安全校验（如哈希计算）已成常态。<code>sttr</code> 的跨平台特性和脚本友好性使其成为此类场景的理想选择。</li>
-<li><strong>开发者体验 (DX) 的追求</strong>：减少上下文切换、统一工具集是提升开发者幸福感和生产力的关键。<code>sttr</code> 将原本需要打开浏览器或记忆多个命令的操作简化为一次终端调用，显著改善了 DX。</li>
-</ol>
-<h4 id="sttr-功能象限分析"><strong><code>sttr</code> 功能象限分析</strong></h4>
-<table>
-<thead>
-<tr>
-<th align="left">功能分类</th>
-<th align="left">核心操作示例</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left"><strong>编码/解码 (Encoding)</strong></td>
-<td align="left"><code>base64</code>, <code>hex</code>, <code>binary</code></td>
-</tr>
-<tr>
-<td align="left"><strong>哈希计算 (Hashing)</strong></td>
-<td align="left"><code>md5</code>, <code>sha1</code>, <code>sha256</code>, <code>sha512</code></td>
-</tr>
-<tr>
-<td align="left"><strong>Web 相关 (Web)</strong></td>
-<td align="left"><code>url</code>, <code>html</code></td>
-</tr>
-<tr>
-<td align="left"><strong>大小写转换 (Case)</strong></td>
-<td align="left"><code>upper</code>, <code>lower</code>, <code>title</code></td>
-</tr>
-<tr>
-<td align="left"><strong>字符串工具 (String)</strong></td>
-<td align="left"><code>reverse</code>, <code>count</code>, <code>trim</code></td>
-</tr>
-</tbody></table>
-<h4 id="工作流演进图"><strong>工作流演进图</strong></h4>
-<pre class="mermaid">graph TD
-    subgraph "传统工作流 (低效且有风险)"
-        A[需要计算SHA256哈希] --> B{环境是?};
-        B -->|Linux/macOS| C["打开终端, 输入 `echo -n &quot;data&quot; | sha256sum`"];
-        B -->|Windows| D["打开浏览器, 搜索 &quot;online sha256 generator&quot;"];
-        D --> E[<font color=red><b>将敏感数据粘贴到网站</b></font>];
-        E --> F[复制结果];
-    end
-
-    subgraph "sttr 现代化工作流 (高效且安全)"
-        G[需要计算SHA256哈希] --> H["打开终端 (任何平台)"];
-        H --> I["输入 `sttr hash sha256 &quot;data&quot;`"];
-        I --> J["获得结果 (数据从未离开本地)"];
-    end</pre>
-<h2 id="5-案例研究--数据支撑">5. 案例研究 / 数据支撑</h2>
-<h4 id="案例一：devops-工程师在-cicd-中的应用"><strong>案例一：DevOps 工程师在 CI/CD 中的应用</strong></h4>
-<p>在 <code>Jenkinsfile</code> 或 <code>.gitlab-ci.yml</code> 中，经常需要对构建产物进行哈希以生成校验和。</p>
-<pre><code class="language-bash"># 旧方法 (依赖特定环境)
-# checksum=$(sha256sum my-app.jar | awk &#39;{print $1}&#39;)
-
-# sttr 方法 (跨平台且简洁)
-checksum=$(sttr hash sha256 --file my-app.jar)
+      <div class="post-content" id="post-content"><p>这篇文章用当前项目作为例子，解释从“写一篇 Markdown”到“在浏览器里看到博客”的完整流程。</p>
+<h2 id="我应该访问哪个-url">我应该访问哪个 URL</h2>
+<p>现在有两个常用访问地址。</p>
+<p>本地预览地址：</p>
+<pre><code class="language-text">http://localhost:3003
 </code></pre>
-<p>使用 <code>sttr</code> 后，CI/CD 脚本不再需要担心运行代理是 Windows 还是 Linux，<strong>降低了脚本的复杂性和维护成本</strong>。</p>
-<h4 id="案例二：安全分析师的应急响应"><strong>案例二：安全分析师的应急响应</strong></h4>
-<p>分析师在日志中发现一段可疑的 Base64 编码字符串。</p>
-<blockquote>
-<p>&quot; eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c &quot;</p>
-</blockquote>
-<ul>
-<li><strong>旧方法</strong>：复制该字符串，打开 CyberChef 或在线解码网站，粘贴，解码。这个过程存在数据泄露风险，并中断了在终端中的分析流程。</li>
-<li><strong>sttr 方法</strong>：直接在终端中高亮并管道处理。<pre><code class="language-bash">echo &quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c&quot; | sttr base64 decode
+<p>线上 GitHub Pages 地址：</p>
+<pre><code class="language-text">https://cxy1984.github.io/ai-blog
 </code></pre>
-分析师<strong>无需离开终端即可完成解码</strong>，保持了工作流的连贯性，并确保了数据的绝对安全。</li>
-</ul>
-<h4 id="工具对比矩阵"><strong>工具对比矩阵</strong></h4>
-<table>
-<thead>
-<tr>
-<th align="left">工具</th>
-<th align="left">安全性</th>
-<th align="left">易用性</th>
-<th align="left">跨平台性</th>
-<th align="left">脚本友好性</th>
-</tr>
-</thead>
-<tbody><tr>
-<td align="left"><strong>sttr</strong></td>
-<td align="left"><strong>极高</strong></td>
-<td align="left"><strong>高</strong></td>
-<td align="left"><strong>极高</strong></td>
-<td align="left"><strong>极高</strong></td>
-</tr>
-<tr>
-<td align="left"><strong>在线工具</strong></td>
-<td align="left">极低</td>
-<td align="left">高</td>
-<td align="left">极高</td>
-<td align="left">差</td>
-</tr>
-<tr>
-<td align="left"><strong>原生CLI工具</strong></td>
-<td align="left">极高</td>
-<td align="left">中</td>
-<td align="left">差</td>
-<td align="left">高</td>
-</tr>
-<tr>
-<td align="left"><strong>CyberChef (GUI)</strong></td>
-<td align="left">极高</td>
-<td align="left">中</td>
-<td align="left">极高</td>
-<td align="left">极差</td>
-</tr>
-</tbody></table>
-<h2 id="6-未来展望与预测">6. 未来展望与预测</h2>
-<p>我们预测 <code>sttr</code> 这类整合型 CLI 工具将在未来 3-5 年内获得更广泛的采纳。</p>
-<ol>
-<li><strong>功能扩展</strong>：可能会加入更多编码格式（如 Base58）、更多哈希算法（如 Blake3），甚至简单的对称加密/解密功能（使用用户提供的密钥）。</li>
-<li><strong>插件化架构</strong>：为了避免功能臃肿，<code>sttr</code> 的未来版本可能会采用插件化架构，允许用户按需添加或开发自己的转换模块。</li>
-<li><strong>集成到更大的工具链</strong>：有望被集成到 VS Code 插件、安全工具包（如 a-shell for iOS）或作为其他 CLI 工具的依赖库。</li>
-</ol>
-<h4 id="技术采纳生命周期预测"><strong>技术采纳生命周期预测</strong></h4>
-<pre class="mermaid">gantt
-    title sttr 技术采纳生命周期
-    dateFormat  YYYY-MM-DD
-    axisFormat %Y
-    
-    section 创新者 & 早期采用者
-    初步开发与发布 :done, 2021-01-01, 2022-12-31
-    在 GitHub/Hacker News 获得关注 :active, 2023-01-01, 24m
-    
-    section 早期大众
-    被技术博主和教程收录 :2024-06-01, 18m
-    被企业作为标准工具推荐 :2025-01-01, 24m
-    
-    section 晚期大众 & 落后者
-    成为各类"Awesome CLI"列表的标配 :2026-06-01, 36m</pre>
-<h2 id="7-结论与建议">7. 结论与建议</h2>
-<p><code>sttr</code> 并非一项颠覆性的技术发明，但它是一项<strong>卓越的工程整合与产品思维的胜利</strong>。它精准地识别了开发者工作流中的一个长期痛点，并提供了一个优雅、安全且高效的解决方案。其价值可以用一个简单的数学公式来概括：
-<code>$V_{sttr} = \sum_{i=1}^{n} (T_{switch} + T_{search})_i + R_{security}$</code>
-其中 <code>$V_{sttr}$</code> 是 <code>sttr</code> 创造的价值，$T_{switch}$ 是上下文切换时间，$T_{search}$ 是查找正确命令或网站的时间，$R_{security}$ 是通过离线操作避免的巨大安全风险。</p>
+<p>本地地址看的是你电脑上的文件，适合写文章时预览。</p>
+<p>线上地址看的是 GitHub 仓库发布后的文件，适合分享给别人。</p>
+<h2 id="本地版本和线上版本有什么区别">本地版本和线上版本有什么区别</h2>
+<p>可以把它们理解成两份不同位置的网站文件。</p>
+<p>本地版本：</p>
+<pre><code class="language-text">D:\code\ai-note
+</code></pre>
+<p>线上版本：</p>
+<pre><code class="language-text">GitHub 仓库 cxy1984/ai-blog 的 main 分支
+</code></pre>
+<p>你在本地写完文章以后，只有执行了：</p>
+<pre><code class="language-powershell">git push
+</code></pre>
+<p>GitHub Pages 才能拿到最新文件并更新线上网站。</p>
+<p>所以流程是：</p>
+<pre><code class="language-text">本地写文章 -&gt; 本地构建 -&gt; 本地预览 -&gt; git push -&gt; GitHub Pages 发布
+</code></pre>
+<h2 id="这个项目最核心的目录">这个项目最核心的目录</h2>
+<p>真正需要长期关注的是这几个目录和文件：</p>
+<pre><code class="language-text">markdown/       # 文章源文件，自己写的 Markdown 都放这里
+docs/           # 构建生成的文章 HTML
+pages/          # 构建生成的分页列表
+overview.html   # 构建生成的文章概览和搜索数据
+sitemap.xml     # 构建生成的站点地图
+index.html      # 网站首页入口
+template*.html  # 页面模板
+src/            # 构建脚本
+</code></pre>
+<p>其中最重要的是：</p>
+<pre><code class="language-text">markdown/
+</code></pre>
+<p>你写博客时，优先只改这里。</p>
+<h2 id="markdown-是源文件">Markdown 是源文件</h2>
+<p>比如新建一篇文章：</p>
+<pre><code class="language-text">markdown/2026-06/我的第一篇博客.md
+</code></pre>
+<p>内容类似：</p>
+<pre><code class="language-markdown"># 我的第一篇博客
+
+这里是正文。
+</code></pre>
+<p>第一行 <code># 标题</code> 会被构建脚本识别为文章标题。</p>
+<h2 id="docs-是生成文件">docs 是生成文件</h2>
+<p>执行：</p>
+<pre><code class="language-powershell">npm run build
+</code></pre>
+<p>项目会把 Markdown 转成 HTML。</p>
+<p>例如：</p>
+<pre><code class="language-text">markdown/2026-06/我的第一篇博客.md
+</code></pre>
+<p>会生成：</p>
+<pre><code class="language-text">docs/2026-06/我的第一篇博客.html
+docs/2026-06/我的第一篇博客-fragment.html
+</code></pre>
+<p>其中：</p>
 <ul>
-<li><p><strong>对开发者</strong>：</p>
-<ul>
-<li><strong>立即采纳</strong>。将 <code>sttr</code> 安装到您的设备上，并养成使用它的习惯。这将直接转化为生产力提升和安全保障。</li>
+<li><code>.html</code> 是完整文章页，适合搜索引擎和直接访问。</li>
+<li><code>-fragment.html</code> 是片段页，给首页的单页加载逻辑使用。</li>
 </ul>
-</li>
-<li><p><strong>对技术负责人与 CISO</strong>：</p>
-<ul>
-<li><strong>在团队内推广</strong>。应将 <code>sttr</code> 作为标准开发工具的一部分，并明确<strong>禁止</strong>在工作中使用在线字符串转换工具处理敏感数据。</li>
-</ul>
-</li>
-<li><p>**对项目作者 (abhimanyu003)**：</p>
-<ul>
-<li><strong>加强文档和社区建设</strong>。提供更多实际用例和集成示例，可以极大地加速其采纳过程。</li>
-<li><strong>保持克制</strong>。避免功能过度膨胀，保持其作为字符串转换工具的核心定位是其成功的关键。</li>
-</ul>
-</li>
-</ul>
-<h2 id="8-参考资料">8. 参考资料</h2>
-<ul>
-<li><strong>sttr 官方 GitHub 仓库</strong>: <a href="https://github.com/abhimanyu003/sttr">https://github.com/abhimanyu003/sttr</a></li>
-<li><strong>OWASP - Data Security Top 10</strong>: (相关概念) <a href="https://owasp.org/">https://owasp.org/</a></li>
-<li><strong>The Go Programming Language</strong>: <a href="https://golang.org/">https://golang.org/</a></li>
-</ul>
+<h2 id="首页为什么会自动出现新文章">首页为什么会自动出现新文章</h2>
+<p>首页列表不是手写的。</p>
+<p>执行：</p>
+<pre><code class="language-powershell">npm run build
+</code></pre>
+<p>会运行：</p>
+<pre><code class="language-text">src/generate_index_with_dates.js
+</code></pre>
+<p>这个脚本会扫描：</p>
+<pre><code class="language-text">markdown/
+</code></pre>
+<p>然后按文章修改时间排序，生成：</p>
+<pre><code class="language-text">pages/index.html
+pages/index2.html
+pages/index3.html
+...
+</code></pre>
+<p><code>index.html</code> 首页再加载这些分页列表，所以你写完 Markdown 并构建后，首页会自动出现新文章。</p>
+<h2 id="overviewhtml-是什么">overview.html 是什么</h2>
+<p><code>overview.html</code> 是文章概览页，也可以理解成文章索引页。</p>
+<p>它由：</p>
+<pre><code class="language-text">src/generate_overview.js
+</code></pre>
+<p>自动生成。</p>
+<p>它会收集所有文章标题、链接、日期，然后写入页面里，方便搜索和浏览。</p>
+<h2 id="sitemapxml-是什么">sitemap.xml 是什么</h2>
+<p><code>sitemap.xml</code> 是给搜索引擎看的站点地图。</p>
+<p>它由：</p>
+<pre><code class="language-text">src/generate_sitemap.js
+</code></pre>
+<p>自动生成。</p>
+<p>里面会列出站点里有哪些页面，例如：</p>
+<pre><code class="language-text">https://cxy1984.github.io/ai-blog/index.html
+https://cxy1984.github.io/ai-blog/docs/2026-06/我的第一篇博客.html
+</code></pre>
+<h2 id="npm-run-build-到底做了什么">npm run build 到底做了什么</h2>
+<p><code>package.json</code> 里定义了：</p>
+<pre><code class="language-json">&quot;build&quot;: &quot;node src/convert_md_to_html_pandoc.js &amp;&amp; node src/generate_index_with_dates.js &amp;&amp; node src/generate_sitemap.js &amp;&amp; node src/generate_overview.js&quot;
+</code></pre>
+<p>也就是说，执行：</p>
+<pre><code class="language-powershell">npm run build
+</code></pre>
+<p>等于依次执行 4 步：</p>
+<pre><code class="language-text">1. Markdown 转 HTML
+2. 生成首页分页列表
+3. 生成 sitemap.xml
+4. 生成 overview.html
+</code></pre>
+<p>这就是为什么你只写 Markdown，但网站的很多 HTML 文件都会变化。</p>
+<h2 id="npm-run-dev-是什么">npm run dev 是什么</h2>
+<p><code>npm run dev</code> 是本地开发模式。</p>
+<p>它会做三件事：</p>
+<pre><code class="language-text">1. 清理并重新构建 docs
+2. 启动文件监听
+3. 启动本地 HTTP 服务
+</code></pre>
+<p>启动后访问：</p>
+<pre><code class="language-text">http://localhost:3003
+</code></pre>
+<p>如果它一直开着，你就可以边写边预览。</p>
+<h2 id="github-pages-怎么发布">GitHub Pages 怎么发布</h2>
+<p>GitHub Pages 的工作方式很简单：</p>
+<pre><code class="language-text">读取 GitHub 仓库 main 分支里的静态文件，然后当成网站发布
+</code></pre>
+<p>你的仓库地址：</p>
+<pre><code class="language-text">https://github.com/cxy1984/ai-blog
+</code></pre>
+<p>GitHub Pages 地址：</p>
+<pre><code class="language-text">https://cxy1984.github.io/ai-blog
+</code></pre>
+<p>所以你本地改完以后，要执行：</p>
+<pre><code class="language-powershell">git add .
+git commit -m &quot;add blog post&quot;
+git push
+</code></pre>
+<p>推送成功以后，GitHub Pages 才会更新线上网站。</p>
+<h2 id="一篇文章的完整生命周期">一篇文章的完整生命周期</h2>
+<p>以 <code>我的第一篇博客.md</code> 为例：</p>
+<pre><code class="language-text">1. 写源文件
+   markdown/2026-06/我的第一篇博客.md
+
+2. 构建
+   npm run build
+
+3. 生成文章页
+   docs/2026-06/我的第一篇博客.html
+   docs/2026-06/我的第一篇博客-fragment.html
+
+4. 更新索引
+   pages/index.html
+   overview.html
+   sitemap.xml
+
+5. 本地预览
+   http://localhost:3003
+
+6. 提交推送
+   git add .
+   git commit -m &quot;add blog post&quot;
+   git push
+
+7. 线上访问
+   https://cxy1984.github.io/ai-blog
+</code></pre>
+<h2 id="为什么要删除原作者资源">为什么要删除原作者资源</h2>
+<p>这个项目最开始是从 GitHub copy 过来的，里面带了很多原作者的文章。</p>
+<p>如果不删除，首页会混着显示别人的内容。</p>
+<p>清理原则是：</p>
+<pre><code class="language-text">保留项目框架和构建脚本
+删除原作者文章源文件
+删除原作者生成文件
+保留自己的 Markdown
+重新构建生成干净的网站
+</code></pre>
+<p>以后这个仓库就只显示自己的博客。</p>
+<h2 id="以后写博客的固定流程">以后写博客的固定流程</h2>
+<p>日常只需要记住这套命令：</p>
+<pre><code class="language-powershell">cd D:\code\ai-note
+</code></pre>
+<p>新建或编辑 Markdown：</p>
+<pre><code class="language-text">markdown/2026-06/文章标题.md
+</code></pre>
+<p>构建：</p>
+<pre><code class="language-powershell">npm run build
+</code></pre>
+<p>本地预览：</p>
+<pre><code class="language-text">http://localhost:3003
+</code></pre>
+<p>发布：</p>
+<pre><code class="language-powershell">git add .
+git commit -m &quot;add blog post&quot;
+git push
+</code></pre>
+<h2 id="总结">总结</h2>
+<p>这个项目不是动态博客系统，没有数据库，也没有后台管理页面。</p>
+<p>它的本质是：</p>
+<pre><code class="language-text">Markdown 源文件 + Node.js 构建脚本 + 静态 HTML + GitHub Pages
+</code></pre>
+<p>你负责写 Markdown。</p>
+<p>脚本负责生成 HTML。</p>
+<p>GitHub Pages 负责把 HTML 发布成网站。</p>
 </div>
     </article>
   </div>
