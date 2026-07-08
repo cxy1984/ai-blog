@@ -346,284 +346,346 @@
   <div class="main-content">
     <article class="post">
       <header class="post-header">
-        <h1 class="post-title">理解代理模式：SwitchyOmega、mihomo、浏览器与 Git 代理配置</h1>
+        <h1 class="post-title">MySQL 主从复制 1032 错误排查与修复全流程总结</h1>
         <div class="post-meta">
-          <div class="post-date">2026/6/12</div>
-          <div class="post-category">2026-06</div>
+          <div class="post-date">2026/7/8</div>
+          <div class="post-category">2026-07</div>
         </div>
       </header>
       <div class="warning">
         ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
       </div>
-      <div class="post-content" id="post-content"><p>这次 GitHub 推送失败的问题，本质不是 GitHub 仓库权限，也不是博客项目本身的问题，而是不同软件使用代理的方式不一样。</p>
-<p>我的实际环境是：</p>
-<pre><code class="language-text">浏览器使用 SwitchyOmega 插件做分流
-mihomo 在本机提供 mixed port：127.0.0.1:7890
-Git 原来没有单独配置代理
-</code></pre>
-<p>所以会出现一个看起来很奇怪的现象：</p>
-<pre><code class="language-text">浏览器能打开 GitHub
-但是 git pull / git push 失败
-</code></pre>
-<p>原因是：浏览器和 Git 不是同一套代理配置。</p>
-<h2 id="一句话结论">一句话结论</h2>
-<p>当前链路可以分成两层：</p>
-<pre><code class="language-text">第一层：SwitchyOmega 决定浏览器请求要不要走代理
-第二层：mihomo 接收代理请求后，再按自己的规则和节点转发
-</code></pre>
-<p>浏览器访问 GitHub 时，大概是：</p>
-<pre><code class="language-text">浏览器 -&gt; SwitchyOmega 规则 -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
-</code></pre>
-<p>Git 原来访问 GitHub 时，大概是：</p>
-<pre><code class="language-text">Git -&gt; github.com:443
-</code></pre>
-<p>Git 没有经过浏览器，也不会使用 SwitchyOmega 插件，所以 Git 还是直连 GitHub。当前网络直连 GitHub 不稳定，于是出现连接超时、连接重置。</p>
-<p>后来给 Git 单独配置代理后，Git 的链路变成：</p>
-<pre><code class="language-text">Git -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
-</code></pre>
-<p>这就是为什么后面 <code>git pull</code> 和 <code>git push</code> 能成功。</p>
-<h2 id="mihomo-做了什么">mihomo 做了什么</h2>
-<p>mihomo 的核心作用是：在本机启动一个代理入口，并根据配置把请求转发到不同节点。</p>
-<p>当前使用的是 mixed port：</p>
-<pre><code class="language-text">127.0.0.1:7890
-</code></pre>
-<p>这个端口可以理解成一个本地代理入口。</p>
-<p>任何程序只要把网络请求交给：</p>
-<pre><code class="language-text">127.0.0.1:7890
-</code></pre>
-<p>mihomo 就能接管这个请求。</p>
-<p>接管以后，mihomo 会继续判断：</p>
-<ul>
-<li>这个域名是否直连</li>
-<li>这个域名是否走代理</li>
-<li>走哪个节点</li>
-<li>是否命中规则集</li>
-<li>是否使用当前选中的策略组</li>
-</ul>
-<p>也就是说，mihomo 不等于自动代理所有软件。它只是提供了一个本地入口，软件必须主动使用这个入口，或者通过系统代理/TUN 等方式被接管。</p>
-<h2 id="switchyomega-做了什么">SwitchyOmega 做了什么</h2>
-<p>SwitchyOmega 是浏览器插件。它只影响浏览器里的请求。</p>
-<p>它通常会配置多个情景模式，例如：</p>
-<pre><code class="language-text">直连
-代理
-自动切换
-</code></pre>
-<p>如果你配置了“特定网站走代理”，那通常是 SwitchyOmega 在浏览器层做了规则判断。</p>
-<p>例如：</p>
-<pre><code class="language-text">github.com      -&gt; 走代理
-google.com      -&gt; 走代理
-baidu.com       -&gt; 直连
-localhost       -&gt; 直连
-</code></pre>
-<p>当浏览器访问 <code>github.com</code> 时，SwitchyOmega 判断这个域名应该走代理，于是把请求发给：</p>
-<pre><code class="language-text">127.0.0.1:7890
-</code></pre>
-<p>然后才轮到 mihomo 处理这个请求。</p>
-<p>所以浏览器实际链路是：</p>
-<pre><code class="language-text">浏览器
-  -&gt; SwitchyOmega 判断规则
-  -&gt; 命中代理规则
-  -&gt; 发送到 127.0.0.1:7890
-  -&gt; mihomo 接管
-  -&gt; mihomo 选择节点
-  -&gt; GitHub
-</code></pre>
-<h2 id="为什么说有两层规则">为什么说有两层规则</h2>
-<p>你的环境里至少有两层规则。</p>
-<p>第一层是浏览器插件规则：</p>
-<pre><code class="language-text">SwitchyOmega：决定浏览器请求是否交给代理端口
-</code></pre>
-<p>第二层是 mihomo 规则：</p>
-<pre><code class="language-text">mihomo：决定收到的代理请求最终怎么转发
-</code></pre>
-<p>举个例子。</p>
-<p>浏览器访问：</p>
-<pre><code class="language-text">https://github.com
-</code></pre>
-<p>SwitchyOmega 先判断：</p>
-<pre><code class="language-text">github.com 是否需要走代理？
-</code></pre>
-<p>如果答案是“是”，浏览器请求会被发到：</p>
-<pre><code class="language-text">127.0.0.1:7890
-</code></pre>
-<p>mihomo 收到请求后再判断：</p>
-<pre><code class="language-text">github.com 应该走哪个节点？
-是否命中代理规则？
-是否直连？
-</code></pre>
-<p>所以最终路径是两层决策叠加的结果。</p>
-<h2 id="浏览器为什么正常">浏览器为什么正常</h2>
-<p>浏览器正常，是因为浏览器里装了 SwitchyOmega。</p>
-<p>SwitchyOmega 把需要代理的网站转发到了 mihomo 的 mixed port：</p>
-<pre><code class="language-text">127.0.0.1:7890
-</code></pre>
-<p>所以浏览器访问 GitHub 时，没有直接连 GitHub，而是通过代理链路访问。</p>
-<p>这解释了为什么你能在浏览器里打开 GitHub 页面。</p>
-<h2 id="git-为什么失败">Git 为什么失败</h2>
-<p>Git 是命令行程序，不运行在浏览器里。</p>
-<p>它不会读取 SwitchyOmega 插件规则，也不会知道浏览器里哪些网站配置了代理。</p>
-<p>所以之前 Git 执行：</p>
-<pre><code class="language-powershell">git pull
-git push
-</code></pre>
-<p>实际链路是：</p>
-<pre><code class="language-text">Git -&gt; github.com:443
-</code></pre>
-<p>而不是：</p>
-<pre><code class="language-text">Git -&gt; SwitchyOmega -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
-</code></pre>
-<p>这里要特别注意：</p>
-<pre><code class="language-text">SwitchyOmega 只管浏览器，不管 Git。
-</code></pre>
-<p>这就是浏览器能访问 GitHub，但 Git 报错的根本原因。</p>
-<h2 id="之前的-git-报错是什么意思">之前的 Git 报错是什么意思</h2>
-<p>之前看到过这些错误：</p>
-<pre><code class="language-text">Failed to connect to github.com port 443
-Recv failure: Connection was reset
-OpenSSL SSL_connect: SSL_ERROR_SYSCALL
-</code></pre>
-<p>这些错误都说明 Git 和 GitHub 之间的网络链路不稳定。</p>
-<p>在没有配置 Git 代理时，Git 尝试直连 GitHub，容易失败。</p>
-<p>配置 Git 代理后，<code>git pull --rebase origin main</code> 成功，说明 Git 已经能通过 mihomo 访问 GitHub。</p>
-<p><code>git push</code> 第一次出现 <code>SSL_ERROR_SYSCALL</code>，重试后成功，说明代理链路可用，但节点或网络偶尔会抖动。</p>
-<h2 id="这次实际修改了什么">这次实际修改了什么</h2>
-<p>这次没有修改 SwitchyOmega。</p>
-<p>这次也没有修改 mihomo 的节点、订阅、规则、策略组。</p>
-<p>实际修改的是 Git 的全局配置：</p>
-<pre><code class="language-powershell">git config --global http.proxy http://127.0.0.1:7890
-git config --global https.proxy http://127.0.0.1:7890
-</code></pre>
-<p>这两条命令的意思是：</p>
-<pre><code class="language-text">以后当前 Windows 用户执行 Git 的 HTTP/HTTPS 请求时，默认走 127.0.0.1:7890
-</code></pre>
-<p>修改后，Git 访问 GitHub 的链路变成：</p>
-<pre><code class="language-text">Git -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
-</code></pre>
-<h2 id="修改范围是什么">修改范围是什么</h2>
-<p>这次修改的范围是：</p>
-<pre><code class="language-text">当前 Windows 用户的 Git 全局配置
-</code></pre>
-<p>一般写入这个文件：</p>
-<pre><code class="language-text">C:\Users\&lt;你的用户名&gt;\.gitconfig
-</code></pre>
-<p>影响范围：</p>
-<ul>
-<li>当前用户下所有 Git 仓库</li>
-<li>使用 HTTPS 地址的 Git 操作</li>
-<li><code>git clone https://...</code></li>
-<li><code>git pull</code></li>
-<li><code>git push</code></li>
-<li><code>git fetch</code></li>
-</ul>
-<p>不影响：</p>
-<ul>
-<li>SwitchyOmega 插件配置</li>
-<li>浏览器代理规则</li>
-<li>mihomo 节点配置</li>
-<li>mihomo 分流规则</li>
-<li>npm 代理配置</li>
-<li>SSH 地址的 Git 操作，例如 <code>git@github.com:xxx/xxx.git</code></li>
-</ul>
-<p>也就是说，这次只是让 Git 学会走 mihomo 的本地代理端口，没有改你原来别人帮你配置的浏览器插件规则。</p>
-<h2 id="三套配置的关系">三套配置的关系</h2>
-<p>可以这样理解：</p>
-<pre><code class="language-text">SwitchyOmega：只影响浏览器
-mihomo：提供本地代理入口和节点分流
-Git proxy：只影响 Git 命令
-</code></pre>
-<p>它们之间不是互相替代，而是搭配关系。</p>
-<p>浏览器链路：</p>
-<pre><code class="language-text">浏览器 -&gt; SwitchyOmega -&gt; mihomo -&gt; 目标网站
-</code></pre>
-<p>Git 链路：</p>
-<pre><code class="language-text">Git -&gt; Git proxy 配置 -&gt; mihomo -&gt; GitHub
-</code></pre>
-<p>如果没有 Git proxy 配置，Git 不会经过 SwitchyOmega。</p>
-<h2 id="怎么查看-git-当前代理">怎么查看 Git 当前代理</h2>
-<p>查看 Git 是否配置代理：</p>
-<pre><code class="language-powershell">git config --global --get http.proxy
-git config --global --get https.proxy
-</code></pre>
-<p>如果输出：</p>
-<pre><code class="language-text">http://127.0.0.1:7890
-http://127.0.0.1:7890
-</code></pre>
-<p>说明 Git 已经配置为走 mihomo mixed port。</p>
-<h2 id="怎么取消-git-代理">怎么取消 Git 代理</h2>
-<p>如果以后不想让 Git 走代理，可以执行：</p>
-<pre><code class="language-powershell">git config --global --unset http.proxy
-git config --global --unset https.proxy
-</code></pre>
-<p>取消后，Git 会回到默认网络行为。</p>
-<p>如果当前网络不能直连 GitHub，取消后 <code>git pull</code> 和 <code>git push</code> 可能又会失败。</p>
-<h2 id="怎么判断-mihomo-的-7890-是否开启">怎么判断 mihomo 的 7890 是否开启</h2>
-<p>可以执行：</p>
-<pre><code class="language-powershell">netstat -ano | findstr &quot;:7890&quot;
-</code></pre>
-<p>如果看到：</p>
-<pre><code class="language-text">127.0.0.1:7890 LISTENING
-</code></pre>
-<p>说明 mihomo 正在监听 mixed port。</p>
-<p>也可以执行：</p>
-<pre><code class="language-powershell">git ls-remote https://github.com/cxy1984/ai-blog.git
-</code></pre>
-<p>如果能返回远程分支信息，说明 Git 可以通过当前网络访问 GitHub。</p>
-<h2 id="常见现象对照">常见现象对照</h2>
+      <div class="post-content" id="post-content"><blockquote>
+<p>日期：2026-07-08
+环境：MySQL 5.7 | CentOS 7 | 主库 {{DB_HOST_IP}} → 从库 localhost</p>
+</blockquote>
+<hr>
+<h2 id="一、问题现象">一、问题现象</h2>
+<p>从库复制中断，<code>SHOW SLAVE STATUS</code> 显示：</p>
 <table>
 <thead>
 <tr>
-<th>现象</th>
-<th>可能原因</th>
+<th>字段</th>
+<th>值</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>浏览器能打开 GitHub，Git push 失败</td>
-<td>浏览器走了 SwitchyOmega，但 Git 没配代理</td>
+<td>Slave_IO_Running</td>
+<td>Yes</td>
 </tr>
 <tr>
-<td>浏览器打不开 GitHub，Git 可以 push</td>
-<td>Git 配了代理，但浏览器规则没命中</td>
+<td>Slave_SQL_Running</td>
+<td><strong>No</strong></td>
 </tr>
 <tr>
-<td>pull 成功，push 偶尔失败</td>
-<td>代理节点或网络临时抖动</td>
-</tr>
-<tr>
-<td>配了 Git 代理后所有仓库都走代理</td>
-<td>使用了 <code>--global</code>，影响当前用户所有 Git 仓库</td>
-</tr>
-<tr>
-<td>取消 Git 代理后又失败</td>
-<td>当前网络不能稳定直连 GitHub</td>
+<td>Last_Error</td>
+<td><code>Could not execute Update_rows event on table db_9buqi.local_goods_sku; Can&#39;t find record in &#39;local_goods_sku&#39;, Error_code: 1032; handler error HA_ERR_KEY_NOT_FOUND; the event&#39;s master log mysql-bin.000258, end_log_pos 2232952</code></td>
 </tr>
 </tbody></table>
-<h2 id="当前博客项目发布时的网络路径">当前博客项目发布时的网络路径</h2>
-<p>现在执行：</p>
-<pre><code class="language-powershell">git push
+<h3 id="错误含义">错误含义</h3>
+<p>主库 binlog 中有一条 <code>UPDATE</code> 语句要更新 <code>local_goods_sku</code> 表中的某行记录，但从库上<strong>找不到这行数据</strong>，导致 SQL 线程中断。</p>
+<hr>
+<h2 id="二、可能的原因">二、可能的原因</h2>
+<table>
+<thead>
+<tr>
+<th>原因</th>
+<th>说明</th>
+<th align="center">本次是否匹配</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>从库有人手动删除了数据</td>
+<td>从库未开启 <code>super_read_only</code>，可能被误操作</td>
+<td align="center">❌（排除）</td>
+</tr>
+<tr>
+<td>从库搭建时备份不完整</td>
+<td>备份落后于主库，部分行从未同步过来</td>
+<td align="center">✅ <strong>最可能</strong></td>
+</tr>
+<tr>
+<td>表没有主键</td>
+<td>ROW 格式下用全部列匹配，易导致 1032</td>
+<td align="center">❌（<code>local_goods_sku</code> 有主键）</td>
+</tr>
+<tr>
+<td>之前跳过错误留下的后遗症</td>
+<td>跳过事件导致部分行永久缺失</td>
+<td align="center">✅ 跳过后后续操作继续报错，符合</td>
+</tr>
+<tr>
+<td>binlog 被 PURGE</td>
+<td>历史 INSERT 已被清理，从库无法补回</td>
+<td align="center">❌（<code>expire_logs_days=0</code>，binlog 未清理）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="三、排查与修复过程">三、排查与修复过程</h2>
+<h3 id="阶段-1：快速恢复复制（跳过错误）">阶段 1：快速恢复复制（跳过错误）</h3>
+<pre><code class="language-sql">-- 查看从库状态
+SHOW SLAVE STATUS\G
+
+-- 跳过当前错误事件（临时恢复）
+STOP SLAVE;
+SET GLOBAL sql_slave_skip_counter = 1;
+START SLAVE;
 </code></pre>
-<p>链路是：</p>
-<pre><code class="language-text">Git -&gt; 127.0.0.1:7890 -&gt; mihomo -&gt; GitHub
+<p><strong>结果：</strong> 复制短暂恢复，但遇到下一条缺失行又报 1032。说明缺失不止一行。</p>
+<hr>
+<h3 id="阶段-2：安装-percona-toolkit（全量校验工具）">阶段 2：安装 Percona Toolkit（全量校验工具）</h3>
+<pre><code class="language-bash"># 安装 Percona 官方仓库
+yum install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+percona-release enable tools release
+yum install -y percona-toolkit
+
+# 验证安装
+pt-table-checksum --version
 </code></pre>
-<p>推送成功后，GitHub Pages 会部署博客：</p>
-<pre><code class="language-text">https://cxy1984.github.io/ai-blog
+<blockquote>
+<p>⚠️ 期间遇到镜像源 404、下载慢、SSH 断开等问题，最终安装成功。</p>
+</blockquote>
+<p><strong>安装的工具：</strong></p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pt-table-checksum</code></td>
+<td>对比主从数据一致性，找出差异</td>
+</tr>
+<tr>
+<td><code>pt-table-sync</code></td>
+<td>修复主从数据差异</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="阶段-3：尝试全量校验（未成功）">阶段 3：尝试全量校验（未成功）</h3>
+<pre><code class="language-bash"># 尝试 1：默认方式（卡在等同步）
+pt-table-checksum --host=主库IP --user=xxx --ask-pass --recursion-method=hosts
+
+# 问题：复制中断 + replicate_do_db 白名单不含 percona 库
 </code></pre>
-<h2 id="安全提醒">安全提醒</h2>
-<p>代理配置里的 password、uuid、订阅链接都属于敏感信息。</p>
-<p>不要把完整代理配置发到公开聊天、公开仓库或截图里。如果已经泄露，建议到服务商后台重置订阅链接或节点密码。</p>
-<h2 id="总结">总结</h2>
-<p>之前的问题不是 mihomo 端口错了，也不是 GitHub 仓库没权限。</p>
-<p>真正原因是：</p>
-<pre><code class="language-text">浏览器通过 SwitchyOmega 走了代理
-Git 没有经过 SwitchyOmega
-Git 也没有单独配置代理
+<p><strong><code>replicate_do_db</code> 当前配置：</strong></p>
+<pre><code>db_9buqi, db_9buqi_authority, db_xinfudaojia_com_central, db_9buqi_coupon,
+db_xiuerxin_com_dev, db_9buqi_notary, db_xinfu_express, db_9buqi_bank,
+db_9buqi_com_central
 </code></pre>
-<p>解决办法是给 Git 单独配置：</p>
-<pre><code class="language-powershell">git config --global http.proxy http://127.0.0.1:7890
-git config --global https.proxy http://127.0.0.1:7890
+<p><strong>卡住原因：</strong> pt-table-checksum 在主库创建 <code>percona.checksums</code> 结果表，然后等待它通过复制同步到从库。但 <code>percona</code> 不在 <code>replicate_do_db</code> 白名单中，永远同步不过去。</p>
+<p><strong>尝试的 DSN 方案（未跑通）：</strong></p>
+<pre><code class="language-bash"># 使用 DSN 指定从库
+pt-table-checksum --host=主库IP --user=xxx --ask-pass \
+  --recursion-method=dsn=D=percona,t=dsns \
+  --replicate=db_9buqi_coupon.checksums
 </code></pre>
-<p>这样浏览器和 Git 都能使用 mihomo，但它们使用 mihomo 的方式不同：</p>
-<pre><code class="language-text">浏览器靠 SwitchyOmega
-Git 靠 git config
+<p>同样因复制中断，主库创建的表无法同步到从库而卡住。</p>
+<hr>
+<h3 id="阶段-4：最终修复直接同步差异数据">阶段 4：最终修复——直接同步差异数据</h3>
+<p>跳过复杂的校验流程，直接用 <code>pt-table-sync</code> 修复 <code>local_goods_sku</code> 表：</p>
+<pre><code class="language-bash"># 显式指定主库和从库，对比并修复差异
+pt-table-sync --ask-pass \
+  h={{DB_HOST_IP}},u=&#39;central.xinfudaojia.com&#39; \
+  h=127.0.0.1,u=&#39;central.xinfudaojia.com&#39; \
+  --databases=db_9buqi \
+  --tables=local_goods_sku \
+  --execute \
+  --no-check-slave
+</code></pre>
+<p><strong>执行后：</strong></p>
+<pre><code class="language-sql">START SLAVE;
+SHOW SLAVE STATUS\G
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>修复后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Slave_IO_Running</td>
+<td>✅ Yes</td>
+</tr>
+<tr>
+<td>Slave_SQL_Running</td>
+<td>✅ Yes</td>
+</tr>
+<tr>
+<td>Last_Error</td>
+<td>✅ 空</td>
+</tr>
+<tr>
+<td>Seconds_Behind_Master</td>
+<td>✅ 0（已追上）</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、后续操作清单">四、后续操作清单</h2>
+<p>按优先级排序：</p>
+<h3 id="【高优先级】近期完成">【高优先级】近期完成</h3>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <ol>
+<li>确认复制正常运行 — <strong>已完成</strong></li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="2">
+<li><strong>全量校验所有库</strong>（复制已恢复，用 <code>--recursion-method=hosts</code> 不会再卡）<pre><code class="language-bash"># 从从库执行
+pt-table-checksum --host={{DB_HOST_IP}} --user=&#39;central.xinfudaojia.com&#39; --ask-pass \
+  --recursion-method=hosts \
+  --no-check-binlog-format \
+  --no-check-replication-filters
+</code></pre>
+</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="3">
+<li>根据校验结果，修复其他有差异的表<pre><code class="language-bash">pt-table-sync --replicate=percona.checksums --execute \
+  --host=127.0.0.1 --user=&#39;central.xinfudaojia.com&#39; --ask-pass
+</code></pre>
+</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="4">
+<li><strong>观察 <code>Seconds_Behind_Master</code> 是否稳定归零</strong><pre><code class="language-sql">SHOW SLAVE STATUS\G
+-- 重点关注：Seconds_Behind_Master
+</code></pre>
+</li>
+</ol>
+</li>
+</ul>
+<h3 id="【中优先级】本周内完成">【中优先级】本周内完成</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <ol start="5">
+<li><strong>开启从库只读模式</strong>，防止误写入<pre><code class="language-ini"># 修改从库 my.cnf，在 [mysqld] 段添加
+super_read_only = 1
+read_only = 1
+</code></pre>
+<pre><code class="language-bash"># 动态设置（重启后失效）
+SET GLOBAL super_read_only = 1;
+SET GLOBAL read_only = 1;
+</code></pre>
+</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="6">
+<li><strong>检查所有业务表是否有主键</strong><pre><code class="language-sql">SELECT TABLE_SCHEMA, TABLE_NAME
+FROM information_schema.TABLES T
+WHERE TABLE_TYPE = &#39;BASE TABLE&#39;
+  AND NOT EXISTS (
+    SELECT 1 FROM information_schema.TABLE_CONSTRAINTS TC
+    WHERE TC.TABLE_SCHEMA = T.TABLE_SCHEMA
+      AND TC.TABLE_NAME = T.TABLE_NAME
+      AND TC.CONSTRAINT_TYPE = &#39;PRIMARY&#39;
+  );
+</code></pre>
+ 没有主键的表建议加上，否则 ROW 格式复制下容易出现 1032。</li>
+</ol>
+</li>
+</ul>
+<h3 id="【低优先级】长期维护">【低优先级】长期维护</h3>
+<ul>
+<li><input disabled="" type="checkbox"> <ol start="7">
+<li><strong>定期做主从一致性检查</strong>（建议每周/每月）<pre><code class="language-bash">pt-table-checksum --host=主库IP --user=xxx --ask-pass \
+  --recursion-method=hosts
+</code></pre>
+</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="8">
+<li><strong>监控复制状态</strong>，配置告警<pre><code class="language-sql">-- 监控脚本检查项
+Slave_IO_Running = Yes
+Slave_SQL_Running = Yes
+Seconds_Behind_Master &lt; 60
+Last_Error = 空
+</code></pre>
+</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="9">
+<li><strong>规范 DDL 变更流程</strong>，主从同步执行
+ 避免在主库加字段后忘记在从库执行同样的 ALTER TABLE</li>
+</ol>
+</li>
+<li><input disabled="" type="checkbox"> <ol start="10">
+<li><strong>考虑 binlog 保留策略</strong>（当前 <code>expire_logs_days=0</code> 永不过期）
+根据磁盘空间设置合理保留时间：<pre><code class="language-ini">expire_logs_days = 14
+# 或 MySQL 8.0：
+binlog_expire_logs_seconds = 1209600  # 14天
+</code></pre>
+</li>
+</ol>
+</li>
+</ul>
+<hr>
+<h2 id="五、关键经验总结">五、关键经验总结</h2>
+<h3 id="51-关于-1032-错误">5.1 关于 1032 错误</h3>
+<p><strong>核心原因只有一个：</strong> 从库缺失了主库存在的行。</p>
+<p><strong>不能只靠跳过（<code>sql_slave_skip_counter</code>）</strong>，因为：</p>
+<ul>
+<li>跳过一次只跳过一条事件，后续遇到同一行的操作还会报错</li>
+<li>多次跳过会让不一致越积越多</li>
+</ul>
+<p><strong>根治方法：</strong> 把缺失的数据补上（<code>pt-table-sync</code> 或 <code>mysqldump</code> 覆盖）。</p>
+<h3 id="52-关于-percona-toolkit">5.2 关于 Percona Toolkit</h3>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>用途</th>
+<th>注意点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pt-table-checksum</code></td>
+<td>找出主从差异</td>
+<td>复制必须正常运行（<code>Slave_SQL_Running=Yes</code>），否则卡在等同步</td>
+</tr>
+<tr>
+<td><code>pt-table-sync</code></td>
+<td>修复差异</td>
+<td>复制中断时需用 <code>--no-check-slave</code>、<code>--wait 0</code> 或显式指定双 DSN</td>
+</tr>
+</tbody></table>
+<h3 id="53-关于-replicate_do_db">5.3 关于 <code>replicate_do_db</code></h3>
+<p>白名单机制会影响工具的运行。如果校验结果表（<code>percona.checksums</code>）的数据库不在白名单中，工具会卡死。解决方案：</p>
+<ul>
+<li>用 <code>--replicate=库名.checksums</code> 指定一个在白名单中的库</li>
+<li>或者把 <code>percona</code> 加入 <code>replicate_do_db</code></li>
+</ul>
+<h3 id="54-最佳实践">5.4 最佳实践</h3>
+<ol>
+<li>**从库必须开启 <code>super_read_only=1</code>**，防止误写入</li>
+<li><strong>所有业务表必须有主键</strong>，避免 ROW 格式下的 1032</li>
+<li><strong>DDL 变更要主从同步执行</strong>，不能只改主库</li>
+<li>**定期做 <code>pt-table-checksum</code>**，早发现早修复</li>
+<li><strong>Percona Toolkit 提前装好</strong>，不要等出问题了再装</li>
+</ol>
+<hr>
+<h2 id="六、常用命令速查">六、常用命令速查</h2>
+<pre><code class="language-bash"># 查看从库状态
+mysql -e &quot;SHOW SLAVE STATUS\G&quot;
+
+# 跳过当前错误
+mysql -e &quot;STOP SLAVE; SET GLOBAL sql_slave_skip_counter = 1; START SLAVE;&quot;
+
+# 全量校验（复制正常时）
+pt-table-checksum --host=主库IP --user=用户名 --ask-pass --recursion-method=hosts
+
+# 修复单表差异
+pt-table-sync --ask-pass h=主库IP,u=用户名 h=从库IP,u=用户名 --databases=库名 --tables=表名 --execute
+
+# 根据校验结果修复所有差异
+pt-table-sync --replicate=percona.checksums --execute --host=从库IP --user=用户名 --ask-pass
+
+# 从主库导出单表覆盖从库
+mysqldump -h 主库IP -u 用户名 -p --no-create-info --single-transaction 库名 表名 | mysql -h 从库IP -u 用户名 -p 库名
+
+# 全库覆盖重建从库
+mysqldump -u root -p --all-databases --single-transaction --master-data=2 &gt; fullbackup.sql
+mysql -u root -p &lt; fullbackup.sql
 </code></pre>
 </div>
     </article>

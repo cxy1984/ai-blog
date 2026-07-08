@@ -1,147 +1,202 @@
-# 理解代理模式：mihomo、浏览器与 Git 代理配置
+# 理解代理模式：SwitchyOmega、mihomo、浏览器与 Git 代理配置
 
-最近在推送 GitHub 仓库时遇到了连接超时、连接重置的问题。后来发现浏览器虽然能正常访问 GitHub，但 Git 命令并没有自动走代理。
+这次 GitHub 推送失败的问题，本质不是 GitHub 仓库权限，也不是博客项目本身的问题，而是不同软件使用代理的方式不一样。
 
-这篇文章用自己的环境做一次梳理：代理软件到底做了什么，浏览器为什么能走代理，Git 为什么不一定走代理，以及这次修改到底改了哪里。
+我的实际环境是：
+
+```text
+浏览器使用 SwitchyOmega 插件做分流
+mihomo 在本机提供 mixed port：127.0.0.1:7890
+Git 原来没有单独配置代理
+```
+
+所以会出现一个看起来很奇怪的现象：
+
+```text
+浏览器能打开 GitHub
+但是 git pull / git push 失败
+```
+
+原因是：浏览器和 Git 不是同一套代理配置。
 
 ## 一句话结论
 
-代理软件本身通常只是本机启动一个代理服务，例如：
+当前链路可以分成两层：
+
+```text
+第一层：SwitchyOmega 决定浏览器请求要不要走代理
+第二层：mihomo 接收代理请求后，再按自己的规则和节点转发
+```
+
+浏览器访问 GitHub 时，大概是：
+
+```text
+浏览器 -> SwitchyOmega 规则 -> 127.0.0.1:7890 -> mihomo -> GitHub
+```
+
+Git 原来访问 GitHub 时，大概是：
+
+```text
+Git -> github.com:443
+```
+
+Git 没有经过浏览器，也不会使用 SwitchyOmega 插件，所以 Git 还是直连 GitHub。当前网络直连 GitHub 不稳定，于是出现连接超时、连接重置。
+
+后来给 Git 单独配置代理后，Git 的链路变成：
+
+```text
+Git -> 127.0.0.1:7890 -> mihomo -> GitHub
+```
+
+这就是为什么后面 `git pull` 和 `git push` 能成功。
+
+## mihomo 做了什么
+
+mihomo 的核心作用是：在本机启动一个代理入口，并根据配置把请求转发到不同节点。
+
+当前使用的是 mixed port：
 
 ```text
 127.0.0.1:7890
 ```
 
-真正决定某个软件是否走代理的，是这个软件有没有把网络请求发到这个本地端口。
+这个端口可以理解成一个本地代理入口。
 
-浏览器能走代理，是因为浏览器或系统代理配置指向了 `127.0.0.1:7890`。
-
-Git 之前不能稳定访问 GitHub，是因为 Git 没有配置自己的代理，所以它仍然在尝试直连 `github.com:443`。
-
-这次修改就是给 Git 单独增加了代理配置：
-
-```powershell
-git config --global http.proxy http://127.0.0.1:7890
-git config --global https.proxy http://127.0.0.1:7890
-```
-
-## 代理软件在电脑里做了什么
-
-mihomo 这类代理软件通常会做两件事：
-
-1. 读取节点配置和规则配置。
-2. 在本机启动一个代理监听端口。
-
-你的 mixed port 是：
+任何程序只要把网络请求交给：
 
 ```text
 127.0.0.1:7890
 ```
 
-这个端口可以理解成一个“本地中转站”。
+mihomo 就能接管这个请求。
 
-应用程序如果直接访问：
+接管以后，mihomo 会继续判断：
+
+- 这个域名是否直连
+- 这个域名是否走代理
+- 走哪个节点
+- 是否命中规则集
+- 是否使用当前选中的策略组
+
+也就是说，mihomo 不等于自动代理所有软件。它只是提供了一个本地入口，软件必须主动使用这个入口，或者通过系统代理/TUN 等方式被接管。
+
+## SwitchyOmega 做了什么
+
+SwitchyOmega 是浏览器插件。它只影响浏览器里的请求。
+
+它通常会配置多个情景模式，例如：
+
+```text
+直连
+代理
+自动切换
+```
+
+如果你配置了“特定网站走代理”，那通常是 SwitchyOmega 在浏览器层做了规则判断。
+
+例如：
+
+```text
+github.com      -> 走代理
+google.com      -> 走代理
+baidu.com       -> 直连
+localhost       -> 直连
+```
+
+当浏览器访问 `github.com` 时，SwitchyOmega 判断这个域名应该走代理，于是把请求发给：
+
+```text
+127.0.0.1:7890
+```
+
+然后才轮到 mihomo 处理这个请求。
+
+所以浏览器实际链路是：
+
+```text
+浏览器
+  -> SwitchyOmega 判断规则
+  -> 命中代理规则
+  -> 发送到 127.0.0.1:7890
+  -> mihomo 接管
+  -> mihomo 选择节点
+  -> GitHub
+```
+
+## 为什么说有两层规则
+
+你的环境里至少有两层规则。
+
+第一层是浏览器插件规则：
+
+```text
+SwitchyOmega：决定浏览器请求是否交给代理端口
+```
+
+第二层是 mihomo 规则：
+
+```text
+mihomo：决定收到的代理请求最终怎么转发
+```
+
+举个例子。
+
+浏览器访问：
 
 ```text
 https://github.com
 ```
 
-那就是直连。
+SwitchyOmega 先判断：
 
-应用程序如果把请求交给：
+```text
+github.com 是否需要走代理？
+```
+
+如果答案是“是”，浏览器请求会被发到：
 
 ```text
 127.0.0.1:7890
 ```
 
-mihomo 就会接管请求，然后根据规则判断：
-
-- 国内网站直连
-- GitHub、Google 等特定网站走代理节点
-- 某些域名走指定节点
-- 某些流量拒绝或拦截
-
-所以代理软件不是自动接管所有程序。它只是提供了一个本地入口，程序要不要使用这个入口，取决于程序自己的网络配置，或者系统代理配置。
-
-## 什么是“规则模式”
-
-你之前说“做了一些网站配置，特定网站走代理”，这通常就是规则模式。
-
-规则模式大概是这样：
+mihomo 收到请求后再判断：
 
 ```text
-github.com        -> 走代理
-google.com        -> 走代理
-baidu.com         -> 直连
-qq.com            -> 直连
-局域网地址         -> 直连
-默认其他流量       -> 按配置决定
+github.com 应该走哪个节点？
+是否命中代理规则？
+是否直连？
 ```
 
-实际配置里可能叫：
+所以最终路径是两层决策叠加的结果。
 
-```text
-rules
-Rule Mode
-规则模式
-绕过大陆
-全局模式
-直连模式
-```
+## 浏览器为什么正常
 
-常见模式区别：
+浏览器正常，是因为浏览器里装了 SwitchyOmega。
 
-| 模式 | 含义 |
-|---|---|
-| 直连模式 | 所有流量都不走代理 |
-| 全局模式 | 大部分流量都走代理 |
-| 规则模式 | 按域名、IP、地区、进程等规则判断 |
-
-你现在的情况更像规则模式：浏览器访问普通国内网站不受影响，访问 GitHub 这类网站会走代理。
-
-## 浏览器为什么能走代理
-
-浏览器能走代理，一般有三种可能：
-
-1. 浏览器使用系统代理。
-2. 浏览器装了代理插件，例如 SwitchyOmega。
-3. mihomo 开启了系统代理或 TUN 模式。
-
-如果是系统代理，Windows 里通常会把代理服务器设置成：
+SwitchyOmega 把需要代理的网站转发到了 mihomo 的 mixed port：
 
 ```text
 127.0.0.1:7890
 ```
 
-这样浏览器访问网页时，请求路径大概是：
+所以浏览器访问 GitHub 时，没有直接连 GitHub，而是通过代理链路访问。
 
-```text
-浏览器 -> Windows 系统代理 -> 127.0.0.1:7890 -> mihomo -> 代理节点或直连 -> 目标网站
-```
+这解释了为什么你能在浏览器里打开 GitHub 页面。
 
-所以你会看到浏览器正常，但 Git 命令还是失败。原因是 Git 不一定完全跟随浏览器代理配置。
+## Git 为什么失败
 
-## Git 为什么没有自动走代理
+Git 是命令行程序，不运行在浏览器里。
 
-Git for Windows 使用自己的网络库和配置系统。它可能读取一部分系统配置，但不能假设它一定会跟浏览器一样走代理。
+它不会读取 SwitchyOmega 插件规则，也不会知道浏览器里哪些网站配置了代理。
 
-之前执行：
-
-```powershell
-git config --global --get http.proxy
-git config --global --get https.proxy
-```
-
-没有输出，说明 Git 全局没有配置代理。
-
-所以当执行：
+所以之前 Git 执行：
 
 ```powershell
 git pull
 git push
 ```
 
-Git 实际在尝试：
+实际链路是：
 
 ```text
 Git -> github.com:443
@@ -150,43 +205,58 @@ Git -> github.com:443
 而不是：
 
 ```text
-Git -> 127.0.0.1:7890 -> mihomo -> github.com
+Git -> SwitchyOmega -> 127.0.0.1:7890 -> mihomo -> GitHub
 ```
 
-这就是为什么它报：
+这里要特别注意：
+
+```text
+SwitchyOmega 只管浏览器，不管 Git。
+```
+
+这就是浏览器能访问 GitHub，但 Git 报错的根本原因。
+
+## 之前的 Git 报错是什么意思
+
+之前看到过这些错误：
 
 ```text
 Failed to connect to github.com port 443
 Recv failure: Connection was reset
+OpenSSL SSL_connect: SSL_ERROR_SYSCALL
 ```
 
-## 这次我修改了什么
+这些错误都说明 Git 和 GitHub 之间的网络链路不稳定。
 
-这次只修改了 Git 的全局配置。
+在没有配置 Git 代理时，Git 尝试直连 GitHub，容易失败。
 
-执行的是：
+配置 Git 代理后，`git pull --rebase origin main` 成功，说明 Git 已经能通过 mihomo 访问 GitHub。
+
+`git push` 第一次出现 `SSL_ERROR_SYSCALL`，重试后成功，说明代理链路可用，但节点或网络偶尔会抖动。
+
+## 这次实际修改了什么
+
+这次没有修改 SwitchyOmega。
+
+这次也没有修改 mihomo 的节点、订阅、规则、策略组。
+
+实际修改的是 Git 的全局配置：
 
 ```powershell
 git config --global http.proxy http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 ```
 
-它写入的是当前 Windows 用户的 Git 配置文件，通常是：
+这两条命令的意思是：
 
 ```text
-C:\Users\<你的用户名>\.gitconfig
+以后当前 Windows 用户执行 Git 的 HTTP/HTTPS 请求时，默认走 127.0.0.1:7890
 ```
 
-修改后的效果是：当前用户在这台电脑上执行的 Git HTTP/HTTPS 请求，都会优先走：
+修改后，Git 访问 GitHub 的链路变成：
 
 ```text
-http://127.0.0.1:7890
-```
-
-也就是：
-
-```text
-Git -> mihomo mixed port -> 按 mihomo 规则转发 -> GitHub
+Git -> 127.0.0.1:7890 -> mihomo -> GitHub
 ```
 
 ## 修改范围是什么
@@ -194,33 +264,64 @@ Git -> mihomo mixed port -> 按 mihomo 规则转发 -> GitHub
 这次修改的范围是：
 
 ```text
-Git 全局配置
+当前 Windows 用户的 Git 全局配置
 ```
 
-也就是当前 Windows 用户下的所有 Git 仓库都会受影响。
+一般写入这个文件：
 
-影响对象：
+```text
+C:\Users\<你的用户名>\.gitconfig
+```
 
+影响范围：
+
+- 当前用户下所有 Git 仓库
+- 使用 HTTPS 地址的 Git 操作
 - `git clone https://...`
 - `git pull`
 - `git push`
 - `git fetch`
-- 其他走 HTTP/HTTPS 的 Git 远程操作
 
-不影响对象：
+不影响：
 
+- SwitchyOmega 插件配置
 - 浏览器代理规则
 - mihomo 节点配置
 - mihomo 分流规则
 - npm 代理配置
-- PowerShell 自己的网络请求
-- SSH 方式的 Git 地址，例如 `git@github.com:xxx/xxx.git`
+- SSH 地址的 Git 操作，例如 `git@github.com:xxx/xxx.git`
 
-所以这次没有修改你的代理节点，也没有修改你的 mihomo 规则，只是告诉 Git：以后访问 HTTPS 仓库时，先走本地 `7890` 端口。
+也就是说，这次只是让 Git 学会走 mihomo 的本地代理端口，没有改你原来别人帮你配置的浏览器插件规则。
 
-## 怎么查看当前 Git 代理
+## 三套配置的关系
 
-查看 Git 是否配置了代理：
+可以这样理解：
+
+```text
+SwitchyOmega：只影响浏览器
+mihomo：提供本地代理入口和节点分流
+Git proxy：只影响 Git 命令
+```
+
+它们之间不是互相替代，而是搭配关系。
+
+浏览器链路：
+
+```text
+浏览器 -> SwitchyOmega -> mihomo -> 目标网站
+```
+
+Git 链路：
+
+```text
+Git -> Git proxy 配置 -> mihomo -> GitHub
+```
+
+如果没有 Git proxy 配置，Git 不会经过 SwitchyOmega。
+
+## 怎么查看 Git 当前代理
+
+查看 Git 是否配置代理：
 
 ```powershell
 git config --global --get http.proxy
@@ -234,24 +335,24 @@ http://127.0.0.1:7890
 http://127.0.0.1:7890
 ```
 
-说明 Git 已经走 mihomo 的 mixed port。
+说明 Git 已经配置为走 mihomo mixed port。
 
-## 怎么取消这次修改
+## 怎么取消 Git 代理
 
-如果以后不想让 Git 走代理，可以取消：
+如果以后不想让 Git 走代理，可以执行：
 
 ```powershell
 git config --global --unset http.proxy
 git config --global --unset https.proxy
 ```
 
-取消后，Git 会回到默认行为。
+取消后，Git 会回到默认网络行为。
 
-如果当前网络不能直连 GitHub，取消后 `git pull`、`git push` 可能又会失败。
+如果当前网络不能直连 GitHub，取消后 `git pull` 和 `git push` 可能又会失败。
 
-## 怎么判断 7890 是否真的存在
+## 怎么判断 mihomo 的 7890 是否开启
 
-可以看本机端口：
+可以执行：
 
 ```powershell
 netstat -ano | findstr ":7890"
@@ -263,86 +364,41 @@ netstat -ano | findstr ":7890"
 127.0.0.1:7890 LISTENING
 ```
 
-说明 mihomo 正在监听这个端口。
+说明 mihomo 正在监听 mixed port。
 
-还可以测试 GitHub 连接：
+也可以执行：
 
 ```powershell
 git ls-remote https://github.com/cxy1984/ai-blog.git
 ```
 
-如果能返回远程分支或提交信息，说明 Git 能正常通过网络访问 GitHub。
+如果能返回远程分支信息，说明 Git 可以通过当前网络访问 GitHub。
 
-## 为什么 pull 成功后 push 又失败了一次
+## 常见现象对照
 
-配置代理后，`git pull --rebase origin main` 成功了，说明 Git 已经能通过代理访问 GitHub。
+| 现象 | 可能原因 |
+|---|---|
+| 浏览器能打开 GitHub，Git push 失败 | 浏览器走了 SwitchyOmega，但 Git 没配代理 |
+| 浏览器打不开 GitHub，Git 可以 push | Git 配了代理，但浏览器规则没命中 |
+| pull 成功，push 偶尔失败 | 代理节点或网络临时抖动 |
+| 配了 Git 代理后所有仓库都走代理 | 使用了 `--global`，影响当前用户所有 Git 仓库 |
+| 取消 Git 代理后又失败 | 当前网络不能稳定直连 GitHub |
 
-但第一次 `git push` 报了：
+## 当前博客项目发布时的网络路径
 
-```text
-OpenSSL SSL_connect: SSL_ERROR_SYSCALL
-```
-
-这个错误通常不是配置写错，而是代理链路中途断了一下。重试后推送成功。
-
-这说明当前链路是可用的，但代理节点或网络本身可能偶尔不稳定。
-
-如果以后再遇到类似问题，可以先重试：
+现在执行：
 
 ```powershell
 git push
 ```
 
-如果连续失败，再切换 mihomo 节点。
-
-## 浏览器代理和 Git 代理的区别
-
-可以把它们理解成两套独立配置。
-
-浏览器：
-
-```text
-浏览器设置或系统设置 -> 127.0.0.1:7890
-```
-
-Git：
-
-```text
-Git 配置 -> 127.0.0.1:7890
-```
-
-它们可以都走同一个 mihomo 端口，但配置位置不同。
-
-所以会出现这些情况：
-
-| 浏览器 | Git | 现象 |
-|---|---|---|
-| 走代理 | 不走代理 | 浏览器能打开 GitHub，Git push 失败 |
-| 不走代理 | 走代理 | 浏览器可能打不开 GitHub，Git 正常 |
-| 都走代理 | 都正常 |
-| 都不走代理 | 取决于当前网络能否直连 GitHub |
-
-你之前就是第一种。
-
-## 当前博客项目的发布流程
-
-现在写博客时，本地流程是：
-
-```powershell
-cd D:\code\ai-note
-npm run build
-git add .
-git commit -m "add blog post"
-git push
-```
-
-`git push` 会走：
+链路是：
 
 ```text
 Git -> 127.0.0.1:7890 -> mihomo -> GitHub
 ```
 
-推送成功后，GitHub Pages 会部署到：
+推送成功后，GitHub Pages 会部署博客：
 
 ```text
 https://cxy1984.github.io/ai-blog
@@ -350,28 +406,33 @@ https://cxy1984.github.io/ai-blog
 
 ## 安全提醒
 
-代理节点配置里的 password、uuid、订阅链接都属于敏感信息。
+代理配置里的 password、uuid、订阅链接都属于敏感信息。
 
 不要把完整代理配置发到公开聊天、公开仓库或截图里。如果已经泄露，建议到服务商后台重置订阅链接或节点密码。
 
 ## 总结
 
-这次问题的根因是：浏览器配置了代理，但 Git 没有配置代理。
+之前的问题不是 mihomo 端口错了，也不是 GitHub 仓库没权限。
 
-解决方式是给 Git 单独配置：
+真正原因是：
+
+```text
+浏览器通过 SwitchyOmega 走了代理
+Git 没有经过 SwitchyOmega
+Git 也没有单独配置代理
+```
+
+解决办法是给 Git 单独配置：
 
 ```powershell
 git config --global http.proxy http://127.0.0.1:7890
 git config --global https.proxy http://127.0.0.1:7890
 ```
 
-这不会修改 mihomo 的节点和规则，只会影响当前 Windows 用户下 Git 的 HTTPS 网络请求。
+这样浏览器和 Git 都能使用 mihomo，但它们使用 mihomo 的方式不同：
 
-以后如果 GitHub push 失败，排查顺序可以是：
-
-1. mihomo 是否开启。
-2. `127.0.0.1:7890` 是否监听。
-3. Git 是否配置了 `http.proxy` 和 `https.proxy`。
-4. 当前节点是否稳定。
-5. GitHub 是否需要重新登录验证。
+```text
+浏览器靠 SwitchyOmega
+Git 靠 git config
+```
 
