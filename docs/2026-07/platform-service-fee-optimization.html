@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>平台服务费汇总接口优化记录（列表 + 导出）</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="平台服务费汇总接口优化记录（列表 + 导出）
+
+接口列表:
+
+列表: /service-fee/platform/summary (GET)
+导出: /service-fee/export/platform (POST)
+日期: 2026-07-09
+作者: xxx
+
+
+
+一、问题现象
+1.1 列表查询
+接口默认查询（..." />
+    <meta name="keywords" content="平台服务费汇总接口优化记录, 列表, 导出" />
+    <meta name="author" content="AI 个人笔记" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="平台服务费汇总接口优化记录（列表 + 导出）" />
+    <meta property="og:description" content="平台服务费汇总接口优化记录（列表 + 导出）
+
+接口列表:
+
+列表: /service-fee/platform/summary (GET)
+导出: /service-fee/export/platform (POST)
+日期: 2026-07-09
+作者: xxx
+
+
+
+一、问题现象
+1.1 列表查询
+接口默认查询（..." />
+    <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/platform-service-fee-optimization.html" />
+    <meta property="og:site_name" content="AI 个人笔记" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="平台服务费汇总接口优化记录（列表 + 导出）" />
+    <meta property="twitter:description" content="平台服务费汇总接口优化记录（列表 + 导出）
+
+接口列表:
+
+列表: /service-fee/platform/summary (GET)
+导出: /service-fee/export/platform (POST)
+日期: 2026-07-09
+作者: xxx
+
+
+
+一、问题现象
+1.1 列表查询
+接口默认查询（..." />
+    <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/platform-service-fee-optimization.html" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+    <style>
+      /* Google Fonts for better typography */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #f8f9fa;
+        --text-color: #34495e;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --hover-color: #f8f9fa;
+      }
+
+      :root.dark-mode {
+        --primary-color: #ecf0f1;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --card-bg: #2d2d2d;
+        --hover-color: #3a3a3a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", "Noto Sans SC", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      .header {
+        /* display: flex; */
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #24292e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .github-link:hover {
+        background: #000;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .theme-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: #ce3321;
+        transition: transform 0.3s ease;
+      }
+
+      .theme-toggle:hover svg {
+        transform: rotate(20deg);
+      }
+
+      :root.dark-mode .theme-toggle {
+        background: rgba(45, 45, 45, 0.95);
+        border-color: rgba(200, 200, 200, 0.3);
+      }
+
+      :root.dark-mode .theme-toggle svg {
+        color: #ffc107;
+      }
+
+      :root.dark-mode .theme-toggle:hover {
+        background: rgba(60, 60, 60, 1);
+      }
+
+      .main-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+      }
+
+      .post-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-title {
+        color: var(--primary-color);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+      }
+
+      :root.dark-mode .post-meta {
+        color: #a0a0a0;
+      }
+
+      .post-date {
+        background-color: #e3f2fd;
+        color: var(--secondary-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-date {
+        background-color: rgba(52, 152, 219, 0.2);
+        color: #64b5f6;
+      }
+
+      .post-category {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-category {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #81c784;
+      }
+
+      .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .post-content h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin: 35px 0 25px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      /* Table of Contents */
+      .toc-container {
+        width: 300px;
+        flex-shrink: 0;
+      }
+
+      .toc {
+        position: sticky;
+        top: 135px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .toc h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc ul ul {
+        padding-left: 20px;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+
+      .toc a:hover {
+        color: var(--secondary-color);
+      }
+
+      .toc a.active {
+        color: var(--secondary-color);
+        font-weight: 500;
+      }
+
+      .post-content h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content h3 {
+        color: #2980b9;
+        font-size: 1.3rem;
+        margin: 25px 0 15px 0;
+      }
+
+      .post-content p {
+        margin-bottom: 18px;
+      }
+
+      .post-content ul,
+      .post-content ol {
+        margin: 20px 0;
+        padding-left: 35px;
+      }
+
+      .post-content li {
+        margin-bottom: 10px;
+      }
+
+      .post-content code {
+        background-color: #e8eaed;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        color: #c0392b;
+        font-size: 0.9em;
+      }
+
+      :root.dark-mode .post-content code {
+        background-color: #e8eaed;
+        color: #ff7043;
+      }
+
+      .post-content pre {
+        background-color: #f6f8fa;
+        color: #24292e;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 25px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        border: 1px solid #e1e4e8;
+      }
+
+      :root.dark-mode .post-content pre {
+        background-color: #1e1e1e;
+        color: #f8f8f2;
+        border-color: #333333;
+      }
+
+      :root.dark-mode .post-content pre code {
+        color: #f8f8f2;
+        background-color: transparent;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f2020;
+        border: 1px solid #1f2020;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .copy-button:hover {
+        background: #4caf50;
+        border-color: #4caf50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .copy-button.copied {
+        background-color: #27ae60;
+      }
+
+      .post-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+      }
+
+      .post-content blockquote {
+        background-color: #eaf2f8;
+        border-left: 5px solid var(--secondary-color);
+        padding: 20px;
+        margin: 25px 0;
+        border-radius: 0 5px 5px 0;
+      }
+
+      :root.dark-mode .post-content blockquote {
+        background-color: rgba(52, 152, 219, 0.15);
+        color: #b3e5fc;
+      }
+
+      .post-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.95rem;
+        text-align: left;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        table-layout: auto; /* 让列宽根据内容自动调整 */
+      }
+
+      .post-content th,
+      .post-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        word-wrap: break-word; /* 确保长内容可以换行 */
+      }
+
+      .post-content th {
+        background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .post-content tbody tr {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      :root.dark-mode .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      :root.dark-mode .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      :root.dark-mode .post-content th,
+      :root.dark-mode .post-content td {
+        border: 1px solid var(--border-color);
+      }
+
+      .post-content a {
+        color: var(--secondary-color);
+        text-decoration: none;
+      }
+
+      .post-content a:hover {
+        text-decoration: underline;
+      }
+
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 25px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      :root.dark-mode .warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffd54f;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 40px;
+      }
+
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--secondary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+      }
+
+      /* Mermaid 图表样式 */
+      .mermaid {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      :root.dark-mode .mermaid {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post-title {
+          font-size: 1.6rem;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-content {
+          font-size: 1rem;
+        }
+
+        .post-content h1 {
+          font-size: 1.5rem;
+        }
+
+        .post-content h2 {
+          font-size: 1.3rem;
+        }
+
+        .post-content h3 {
+          font-size: 1.1rem;
+        }
+
+        .toc-container {
+          display: none;
+        }
+      }
+    </style>
+    <!-- 引入本地 Mermaid 库 -->
+    <script src="../../js/mermaid.min.js"></script>
+    <script>
+      // 初始化 Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        // 可以根据需要添加更多配置选项
+        securityLevel: "loose",
+      });
+
+      // 处理 Pandoc 生成的 Mermaid 代码块
+      // Pandoc 将 Mermaid 代码块转换为 <pre class="mermaid"><code>... 格式
+      // 我们需要将其转换为 <div class="mermaid">... 格式以便 Mermaid 渲染
+      document.addEventListener("DOMContentLoaded", function () {
+        const mermaidBlocks = document.querySelectorAll("pre.mermaid code");
+        mermaidBlocks.forEach(function (codeElement) {
+          // 创建新的 div 元素
+          const mermaidDiv = document.createElement("div");
+          mermaidDiv.className = "mermaid";
+          // 将代码内容移到 div 中
+          mermaidDiv.textContent = codeElement.textContent;
+          // 替换原来的 pre 元素
+          codeElement.parentNode.parentNode.replaceChild(
+            mermaidDiv,
+            codeElement.parentNode
+          );
+        });
+
+        // 重新启动 Mermaid 渲染
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+      });
+
+      // 为代码块添加复制按钮
+      function addCopyButtons() {
+        // 处理 Pandoc 生成的代码块结构 (<div class="sourceCode"><pre><code>)
+        const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+        sourceCodeBlocks.forEach(function (block) {
+          // 检查是否已经有复制按钮
+          if (block.querySelector(".copy-button")) return;
+
+          // 获取 pre 元素
+          const preElement = block.querySelector("pre");
+          if (!preElement) return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = preElement.querySelector("code");
+            const text = code ? code.innerText : preElement.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到 sourceCode div 中
+          block.appendChild(button);
+        });
+
+        // 处理普通的 pre 代码块 (非 Pandoc 生成的)
+        // 先获取所有非 mermaid 的 pre 元素
+        const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+        allPreBlocks.forEach(function (block) {
+          // 检查是否已经在 sourceCode div 中（Pandoc 生成的）或者已经有复制按钮
+          if (
+            block.closest(".sourceCode") ||
+            block.querySelector(".copy-button")
+          )
+            return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = block.querySelector("code");
+            const text = code ? code.innerText : block.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到代码块
+          block.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <article class="post">
+          <header class="post-header">
+            <h1 class="post-title">平台服务费汇总接口优化记录（列表 + 导出）</h1>
+            <div class="post-meta">
+              <div class="post-date">2026/7/9</div>
+              <div class="post-category">2026-07</div>
+            </div>
+          </header>
+          <div class="warning">
+            ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+          </div>
+          <div class="post-content" id="post-content"><h1 id="平台服务费汇总接口优化记录（列表--导出）">平台服务费汇总接口优化记录（列表 + 导出）</h1>
+<blockquote>
+<p>接口列表:</p>
+<ul>
+<li>列表: <code>/service-fee/platform/summary</code> (GET)</li>
+<li>导出: <code>/service-fee/export/platform</code> (POST)
+日期: 2026-07-09
+作者: xxx</li>
+</ul>
+</blockquote>
+<hr>
+<h2 id="一、问题现象">一、问题现象</h2>
+<h3 id="11-列表查询">1.1 列表查询</h3>
+<p>接口默认查询（无筛选条件，每页 10 条）耗时 <strong>2.83 秒</strong>，总数据量仅 257 条。</p>
+<h3 id="12-导出">1.2 导出</h3>
+<p>接口默认导出耗时 <strong>5.58 秒</strong>，返回 Excel 仅 54KB。</p>
+<h2 id="二、根因分析">二、根因分析</h2>
+<h3 id="21-代码执行链路">2.1 代码执行链路</h3>
+<p>一次请求的执行流程：</p>
+<pre><code>Step 1: SELECT thread_order_number, MAX(pay_time)
+         FROM view_platform_service_fee          ← 视图第1次执行
+         WHERE ... GROUP BY thread_order_number
+         ORDER BY max_pay_time DESC LIMIT ?
+
+Step 2: SELECT count(1)
+         FROM view_platform_service_fee          ← 视图第2次执行
+         WHERE ... GROUP BY thread_order_number
+
+Step 3: SELECT * FROM view_platform_service_fee  ← 视图第3次执行
+         WHERE thread_order_number IN (...)
+</code></pre>
+<p><strong>一次页面请求，视图被执行了 3 次。</strong></p>
+<h3 id="22-视图结构">2.2 视图结构</h3>
+<p>视图 <code>view_platform_service_fee</code> 的 SQL 结构：</p>
+<pre><code>最内层子查询:
+  product_order_record p
+  LEFT JOIN local_bill
+  LEFT JOIN order_check
+  LEFT JOIN orders_consignments
+  LEFT JOIN deposit_balance_log
+  LEFT JOIN local_bill_finance_log
+
+第一层外层:
+  LEFT JOIN local_inspect_bill_join
+
+第二层外层:
+  LEFT JOIN local_inspect_bill
+
+第三层外层:
+  LEFT JOIN users_mains (x2)
+
+第四层外层:
+  LEFT JOIN local_proportion_child_goods
+</code></pre>
+<p><strong>总共涉及 11 张表的 LEFT JOIN，且有多层子查询嵌套。</strong></p>
+<h3 id="23-索引缺失">2.3 索引缺失</h3>
+<p><code>product_order_record</code> 表（驱动表）的现有索引：</p>
+<table>
+<thead>
+<tr>
+<th>索引</th>
+<th>能否用于查询</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PRIMARY KEY (id)</code></td>
+<td>❌ 分页查询用不到</td>
+</tr>
+<tr>
+<td><code>index_second_order_number</code></td>
+<td>❌ 前缀索引，不支持排序和 GROUP BY</td>
+</tr>
+<tr>
+<td><code>index_logistics_business_number</code></td>
+<td>❌ 不相关</td>
+</tr>
+<tr>
+<td><code>index_shop_discount_coupons_child_id</code></td>
+<td>❌ 不相关</td>
+</tr>
+<tr>
+<td><code>index_plat_discount_coupons_child_id</code></td>
+<td>❌ 不相关</td>
+</tr>
+</tbody></table>
+<p>查询中的 WHERE / GROUP BY / ORDER BY 涉及的列全部没有索引：</p>
+<pre><code class="language-sql">WHERE  product_type &lt; &#39;5&#39;    ← 无索引
+AND    pay_status &lt;&gt; 1       ← 无索引
+GROUP BY thread_order_number ← 无索引
+ORDER BY MAX(pay_time) DESC  ← 无索引
+</code></pre>
+<h3 id="24-视图膨胀问题">2.4 视图膨胀问题</h3>
+<p>由于 11 表 LEFT JOIN 产生一对多关系，同一个 <code>thread_order_number</code> 在视图中会出现多行。因此必须在视图查询上加 <code>GROUP BY thread_order_number</code> 来去重。</p>
+<p>但 <code>product_order_record</code> 表中的 <code>thread_order_number</code> 本身就是唯一的。<strong>GROUP BY 是完全多余的</strong>，只是因为视图 JOIN 膨胀才不得不加。</p>
+<h3 id="25-count-查询-bug">2.5 COUNT 查询 Bug</h3>
+<pre><code class="language-xml">&lt;!-- 原 COUNT 写法 --&gt;
+SELECT count(1)
+FROM view_platform_service_fee
+WHERE ...
+GROUP BY thread_order_number
+</code></pre>
+<p>加了 <code>GROUP BY</code> 后，<code>COUNT(1)</code> 返回的是<strong>每组有多少条记录</strong>，而不是总行数。Java 通过取 <code>list.size()</code> 来获得总组数，虽然碰巧能工作，但 MySQL 必须全量分组完才能返回结果，性能极差。</p>
+<hr>
+<h2 id="三、优化方案">三、优化方案</h2>
+<h3 id="31-核心思路">3.1 核心思路</h3>
+<p><strong>拆掉视图，分步查询。</strong></p>
+<pre><code>改前: 视图(11 JOIN + GROUP BY) × 3 次执行
+改后: product_order_record(单表) × 1 次 + 详情视图(仅 IN 查询) × 1 次
+</code></pre>
+<h3 id="32-具体改动">3.2 具体改动</h3>
+<h4 id="改动-1：加索引">改动 1：加索引</h4>
+<pre><code class="language-sql">ALTER TABLE product_order_record ADD INDEX idx_p_export (
+    product_type,
+    pay_status,
+    pay_time
+);
+</code></pre>
+<p>该索引覆盖 WHERE 条件（<code>product_type &lt; &#39;5&#39; AND pay_status &lt;&gt; 1</code>）和 ORDER BY（<code>pay_time DESC</code>）。</p>
+<h4 id="改动-2：新增-v2-查询（直查主表）">改动 2：新增 V2 查询（直查主表）</h4>
+<p>在 <code>PlatformServiceFeeMapper.xml</code> 中新增：</p>
+<pre><code class="language-xml">&lt;!-- V2 分页查询：直查 product_order_record，不走视图 --&gt;
+&lt;select id=&quot;selectThreadOrderPageV2&quot; ...&gt;
+    SELECT p.thread_order_number, p.pay_time as max_pay_time
+    FROM product_order_record p
+    WHERE p.product_type &lt; &#39;5&#39; AND p.pay_status &lt;&gt; 1
+      AND (其他 p 表筛选条件...)
+    GROUP BY p.thread_order_number
+    ORDER BY p.pay_time DESC
+&lt;/select&gt;
+
+&lt;!-- V2 计数查询：直查 product_order_record --&gt;
+&lt;select id=&quot;selectThreadOrderCountV2&quot; ...&gt;
+    SELECT COUNT(1)
+    FROM product_order_record p
+    WHERE p.product_type &lt; &#39;5&#39; AND p.pay_status &lt;&gt; 1
+      AND (其他 p 表筛选条件...)
+&lt;/select&gt;
+</code></pre>
+<p>注意：V2 的 <code>V2_Where_Clause</code> 只包含 <code>product_order_record</code> 表中存在的字段，不包含跨表字段（如 <code>merchant_verify_status</code>、<code>disbursement_status</code> 等）。</p>
+<h4 id="改动-3：新增-v2-service-方法">改动 3：新增 V2 Service 方法</h4>
+<pre><code class="language-java">private PageResult&lt;PlatformServiceFeeVo&gt; getPlatformServiceFeeV2(PlatformServiceFeeDto dto) {
+    // 1. V2 分页：直查 p 表
+    // 2. V2 计数：直查 p 表
+    // 3-6. 其余逻辑与 V1 相同（详情走视图 + 查询 order_check + 组装 VO）
+}
+</code></pre>
+<h4 id="改动-4：路由方法--开关--自动降级">改动 4：路由方法 + 开关 + 自动降级</h4>
+<pre><code class="language-java">@Override
+public PageResult&lt;PlatformServiceFeeVo&gt; getPlatformServiceFee(PlatformServiceFeeDto dto) {
+    if (optimizedQueryEnabled &amp;&amp; !hasCrossTableFilters(dto)) {
+        return getPlatformServiceFeeV2(dto);  // 走优化逻辑
+    }
+    return getPlatformServiceFeeV1(dto);  // 走原逻辑（兼容所有筛选条件）
+}
+</code></pre>
+<p><strong>自动降级条件</strong>：当用户使用以下跨表筛选条件时，V2 无法处理，自动降级到 V1：</p>
+<pre><code class="language-java">private boolean hasCrossTableFilters(PlatformServiceFeeDto dto) {
+    return StringUtils.hasText(dto.getExpenditureCode())        // disbursement_status
+        || StringUtils.hasText(dto.getMerchantVerifyStatus())   // merchant_verify_status
+        || StringUtils.hasText(dto.getOperationVerifyStatus())  // operation_verify_status
+        || StringUtils.hasText(dto.getFinanceVerifyStatus())    // finance_verify_status
+        || StringUtils.hasText(dto.getAccountPeriodStart())     // account_period
+        || StringUtils.hasText(dto.getAccountPeriodEnd());      // account_period
+}
+</code></pre>
+<h4 id="改动-5：配置开关">改动 5：配置开关</h4>
+<pre><code class="language-yaml"># application-dev.yml
+query:
+  optimization:
+    platform-service-fee: false  # true=走V2，false=走V1
+</code></pre>
+<hr>
+<h2 id="四、改动清单">四、改动清单</h2>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>改动类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>PlatformServiceFeeMapper.xml</code></td>
+<td>新增</td>
+<td>加 <code>V2_Where_Clause</code>、<code>selectThreadOrderPageV2</code>、<code>selectThreadOrderCountV2</code></td>
+</tr>
+<tr>
+<td><code>PlatformServiceFeeMapper.java</code></td>
+<td>新增</td>
+<td>加 2 个 V2 接口方法</td>
+</tr>
+<tr>
+<td><code>PlatformServiceFeeServiceImpl.java</code></td>
+<td>修改</td>
+<td>原方法改为 V1 + 新增路由 + 新增 V2 + 新增降级判断</td>
+</tr>
+<tr>
+<td><code>application-dev.yml</code></td>
+<td>新增</td>
+<td>加 <code>query.optimization.platform-service-fee</code> 开关</td>
+</tr>
+</tbody></table>
+<p><strong>旧代码全部保留，未删除任何内容。</strong></p>
+<hr>
+<h2 id="五、测试结果">五、测试结果</h2>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>耗时</th>
+<th>使用的逻辑</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>无筛选条件（旧版本 V1）</td>
+<td><strong>2.83s</strong></td>
+<td>视图 × 3 次</td>
+</tr>
+<tr>
+<td>无筛选条件（优化版 V2）</td>
+<td><strong>0.24s</strong></td>
+<td>p 表直查 × 1 次 + 视图 IN 查询 × 1 次</td>
+</tr>
+<tr>
+<td>跨表筛选 <code>accountPeriod=2026-06</code></td>
+<td><strong>0.40s</strong></td>
+<td>自动降级 V1（视图 + 索引）</td>
+</tr>
+<tr>
+<td>数据量 <code>total</code></td>
+<td><strong>257</strong></td>
+<td>V1 和 V2 完全一致</td>
+</tr>
+<tr>
+<td>数据内容</td>
+<td><strong>一致</strong></td>
+<td>V1 和 V2 的 threadOrderNumber 列表相同</td>
+</tr>
+</tbody></table>
+<p><strong>优化效果：无筛选时提升约 12 倍，有跨表筛选时因索引提升约 7 倍。</strong></p>
+<hr>
+<h2 id="六、后续可优化方向">六、后续可优化方向</h2>
+<h3 id="61-其他慢接口">6.1 其他慢接口</h3>
+<p>本项目的 <code>CustomerCollectionOrderServiceImpl</code>、<code>MerchantServiceFeeServiceImpl</code> 等 Service 存在类似的视图查询模式，可以用同样的手法优化：</p>
+<ol>
+<li>确认主表字段唯一性（是否有必要 GROUP BY）</li>
+<li>加覆盖索引</li>
+<li>新增 V2 Mapper 查询（直查主表）</li>
+<li>加开关 + 自动降级</li>
+</ol>
+<h3 id="62-进一步优化详情查询">6.2 进一步优化详情查询</h3>
+<p>当前 V2 的详情查询仍然走视图（<code>BaseMapper.selectList</code>），虽然只查 10 条，但视图的 JOIN 开销仍然存在。后续可以改为：</p>
+<ol>
+<li>直查 <code>product_order_record</code> 获取主表字段</li>
+<li>分表 IN 查询 <code>local_bill</code>、<code>order_check</code>、<code>lpcg</code> 等获取关联字段</li>
+<li>Java 代码层组装</li>
+</ol>
+<h3 id="63-explain-执行计划参考">6.3 EXPLAIN 执行计划参考</h3>
+<pre><code class="language-sql">-- 优化前（视图查询）
+EXPLAIN SELECT thread_order_number, MAX(pay_time)
+FROM view_platform_service_fee
+GROUP BY thread_order_number
+ORDER BY MAX(pay_time) DESC;
+-- 结果: Using temporary; Using filesort
+
+-- 优化后（p 表直查）
+EXPLAIN SELECT p.thread_order_number, p.pay_time
+FROM product_order_record p
+WHERE p.product_type &lt; &#39;5&#39; AND p.pay_status &lt;&gt; 1
+ORDER BY p.pay_time DESC;
+-- 结果: Using index condition (idx_p_export)
+</code></pre>
+<hr>
+<h2 id="七、导出接口优化">七、导出接口优化</h2>
+<h3 id="71-导出代码问题">7.1 导出代码问题</h3>
+<p>导出方法 <code>exportProduct</code> 与列表存在相同的问题：</p>
+<pre><code class="language-java">public void exportProduct(...) {
+    // 1. 走视图全量查询（限制 20000 条）
+    QueryWrapper&lt;PlatformServiceFeeEntity&gt; queryWrapper = getPlatformServiceFeeEntityQueryWrapper(dto);
+    queryWrapper.last(&quot;limit 20000 &quot;);
+    List&lt;PlatformServiceFeeEntity&gt; list = platformServiceFeeMapper.selectList(queryWrapper);
+
+    // 2. Java 内存中合并去重
+    List&lt;PlatformServiceFeeEntity&gt; mergedList = list.stream().collect(Collectors.toMap(...))...
+
+    // 3. 再转一次 DTO
+    List&lt;PlatformServiceFeeExportEntity&gt; voList = new ArrayList&lt;&gt;();
+    mergedList.forEach(entity -&gt; { ... voList.add(vo); });
+
+    // 4. 一次性写入 Excel（全部在内存）
+    EasyExcelHelper.exportFile(response, voList, ...);
+}
+</code></pre>
+<p><strong>问题清单：</strong></p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>问题</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>走视图，11 表 JOIN</td>
+<td>查询慢</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>limit 20000</code> 硬编码</td>
+<td>超过 2 万条数据就截断</td>
+</tr>
+<tr>
+<td>3</td>
+<td>全量数据加载到内存后合并</td>
+<td>10 万条时 OOM</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>doWrite(全部)</code> 一次性写入 Excel</td>
+<td>大数据量 OOM</td>
+</tr>
+</tbody></table>
+<h3 id="72-优化措施">7.2 优化措施</h3>
+<h4 id="措施一：加索引（与列表共用）">措施一：加索引（与列表共用）</h4>
+<pre><code class="language-sql">ALTER TABLE product_order_record ADD INDEX idx_p_export (
+    product_type,
+    pay_status,
+    pay_time
+);
+</code></pre>
+<p>该索引使导出中的视图最内层子查询从全表扫描变为索引过滤，导出耗时从 <strong>5.58s 降至 2.92s</strong>。</p>
+<h4 id="措施二：新增分批写入工具方法">措施二：新增分批写入工具方法</h4>
+<p>在 <code>EasyExcelHelper</code> 中新增 <code>exportFileBatch</code> 方法，支持回调式分批写入：</p>
+<pre><code class="language-java">public static &lt;E&gt; void exportFileBatch(
+        HttpServletResponse response,
+        Class&lt;E&gt; type,
+        String sheetName,
+        Consumer&lt;ExcelBatchContext&lt;E&gt;&gt; writerCallback) {
+    try (ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream(), type).build()) {
+        WriteSheet writeSheet = EasyExcel.writerSheet(sheetName).build();
+        writerCallback.accept(new ExcelBatchContext&lt;&gt;(excelWriter, writeSheet));
+    }
+}
+</code></pre>
+<p>使用方式：</p>
+<pre><code class="language-java">EasyExcelHelper.exportFileBatch(response, DTO.class, &quot;Sheet名&quot;, ctx -&gt; {
+    for (List&lt;DTO&gt; batch : getAllBatches()) {
+        ctx.write(batch);
+    }
+});
+</code></pre>
+<h4 id="措施三：新增-v2-导出方法（已预留，当前未启用）">措施三：新增 V2 导出方法（已预留，当前未启用）</h4>
+<pre><code class="language-java">private void exportProductV2(PlatformServiceFeeDto dto, HttpServletResponse response) {
+    // 1. 直查 p 表获取所有 thread_order_number（无 JOIN）
+    List&lt;String&gt; allThreadNumbers = mapper.selectExportThreadOrderNumbersV2(dto);
+
+    // 2. 分批处理，每批 2000 条
+    EasyExcelHelper.exportFileBatch(response, ..., ctx -&gt; {
+        for (批次) {
+            // 查视图获取详情（仅 IN 查询当前批次）
+            // 合并去重
+            // 写入 Excel
+            ctx.write(batch);
+        }
+    });
+}
+</code></pre>
+<p><strong>为何当前未启用</strong>：由于视图 JOIN 仍然是瓶颈，V2 导出在数据量小时（257 条）反而因多查一次 p 表而略慢。索引已经让 V1 从 5.58s 降到 2.92s。当数据量增长到万级以上时，可以启用 V2 获得分批写入的 OOM 防护收益。</p>
+<h3 id="73-优化效果">7.3 优化效果</h3>
+<table>
+<thead>
+<tr>
+<th>接口</th>
+<th>场景</th>
+<th>优化前</th>
+<th>优化后</th>
+<th>提升倍数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>列表查询</td>
+<td>无筛选条件</td>
+<td>2.83s</td>
+<td><strong>0.24s</strong></td>
+<td><strong>~12x</strong></td>
+</tr>
+<tr>
+<td>列表查询</td>
+<td>跨表筛选</td>
+<td>2.83s</td>
+<td><strong>0.40s</strong></td>
+<td><strong>~7x</strong>（索引收益）</td>
+</tr>
+<tr>
+<td>导出</td>
+<td>默认</td>
+<td>5.58s</td>
+<td><strong>2.92s</strong></td>
+<td><strong>~2x</strong>（索引收益）</td>
+</tr>
+</tbody></table>
+<h3 id="74-后续优化方向">7.4 后续优化方向</h3>
+<ol>
+<li><strong>导出深度优化</strong>：新建 Mapper 查询直接 JOIN 必要的几张表（不走 11 表视图），配合分批写入，预期降到 <strong>1s 以内</strong>。</li>
+<li><strong>其他类似接口</strong>：<code>CustomerCollectionOrderServiceImpl</code>、<code>MerchantServiceFeeServiceImpl</code> 存在相同的视图查询模式，可用同样手法优化。</li>
+<li><strong>详情查询也绕开视图</strong>：当前列表 V2 的详情查询仍走视图（IN 查询），后续可改为直查 <code>product_order_record</code> 加分表 IN 查询 + Java 组装。</li>
+</ol>
+<h3 id="75-上线策略">7.5 上线策略</h3>
+<pre><code>第1步：部署代码（开关=false）→ 走旧逻辑，无感知
+第2步：改开关=true → 重启 → 走新逻辑
+第3步：验证接口耗时和数据准确性
+第4步：有问题改回 false → 重启 → 立即回滚
+</code></pre>
+<p><strong>旧代码完整保留</strong>，未删除任何内容，开关切回即可回滚。</p>
+</div>
+        </article>
+      </div>
+
+      <div class="toc-container">
+        <nav class="toc" id="table-of-contents">
+          <h2>目录</h2>
+          <div id="toc-content"></div>
+        </nav>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="切换暗色模式">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+      // Dark mode toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const html = document.documentElement;
+
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem("theme-mode");
+      if (savedTheme === "dark") {
+        html.classList.add("dark-mode");
+      }
+
+      // Theme toggle click handler
+      themeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark-mode");
+        const isDarkMode = html.classList.contains("dark-mode");
+        localStorage.setItem("theme-mode", isDarkMode ? "dark" : "light");
+        console.log("主题切换为:", isDarkMode ? "暗色模式" : "亮色模式");
+      });
+
+      // Generate Table of Contents
+      function generateTOC() {
+        const tocContainer = document.getElementById("toc-content");
+        const content = document.querySelector(".post-content");
+        const headers = content.querySelectorAll("h1, h2, h3");
+
+        if (headers.length === 0) {
+          tocContainer.innerHTML = "<p>暂无目录</p>";
+          return;
+        }
+
+        const toc = document.createElement("ul");
+
+        headers.forEach((header, index) => {
+          // Add an id to the header if it doesn't have one
+          if (!header.id) {
+            header.id = "heading-" + index;
+          }
+
+          const li = document.createElement("li");
+          li.className = "toc-item";
+
+          const link = document.createElement("a");
+          link.href = "#" + header.id;
+          link.textContent = header.textContent;
+          link.className = "toc-link";
+
+          // Set indentation based on header level
+          const level = parseInt(header.tagName.charAt(1)) - 1;
+          li.style.marginLeft = level * 20 + "px";
+
+          li.appendChild(link);
+          toc.appendChild(li);
+        });
+
+        tocContainer.appendChild(toc);
+      }
+
+      // Adjust TOC height to match content
+      function adjustTOCHeight() {
+        const toc = document.getElementById("table-of-contents");
+        const post = document.querySelector(".post");
+
+        if (toc && post) {
+          // Get the height of the post area
+          const postHeight = post.offsetHeight;
+
+          // Set the max-height of the TOC to match the post height
+          // Leave some space for top margin and padding
+          toc.style.maxHeight =
+            Math.min(postHeight - 30, window.innerHeight * 0.8) + "px";
+        }
+      }
+
+      // Back to top button
+      const backToTopButton = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add("visible");
+        } else {
+          backToTopButton.classList.remove("visible");
+        }
+      });
+
+      backToTopButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Initialize TOC when page loads and adjust height
+      document.addEventListener("DOMContentLoaded", function () {
+        generateTOC();
+        adjustTOCHeight();
+
+        // Adjust height on window resize
+        window.addEventListener("resize", adjustTOCHeight);
+      });
+
+      // 页面加载完成后添加复制按钮
+      window.addEventListener("load", function () {
+        addCopyButtons();
+      });
+
+      // 监听可能的动态内容加载
+      const observer = new MutationObserver(function (mutations) {
+        let shouldAddButtons = false;
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              // 检查添加的节点是否是代码块或包含代码块
+              if (
+                (node.classList && node.classList.contains("sourceCode")) ||
+                (node.tagName === "PRE" &&
+                  !node.classList.contains("mermaid")) ||
+                node.querySelector(".sourceCode, pre:not(.mermaid)")
+              ) {
+                shouldAddButtons = true;
+              }
+            }
+          });
+        });
+        if (shouldAddButtons) {
+          // 延迟执行以确保DOM完全更新
+          setTimeout(addCopyButtons, 100);
+        }
+      });
+
+      // 开始监听DOM变化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      console.log("页面加载完成，AI 技术笔记已就绪");
+    </script>
+  </body>
+</html>
