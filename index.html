@@ -227,6 +227,27 @@
         flex-wrap: wrap;
       }
 
+      /* 📊 阅读进度条 */
+      .reading-progress {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 0%;
+        height: 3px;
+        background: linear-gradient(90deg, #3498db, #e74c3c, #f39c12);
+        background-size: 200% 100%;
+        animation: progress-glow 2s ease infinite;
+        z-index: 9999;
+        transition: width 0.1s linear;
+        box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+      }
+
+      @keyframes progress-glow {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
       .theme-toggle {
         display: inline-flex;
         align-items: center;
@@ -1355,6 +1376,8 @@
     </script>
   </head>
   <body>
+    <!-- 📊 阅读进度条 -->
+    <div class="reading-progress" id="readingProgress"></div>
     <div class="page-wrapper">
       <!-- PERSISTENT HEADER -->
       <header class="header">
@@ -2144,6 +2167,29 @@
 
       // 页面初始化时也执行
       initHeaderGlow();
+
+      // ==================== 📊 阅读进度条 ====================
+      function initReadingProgress() {
+        const bar = document.getElementById('readingProgress');
+        if (!bar) return;
+
+        let ticking = false;
+        window.addEventListener('scroll', () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              const scrollTop = window.scrollY;
+              const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+              if (docHeight <= 0) { bar.style.width = '0%'; ticking = false; return; }
+              const progress = (scrollTop / docHeight) * 100;
+              bar.style.width = Math.min(progress, 100) + '%';
+              ticking = false;
+            });
+            ticking = true;
+          }
+        });
+      }
+
+      initReadingProgress();
     </script>
   </body>
 </html>
