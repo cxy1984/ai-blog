@@ -5,14 +5,41 @@ const log = (...args) => {
   if (!isQuiet) console.log(...args);
 };
 
-// Function to get file modification date
-function getFileDate(filePath) {
+// Function to get file date
+// Priority: 1) date from content (> 日期：...) 2) folder name 3) file mtime
+function getFileDate(filePath, monthDir) {
+  // Priority 1: Try to extract date from markdown content
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    // Match patterns like: > 日期：2026-07-08  or  > 日期: 2026-07-09
+    const dateMatch = content.match(/日期[：:]\s*(\d{4})[\-\/](\d{1,2})[\-\/](\d{1,2})/);
+    if (dateMatch) {
+      const year = parseInt(dateMatch[1]);
+      const month = parseInt(dateMatch[2]) - 1;
+      const day = parseInt(dateMatch[3]);
+      return new Date(year, month, day);
+    }
+  } catch (error) {
+    // Fall through to next priority
+  }
+
+  // Priority 2: Fall back to file modification time
   try {
     const stats = fs.statSync(filePath);
     return stats.mtime;
   } catch (error) {
-    return new Date();
+    // Fall through to next priority
   }
+
+  // Priority 3: Use folder name (YYYY-MM) + first day of month
+  if (monthDir && /^\d{4}-\d{2}$/.test(monthDir)) {
+    const parts = monthDir.split('-');
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1;
+    return new Date(year, month, 1);
+  }
+
+  return new Date();
 }
 
 // Function to format date
@@ -100,7 +127,7 @@ function main() {
         const filePath = path.join(monthPath, filename);
         const htmlFilename = filename.replace(".md", "-fragment.html");
         const title = extractTitleFromMarkdown(filePath);
-        const date = getFileDate(filePath);
+        const date = getFileDate(filePath, monthDir);
         const formattedDate = formatDate(date);
 
         allDocuments.push({
