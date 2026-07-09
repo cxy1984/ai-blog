@@ -93,6 +93,34 @@ function getFileDate(filePath, monthDir) {
     return new Date();
 }
 
+// Function to calculate reading time from markdown content
+function calcReadingTime(filePath) {
+    try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        // Remove markdown syntax
+        const plain = content
+            .replace(/^#+\s.*$/gm, '')       // headings
+            .replace(/```[\s\S]*?```/g, '')  // code blocks
+            .replace(/`[^`]+`/g, '')          // inline code
+            .replace(/!\[.*?\]\(.*?\)/g, '') // images
+            .replace(/\[.*?\]\(.*?\)/g, '') // links
+            .replace(/[*_~>|\-]/g, '')        // formatting
+            .replace(/\s+/g, ' ')
+            .trim();
+
+        // Count Chinese characters
+        const chineseChars = (plain.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+        // Count English words
+        const englishWords = (plain.match(/[a-zA-Z]+/g) || []).length;
+
+        // Reading speed: ~200 Chinese chars/min, ~200 English words/min
+        const minutes = Math.max(1, Math.ceil(chineseChars / 200 + englishWords / 200));
+        return { minutes, chineseChars, englishWords };
+    } catch (error) {
+        return { minutes: 1, chineseChars: 0, englishWords: 0 };
+    }
+}
+
 // Function to format date
 function formatDate(date) {
     return date.toLocaleString('zh-CN', {
@@ -114,7 +142,10 @@ function generateDocCard(doc) {
                     <h2 class="feed-item-title"><a href="/docs/${doc.monthDir}/${fragmentFilename}">${doc.title}</a></h2>
                     <div class="feed-item-meta">
                         <span class="feed-item-date">${formattedDate}</span>
-                        <span class="feed-item-category">Markdown 文档</span>
+                        <span class="feed-item-meta-right">
+                            <span class="feed-item-readtime">⏱ ${doc.readingTime.minutes} 分钟</span>
+                            <span class="feed-item-category">Markdown 文档</span>
+                        </span>
                     </div>
                 </div>
                 <div class="feed-item-content">
@@ -186,6 +217,7 @@ function main() {
             const title = extractTitleFromMarkdown(filePath);
             const excerpt = extractExcerptFromMarkdown(filePath);
             const date = getFileDate(filePath, monthDir);
+            const readingTime = calcReadingTime(filePath);
             
             allDocuments.push({
                 type: 'markdown',
@@ -193,7 +225,8 @@ function main() {
                 filename,
                 title,
                 excerpt,
-                date
+                date,
+                readingTime
             });
         });
     });

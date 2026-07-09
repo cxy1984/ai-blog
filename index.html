@@ -578,6 +578,8 @@
         margin-bottom: 20px;
         padding-bottom: 15px;
         border-bottom: 1px solid rgba(233, 236, 239, 0.6);
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
       .feed-item-date {
@@ -590,6 +592,25 @@
       .feed-item-date::before {
         content: "📅";
         font-size: 0.85rem;
+      }
+
+      .feed-item-meta-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .feed-item-readtime {
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #95a5a6;
+        font-size: 0.85rem;
+      }
+
+      :root.dark-mode .feed-item-readtime {
+        color: #7f8c8d;
       }
 
       .feed-item-category {

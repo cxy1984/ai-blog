@@ -51,6 +51,27 @@ function formatDate(date) {
   });
 }
 
+// Function to calculate reading time from markdown content
+function calcReadingTime(filePath) {
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const plain = content
+      .replace(/^#+\s.*$/gm, '')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`[^`]+`/g, '')
+      .replace(/![\[\]\(\).*?]/g, '')
+      .replace(/\[.*?\]\(.*?\)/g, '')
+      .replace(/[*_~>|\-]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const chineseChars = (plain.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length;
+    const englishWords = (plain.match(/[a-zA-Z]+/g) || []).length;
+    return Math.max(1, Math.ceil(chineseChars / 200 + englishWords / 200));
+  } catch (error) {
+    return 1;
+  }
+}
+
 // Function to extract title from Markdown file
 function extractTitleFromMarkdown(filePath) {
   try {
@@ -129,6 +150,7 @@ function main() {
         const title = extractTitleFromMarkdown(filePath);
         const date = getFileDate(filePath, monthDir);
         const formattedDate = formatDate(date);
+        const readingTime = calcReadingTime(filePath);
 
         allDocuments.push({
           type: "markdown",
@@ -136,6 +158,7 @@ function main() {
           title: title,
           date: formattedDate,
           category: "Markdown 文档",
+          readtime: readingTime,
           timestamp: date.getTime(),
         });
       });
