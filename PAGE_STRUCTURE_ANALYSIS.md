@@ -300,7 +300,7 @@ npm run build
 ## 8. 项目文件组织
 
 ```
-ai-note/
+ai-blog/
 ├── markdown/                # 源文件
 │   ├── 2025-10/
 │   │   ├── article1.md

@@ -1,5 +1,5 @@
 {
-  "name": "ai-note-converter",
+  "name": "ai-blog-converter",
   "version": "1.0.0",
   "description": "Convert HTML documentation to Markdown and generate static site",
   "main": "src/dev.js",
