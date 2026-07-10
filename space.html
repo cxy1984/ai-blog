@@ -31,24 +31,25 @@
         st.textContent = css;
         document.head.appendChild(st);
       }
+      var motionPropNames = { initial: 1, animate: 1, whileInView: 1, viewport: 1, transition: 1, variants: 1, exit: 1, whileHover: 1, whileTap: 1, whileDrag: 1, whileFocus: 1, layout: 1, layoutId: 1, onAnimationStart: 1, onAnimationComplete: 1, drag: 1, dragConstraints: 1, dragElastic: 1 };
       function makeTag(tag) {
         return function(props) {
           var args = Array.prototype.slice.call(arguments, 1);
           var children = [];
           for (var i = 0; i < args.length; i++) {
             if (Array.isArray(args[i])) { for (var j = 0; j < args[i].length; j++) children.push(args[i][j]); }
-            else if (args[i] != null) children.push(args[i]);
+            else if (args[i] != null && args[i] !== true && args[i] !== false) children.push(args[i]);
           }
-          var elProps = {};
-          var delay = 0;
-          var anim = '';
-          for (var k in props) {
-            if (k === 'initial' || k === 'viewport') { }
-            else if (k === 'animate' || k === 'whileInView') { anim = 'mp_fadeIn'; }
-            else if (k === 'transition') {
-              if (props[k] && props[k].delay) delay = props[k].delay;
+          var elProps = {}, delay = 0, anim = '';
+          if (props) {
+            for (var k in props) {
+              if (motionPropNames[k]) {
+                if (k === 'animate' || k === 'whileInView') anim = 'mp_fadeIn';
+                if (k === 'transition' && props[k] && props[k].delay) delay = props[k].delay;
+              } else if (k !== 'key' || tag === '') {
+                elProps[k] = props[k];
+              }
             }
-            else { elProps[k] = props[k]; }
           }
           var cls = elProps.className || '';
           if (anim) cls = cls + ' mp_anim ' + anim;
@@ -57,7 +58,8 @@
             elProps.style = Object.assign({}, existing, { animationDelay: delay + 's' });
           }
           elProps.className = cls.trim();
-          return React.createElement(tag, elProps, children.length ? children : null);
+          if (children.length === 0) children = null;
+          return React.createElement(tag, elProps, children);
         };
       }
       for (var i = 0; i < tags.length; i++) motion[tags[i]] = makeTag(tags[i]);
