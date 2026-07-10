@@ -12,8 +12,59 @@
     <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
-    <script>window.Motion = window.FramerMotion;</script>
+    <!-- Motion polyfill: replaces framer-motion with CSS animations (no external deps) -->
+    <script>
+    window.Motion = {};
+    (function() {
+      var tags = 'a,abbr,address,area,article,aside,audio,b,base,bdi,bdo,blockquote,body,br,button,canvas,caption,cite,code,col,colgroup,data,datalist,dd,del,details,dfn,dialog,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,head,header,hgroup,hr,html,i,iframe,img,input,ins,kbd,label,legend,li,link,main,map,mark,menu,meta,meter,nav,noscript,object,ol,optgroup,option,output,p,picture,pre,progress,q,rp,rt,ruby,s,samp,script,section,select,slot,small,source,span,strong,style,sub,summary,sup,table,tbody,td,template,textarea,tfoot,th,thead,time,title,tr,track,u,ul,var,video,wbr'.split(',');
+      var motion = {};
+      var styleId = '__motionPolyfill';
+      if (!document.getElementById(styleId)) {
+        var st = document.createElement('style');
+        st.id = styleId;
+        var css = '';
+        css += '@keyframes mp_fadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(20px); } to { opacity: 1; filter: blur(0px); transform: translateY(0); } } ';
+        css += '@keyframes mp_fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } } ';
+        css += '.mp_anim { animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); } ';
+        css += '.mp_fadeIn { animation-name: mp_fadeIn; animation-duration: 0.6s; } ';
+        css += '.mp_fadeInUp { animation-name: mp_fadeInUp; animation-duration: 0.6s; }';
+        st.textContent = css;
+        document.head.appendChild(st);
+      }
+      function makeTag(tag) {
+        return function(props) {
+          var args = Array.prototype.slice.call(arguments, 1);
+          var children = [];
+          for (var i = 0; i < args.length; i++) {
+            if (Array.isArray(args[i])) { for (var j = 0; j < args[i].length; j++) children.push(args[i][j]); }
+            else if (args[i] != null) children.push(args[i]);
+          }
+          var elProps = {};
+          var delay = 0;
+          var anim = '';
+          for (var k in props) {
+            if (k === 'initial' || k === 'viewport') { }
+            else if (k === 'animate' || k === 'whileInView') { anim = 'mp_fadeIn'; }
+            else if (k === 'transition') {
+              if (props[k] && props[k].delay) delay = props[k].delay;
+            }
+            else { elProps[k] = props[k]; }
+          }
+          var cls = elProps.className || '';
+          if (anim) cls = cls + ' mp_anim ' + anim;
+          if (delay > 0) {
+            var existing = elProps.style || {};
+            elProps.style = Object.assign({}, existing, { animationDelay: delay + 's' });
+          }
+          elProps.className = cls.trim();
+          return React.createElement(tag, elProps, children.length ? children : null);
+        };
+      }
+      for (var i = 0; i < tags.length; i++) motion[tags[i]] = makeTag(tags[i]);
+      window.Motion.motion = motion;
+      window.Motion.AnimatePresence = function(p) { return p.children; };
+    })();
+    </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow-x: hidden; min-height: 100vh; }
