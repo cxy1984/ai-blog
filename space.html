@@ -12,55 +12,119 @@
     <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-    <!-- Motion polyfill: replaces framer-motion with CSS animations (no external deps) -->
+    <!-- framer-motion → use dynamic import to detect availability, fallback to polyfill -->
     <script>
-    window.Motion = {};
-    (function() {
-      var tags = 'a,abbr,address,area,article,aside,audio,b,base,bdi,bdo,blockquote,body,br,button,canvas,caption,cite,code,col,colgroup,data,datalist,dd,del,details,dfn,dialog,div,dl,dt,em,embed,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,head,header,hgroup,hr,html,i,iframe,img,input,ins,kbd,label,legend,li,link,main,map,mark,menu,meta,meter,nav,noscript,object,ol,optgroup,option,output,p,picture,pre,progress,q,rp,rt,ruby,s,samp,script,section,select,slot,small,source,span,strong,style,sub,summary,sup,table,tbody,td,template,textarea,tfoot,th,thead,time,title,tr,track,u,ul,var,video,wbr'.split(',');
-      var motion = {};
-      var styleId = '__motionPolyfill';
-      if (!document.getElementById(styleId)) {
-        var st = document.createElement('style');
-        st.id = styleId;
-        var css = '';
-        css += '@keyframes mp_fadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(20px); } to { opacity: 1; filter: blur(0px); transform: translateY(0); } } ';
-        css += '@keyframes mp_fadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } } ';
-        css += '.mp_anim { animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); } ';
-        css += '.mp_fadeIn { animation-name: mp_fadeIn; animation-duration: 0.6s; } ';
-        css += '.mp_fadeInUp { animation-name: mp_fadeInUp; animation-duration: 0.6s; }';
-        st.textContent = css;
-        document.head.appendChild(st);
-      }
-      function makeTag(tag) {
-        return function(props) {
-          var args = Array.prototype.slice.call(arguments, 1);
-          // Use a flat array spread approach instead of manual children building
-          var flatArgs = [];
-          for (var ai = 0; ai < args.length; ai++) {
-            var av = args[ai];
-            if (Array.isArray(av)) {
-              for (var aj = 0; aj < av.length; aj++) {
-                flatArgs.push(av[aj]);
-              }
-            } else {
-              flatArgs.push(av);
-            }
-          }
-          // Filter out null/undefined/boolean
-          var cleanArgs = flatArgs.filter(function(x) { return x != null && x !== true && x !== false; });
-          return React.createElement.apply(React, [tag, props].concat(cleanArgs));
+        // Suppress Framer Motion dev warnings about list keys
+        const _error = console.error;
+        console.error = function(msg) {
+            if (typeof msg === 'string' && msg.includes('each child in a list')) return;
+            _error.apply(console, arguments);
         };
-      }
-      for (var i = 0; i < tags.length; i++) motion[tags[i]] = makeTag(tags[i]);
-      window.Motion.motion = motion;
-      window.Motion.AnimatePresence = function(p) { return p.children; };
-    })();
+
+        // Load framer-motion — try ESM dynamic import, fallback to window assignment
+        window.__motionReady = new Promise(function(resolve) {
+            var s = document.createElement('script');
+            s.src = 'https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js';
+            s.onload = function() {
+                // Check if window.FramerMotion or window.Motion exists
+                var M = window.FramerMotion || window.Motion;
+                if (M && M.motion) {
+                    window.Motion = M;
+                    console.log('[framer] loaded via UMD');
+                    resolve(true);
+                } else {
+                    // Try dynamic import as fallback
+                    import('https://unpkg.com/framer-motion@11.11.17/dist/es/index.mjs')
+                        .then(function(mod) {
+                            window.Motion = mod;
+                            console.log('[framer] loaded via ESM');
+                            resolve(true);
+                        })
+                        .catch(function() {
+                            resolve(false);
+                        });
+                }
+            };
+            s.onerror = function() {
+                resolve(false);
+            };
+            document.head.appendChild(s);
+        });
+    </script>
+    <script>
+        // Backup: if framer-motion fails, provide minimal polyfill
+        window.__motionReady.then(function(loaded) {
+            if (loaded) return;
+            console.warn('[framer] not available, using CSS polyfill');
+            // Inject CSS keyframes
+            var style = document.createElement('style');
+            style.textContent = [
+                '@keyframes mpFadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(20px); } to { opacity: 1; filter: blur(0px); transform: translateY(0); } }',
+                '@keyframes mpFadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }',
+                '.mpInit { opacity: 0 !important; }',
+                '.mpAnim { animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }',
+                '.mpFI { animation-name: mpFadeIn; animation-duration: 0.6s; }',
+                '.mpFIUp { animation-name: mpFadeInUp; animation-duration: 0.6s; }',
+            ].join('\n');
+            document.head.appendChild(style);
+
+            var MAX_RETRIES = 5;
+            function tryPatchMotion(n) {
+                if (n > MAX_RETRIES) return;
+                if (window.Motion && window.Motion.motion) return;
+                var tags = ('div,span,p,h1,h2,h3,h4,h5,h6,section,nav,article,aside,header,footer,main,' +
+                    'a,button,ul,li,ol,form,input,label,textarea,select,img,figure,figcaption,blockquote,pre,code,' +
+                    'table,thead,tbody,tr,td,th,br,hr,small,strong,em,i,b,sup,sub').split(',');
+                var motion = {};
+                tags.forEach(function(t) {
+                    motion[t] = function(props) {
+                        var args = Array.prototype.slice.call(arguments, 1);
+                        var flat = [];
+                        for (var ai = 0; ai < args.length; ai++) {
+                            var av = args[ai];
+                            if (Array.isArray(av)) { for (var aj = 0; aj < av.length; aj++) flat.push(av[aj]); }
+                            else flat.push(av);
+                        }
+                        var clean = flat.filter(function(x) { return x != null && x !== true && x !== false; });
+                        var elProps = {};
+                        var animClass = '';
+                        var delay = 0;
+                        if (props) {
+                            for (var k in props) {
+                                if (k === 'initial') { animClass = 'mpFI'; }
+                                else if (k === 'animate' || k === 'whileInView') { animClass = 'mpFI'; }
+                                else if (k === 'transition' && props[k] && props[k].delay) { delay = props[k].delay; }
+                                else if (k === 'viewport' || k === 'variants' || k === 'exit' || k === 'layout' ||
+                                    k === 'layoutId' || k === 'onAnimationStart' || k === 'onAnimationComplete') {}
+                                else { elProps[k] = props[k]; }
+                            }
+                        }
+                        var cls = elProps.className || '';
+                        if (animClass) cls = cls + ' mpAnim ' + animClass;
+                        if (delay > 0) {
+                            elProps.style = Object.assign({}, elProps.style || {}, { animationDelay: delay + 's' });
+                        }
+                        elProps.className = cls.trim();
+                        return React.createElement(t, elProps, clean.length ? clean : null);
+                    };
+                });
+                window.Motion = window.Motion || {};
+                window.Motion.motion = motion;
+                window.Motion.AnimatePresence = function(p) { return p.children; };
+            }
+            tryPatchMotion(0);
+            // Retry a few times in case framer-motion loads late
+            var iv = setInterval(function() {
+                tryPatchMotion(0);
+                if (window.Motion && window.Motion.motion) clearInterval(iv);
+            }, 200);
+            setTimeout(function() { clearInterval(iv); }, 3000);
+        });
     </script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow-x: hidden; min-height: 100vh; }
 
-        /* Starfield fallback */
         .starfield {
             position: fixed; inset: 0;
             background: radial-gradient(ellipse at 50% 30%, #0a0a1a 0%, #000 70%);
@@ -180,19 +244,15 @@
                 }
             }
         };
-        // Suppress Framer Motion dev warnings about list keys
-        const _error = console.error;
-        console.error = function(msg) {
-            if (typeof msg === 'string' && msg.includes('each child in a list')) return;
-            _error.apply(console, arguments);
-        };
     </script>
 </head>
 <body>
     <div class="starfield" id="starfield"></div>
     <div id="root"></div>
+
+    <!-- ===== Initial render: wait for framer-motion, then render App ===== -->
     <script type="text/babel">
-        const { motion, AnimatePresence } = window.Motion;
+        const { motion, AnimatePresence } = window.Motion || {};
         const { useState, useEffect, useRef, useCallback, createElement: h, Fragment } = React;
 
         // ─── Icons ───
@@ -228,14 +288,13 @@
         const FADE_MS = 500;
         const FADE_OUT_LEAD = 0.55;
 
-        const FadingVideo = ({ src, className, style: styleProp, fullBleed }) => {
+        const FadingVideo = ({ src, className, style: styleProp }) => {
             const videoRef = useRef(null);
             const rAFRef = useRef(null);
             const fadingOutRef = useRef(false);
             const [errored, setErrored] = useState(false);
             const [loaded, setLoaded] = useState(false);
 
-            // Timeout: if video doesn't load in 8s, show fallback
             useEffect(() => {
                 const timer = setTimeout(() => {
                     if (!loaded) setErrored(true);
@@ -250,7 +309,6 @@
                 const start = performance.now();
                 const from = parseFloat(v.style.opacity) || 0;
                 const diff = target - from;
-
                 function tick(now) {
                     const elapsed = now - start;
                     const t = Math.min(elapsed / duration, 1);
@@ -271,18 +329,13 @@
                     v.play().catch(() => {});
                     fadeTo(1, FADE_MS);
                 };
-
-                const onError = () => {
-                    setErrored(true);
-                };
-
+                const onError = () => setErrored(true);
                 const onTimeUpdate = () => {
                     if (!fadingOutRef.current && v.duration > 0 && v.duration - v.currentTime <= FADE_OUT_LEAD && v.duration - v.currentTime > 0) {
                         fadingOutRef.current = true;
                         fadeTo(0, FADE_MS);
                     }
                 };
-
                 const onEnded = () => {
                     v.style.opacity = '0';
                     setTimeout(() => {
@@ -298,7 +351,6 @@
                 v.addEventListener('timeupdate', onTimeUpdate);
                 v.addEventListener('ended', onEnded);
 
-                // Check if video already loaded
                 if (v.readyState >= 3) { setLoaded(true); onLoaded(); }
 
                 return () => {
@@ -310,19 +362,10 @@
                 };
             }, [fadeTo]);
 
-            if (errored) {
-                return h('div', { className: 'video-fallback' });
-            }
-
+            if (errored) return h('div', { className: 'video-fallback' });
             return h('video', {
-                ref: videoRef,
-                src,
-                autoPlay: true,
-                muted: true,
-                playsInline: true,
-                preload: 'auto',
-                className,
-                style: { opacity: 0, ...styleProp },
+                ref: videoRef, src, autoPlay: true, muted: true, playsInline: true,
+                preload: 'auto', className, style: { opacity: 0, ...styleProp },
             });
         };
 
@@ -342,44 +385,39 @@
             }, []);
 
             const words = text.split(' ');
-
-            return h('p', { ref,
-                style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' }
-            }, words.map((w, i) => h(motion.span, {
-                key: i,
-                style: { display: 'inline-block', marginRight: '0.28em' },
-                initial: triggered ? undefined : { filter: 'blur(10px)', opacity: 0, y: 50 },
-                animate: triggered ? {
-                    filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'],
-                    opacity: [0, 0.5, 1],
-                    y: [50, -5, 0],
-                } : undefined,
-                transition: {
-                    duration: 0.7,
-                    times: [0, 0.5, 1],
-                    ease: 'easeOut',
-                    delay: delayProp + (i * 100) / 1000,
-                }
-            }, w)));
+            return h('p', { ref, style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' } },
+                words.map((w, i) => h(motion.span, {
+                    key: i,
+                    style: { display: 'inline-block', marginRight: '0.28em' },
+                    initial: triggered ? undefined : { filter: 'blur(10px)', opacity: 0, y: 50 },
+                    animate: triggered ? {
+                        filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'],
+                        opacity: [0, 0.5, 1],
+                        y: [50, -5, 0],
+                    } : undefined,
+                    transition: {
+                        duration: 0.7,
+                        times: [0, 0.5, 1],
+                        ease: 'easeOut',
+                        delay: delayProp + (i * 100) / 1000,
+                    }
+                }, w))
+            );
         };
 
         // ─── Navbar ───
         const Navbar = () => {
             const links = ['Home', 'Voyages', 'Worlds', 'Innovation', 'Plan Launch'];
             return h('nav', { className: 'fixed top-4 left-0 right-0 px-8 lg:px-16 z-50 flex items-center justify-between' },
-                // Logo
                 h('div', { className: 'w-12 h-12 liquid-glass rounded-full flex items-center justify-center flex-shrink-0' },
                     h('span', { className: 'font-heading italic text-white text-lg' }, 'a')
                 ),
-                // Center
                 h('div', { className: 'hidden md:flex items-center gap-2 liquid-glass rounded-full px-1.5 py-1.5' },
                     ...links.map(l => h('span', { key: l, className: 'px-3 py-2 text-sm font-medium text-white/90 font-body cursor-pointer hover:text-white transition' }, l)),
                     h('span', { className: 'bg-white text-black rounded-full px-4 py-2 text-sm font-medium font-body flex items-center gap-1.5 cursor-pointer whitespace-nowrap' },
-                        'Claim a Spot',
-                        h(ArrowUpRight, { className: 'h-4 w-4' })
+                        'Claim a Spot', h(ArrowUpRight, { className: 'h-4 w-4' })
                     )
                 ),
-                // Right spacer
                 h('div', { className: 'w-12 flex-shrink-0 hidden md:block' })
             );
         };
@@ -393,16 +431,13 @@
                 viewport: { once: true, amount: 0.2 },
                 transition: { duration: 0.6, delay: 0.15 * index, ease: 'easeOut' }
             },
-                // Top row
                 h('div', { className: 'flex items-start justify-between gap-4' },
                     h('div', { className: 'w-11 h-11 liquid-glass rounded-[0.75rem] flex items-center justify-center flex-shrink-0' }, icon),
                     h('div', { className: 'flex flex-wrap justify-end gap-1.5 flex-1' },
                         ...tags.map((t, i) => h('span', { key: i, className: 'liquid-glass rounded-full px-3 py-1 text-[11px] text-white/90 font-body whitespace-nowrap' }, t))
                     )
                 ),
-                // Spacer
                 h('div', { className: 'flex-1' }),
-                // Bottom
                 h('div', { className: 'mt-6' },
                     h('h3', { className: 'font-heading italic text-white text-3xl md:text-4xl tracking-[-1px] leading-none' }, title),
                     h('p', { className: 'mt-3 text-sm text-white/90 font-body font-light leading-snug max-w-[32ch]' }, body)
@@ -413,16 +448,13 @@
         // ─── Section 1: Hero ───
         const Hero = () => {
             return h('section', { className: 'relative w-full h-screen overflow-hidden' },
-                // Background video
                 h(FadingVideo, {
                     src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4',
                     className: 'absolute left-1/2 top-0 -translate-x-1/2 object-cover object-top z-0',
                     style: { width: '120%', height: '120%' }
                 }),
-                // Content layer
                 h('div', { className: 'relative z-10 flex flex-col h-full' },
                     h(Navbar),
-                    // Center content
                     h('div', { className: 'flex-1 flex flex-col items-center justify-center px-4 pt-24' },
                         // Badge
                         h(motion.div, {
@@ -435,10 +467,7 @@
                             h('span', { className: 'text-sm text-white/90 pr-3 font-body' }, 'Maiden Crewed Voyage to Mars Arrives 2026')
                         ),
                         // Headline
-                        h(BlurText, {
-                            text: 'Venture Past Our Sky Across the Universe',
-                            delay: 0.5,
-                        }),
+                        h(BlurText, { text: 'Venture Past Our Sky Across the Universe', delay: 0.5 }),
                         // Subheading
                         h(motion.p, {
                             className: 'mt-4 text-sm md:text-base text-white max-w-2xl font-body font-light leading-tight text-center',
@@ -454,12 +483,10 @@
                             transition: { duration: 0.6, delay: 1.1, ease: 'easeOut' }
                         },
                             h('span', { className: 'liquid-glass-strong rounded-full px-5 py-2.5 text-sm font-medium text-white font-body flex items-center gap-2 cursor-pointer' },
-                                'Start Your Voyage',
-                                h(ArrowUpRight, { className: 'h-5 w-5' })
+                                'Start Your Voyage', h(ArrowUpRight, { className: 'h-5 w-5' })
                             ),
                             h('span', { className: 'text-sm text-white font-body flex items-center gap-1.5 cursor-pointer hover:underline' },
-                                'View Liftoff',
-                                h(Play, { className: 'h-4 w-4' })
+                                'View Liftoff', h(Play, { className: 'h-4 w-4' })
                             )
                         ),
                         // Stats
@@ -531,14 +558,11 @@
             ];
 
             return h('section', { className: 'relative min-h-screen w-full overflow-hidden' },
-                // Background video
                 h(FadingVideo, {
                     src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4',
                     className: 'absolute inset-0 w-full h-full object-cover z-0',
                 }),
-                // Content
                 h('div', { className: 'relative z-10 px-8 md:px-16 lg:px-20 pt-24 pb-10 flex flex-col min-h-screen' },
-                    // Header
                     h('div', { className: 'mb-auto' },
                         h(motion.p, {
                             className: 'text-sm font-body text-white/80 mb-6',
@@ -555,7 +579,6 @@
                             transition: { duration: 0.6, delay: 0.1 }
                         }, 'Production', h('br'), 'evolved')
                     ),
-                    // Cards
                     h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mt-16' },
                         ...cards.map((c, i) => h(CapCard, { key: i, ...c, index: i }))
                     )
@@ -573,9 +596,26 @@
 
         window.App = App;
     </script>
-    <script type="text/babel">
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(React.createElement(React.StrictMode, null, React.createElement(window.App)));
+    <script>
+        // Delay rendering until framer-motion (or fallback polyfill) is ready
+        (function() {
+            function tryRender(n) {
+                if (n > 50) {
+                    document.getElementById('root').innerHTML = '<div style="color:white;text-align:center;padding:40vh 20px;font-family:sans-serif">Loading... Please refresh.</div>';
+                    return;
+                }
+                if (window.Motion && window.Motion.motion && window.App) {
+                    try {
+                        var root = ReactDOM.createRoot(document.getElementById('root'));
+                        root.render(React.createElement(React.StrictMode, null, React.createElement(window.App)));
+                    } catch(e) {
+                        console.error('[render]', e);
+                        setTimeout(function() { tryRender(n + 1); }, 200);
+                    }
+                } else {
+                    setTimeout(function() { tryRender(n + 1); }, 100);
+                }
+            }
+            tryRender(0);
+        })();
     </script>
-</body>
-</html>
