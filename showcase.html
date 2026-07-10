@@ -22,17 +22,58 @@
             position: relative;
         }
 
-        /* ==================== 噪点纹理 ==================== */
-        .noise {
+        /* ==================== 背景层 ==================== */
+        .bg-layer {
             position: fixed;
             inset: 0;
             z-index: 0;
             pointer-events: none;
-            opacity: 0.35;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-            background-repeat: repeat;
+            overflow: hidden;
+        }
+
+        /* 噪点 */
+        .noise {
+            position: absolute;
+            inset: 0;
+            opacity: 0.3;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             background-size: 256px 256px;
             mix-blend-mode: multiply;
+        }
+
+        /* 浮动渐变体 */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+        }
+        .blob-1 { width: 350px; height: 350px; background: rgba(99,102,241,0.06); top: -120px; right: -80px; animation: blobA 14s ease-in-out infinite; }
+        .blob-2 { width: 250px; height: 250px; background: rgba(139,92,246,0.05); bottom: -80px; left: -60px; animation: blobB 18s ease-in-out infinite; }
+        .blob-3 { width: 200px; height: 200px; background: rgba(99,102,241,0.04); top: 50%; left: 60%; animation: blobA 16s ease-in-out infinite reverse; }
+
+        @keyframes blobA {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            33% { transform: translate(30px,-40px) scale(1.1); }
+            66% { transform: translate(-20px,30px) scale(0.95); }
+        }
+        @keyframes blobB {
+            0%, 100% { transform: translate(0,0) scale(1); }
+            50% { transform: translate(40px,20px) scale(1.15); }
+        }
+
+        /* 技术网格点 */
+        .grid-dots {
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, #c7d2fe 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.25;
+            animation: gridPulse 6s ease-in-out infinite;
+        }
+
+        @keyframes gridPulse {
+            0%, 100% { opacity: 0.25; }
+            50% { opacity: 0.4; }
         }
 
         /* ==================== Canvas 粒子 ==================== */
@@ -43,67 +84,44 @@
             pointer-events: none;
         }
 
-        /* ==================== 浮动几何形状 ==================== */
-        .float-shape {
+        /* ==================== 轨道装饰（技术星系简化版） ==================== */
+        .orbit-deco {
             position: fixed;
-            border-radius: 50%;
+            inset: 0;
             z-index: 1;
             pointer-events: none;
-            opacity: 0.3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .float-shape-1 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 70%);
-            top: -80px;
-            right: -60px;
-            animation: floatA 12s ease-in-out infinite;
-        }
-
-        .float-shape-2 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%);
-            bottom: -40px;
-            left: -40px;
-            animation: floatB 15s ease-in-out infinite;
-        }
-
-        .float-shape-3 {
-            width: 180px;
-            height: 180px;
-            border: 1px solid rgba(99,102,241,0.1);
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            top: 40%;
-            left: -60px;
-            animation: floatC 18s ease-in-out infinite;
-        }
-
-        .float-shape-4 {
-            width: 120px;
-            height: 120px;
-            border: 1px solid rgba(99,102,241,0.08);
+        .orbit-ring {
+            position: absolute;
+            border: 1px solid rgba(99,102,241,0.06);
             border-radius: 50%;
-            bottom: 30%;
-            right: -30px;
-            animation: floatA 20s ease-in-out infinite reverse;
+            animation: orbitSpin 20s linear infinite;
         }
 
-        @keyframes floatA {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            33% { transform: translate(20px, -30px) rotate(5deg); }
-            66% { transform: translate(-10px, 20px) rotate(-3deg); }
+        .orbit-ring:nth-child(1) { width: 400px; height: 400px; }
+        .orbit-ring:nth-child(2) { width: 500px; height: 500px; animation-duration: 28s; animation-direction: reverse; }
+        .orbit-ring:nth-child(3) { width: 600px; height: 600px; animation-duration: 36s; }
+        .orbit-ring:nth-child(4) { width: 300px; height: 300px; animation-duration: 16s; animation-direction: reverse; border-style: dashed; }
+
+        .orbit-dot {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: rgba(99,102,241,0.15);
+            border-radius: 50%;
         }
 
-        @keyframes floatB {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            50% { transform: translate(25px, 15px) rotate(8deg); }
-        }
+        .orbit-ring:nth-child(1) .orbit-dot { top: -2.5px; left: 50%; }
+        .orbit-ring:nth-child(2) .orbit-dot { top: 50%; right: -2.5px; }
+        .orbit-ring:nth-child(3) .orbit-dot { bottom: -2.5px; left: 50%; }
+        .orbit-ring:nth-child(4) .orbit-dot { top: 50%; left: -2.5px; }
 
-        @keyframes floatC {
-            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            50% { transform: translate(15px, -20px) rotate(180deg) scale(1.1); }
+        @keyframes orbitSpin {
+            to { transform: rotate(360deg); }
         }
 
         /* ==================== 主容器 ==================== */
@@ -137,8 +155,8 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 86px;
-            height: 86px;
+            width: 90px;
+            height: 90px;
             transform: translate(-50%, -50%);
             animation: ringSpin 8s linear infinite;
         }
@@ -157,13 +175,65 @@
             box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
         }
 
+        .name-area {
+            cursor: pointer;
+            user-select: none;
+        }
+
         .name-area h1 {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 30px;
             font-weight: 700;
             letter-spacing: -0.5px;
-            color: #1a1a2e;
             line-height: 1.2;
+            transition: color 0.4s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Glitch 效果 */
+        .name-area h1::before,
+        .name-area h1::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .name-area h1:hover::before {
+            opacity: 0.7;
+            color: #6366f1;
+            animation: glitch1 0.3s ease-in-out 3;
+            clip-path: inset(20% 0 40% 0);
+        }
+
+        .name-area h1:hover::after {
+            opacity: 0.7;
+            color: #ec4899;
+            animation: glitch2 0.3s ease-in-out 3;
+            clip-path: inset(50% 0 10% 0);
+        }
+
+        @keyframes glitch1 {
+            0% { transform: translate(0); }
+            20% { transform: translate(-3px, 2px); }
+            40% { transform: translate(3px, -1px); }
+            60% { transform: translate(-2px, 3px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes glitch2 {
+            0% { transform: translate(0); }
+            20% { transform: translate(3px, -2px); }
+            40% { transform: translate(-3px, 1px); }
+            60% { transform: translate(2px, -3px); }
+            80% { transform: translate(-2px, 2px); }
+            100% { transform: translate(0); }
         }
 
         .name-area .tagline {
@@ -172,6 +242,7 @@
             color: #9ca3af;
             letter-spacing: 1.5px;
             text-transform: uppercase;
+            margin-top: 2px;
         }
 
         /* ==================== 主网格 ==================== */
@@ -183,17 +254,15 @@
             align-items: stretch;
         }
 
-        /* ==================== 终端（玻璃态） ==================== */
+        /* ==================== 终端 ==================== */
         .terminal {
-            background: rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.7);
             border: 1px solid rgba(255,255,255,0.8);
             border-radius: 16px;
             padding: 20px 24px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow:
-                0 4px 24px rgba(0,0,0,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.8);
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.9;
@@ -210,7 +279,7 @@
             inset: 0;
             border-radius: 16px;
             padding: 1px;
-            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.06), rgba(99,102,241,0.08));
+            background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05), rgba(99,102,241,0.08));
             -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
             -webkit-mask-composite: xor;
             mask-composite: exclude;
@@ -223,12 +292,9 @@
             margin-bottom: 14px;
             flex-shrink: 0;
         }
-
         .terminal-dots span {
-            width: 10px;
-            height: 10px;
+            width: 10px; height: 10px;
             border-radius: 50%;
-            transition: opacity 0.2s;
         }
         .terminal-dots span:nth-child(1) { background: #ef4444; }
         .terminal-dots span:nth-child(2) { background: #f59e0b; }
@@ -263,15 +329,13 @@
         }
 
         .card {
-            background: rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.7);
             border: 1px solid rgba(255,255,255,0.8);
             border-radius: 16px;
             padding: 18px 22px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow:
-                0 2px 12px rgba(0,0,0,0.03),
-                inset 0 1px 0 rgba(255,255,255,0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.8);
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -286,9 +350,7 @@
         .card::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            top: 0; left: 0; right: 0;
             height: 1.5px;
             background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
             background-size: 200% 100%;
@@ -314,24 +376,12 @@
 
         .card:hover {
             transform: translateY(-3px);
-            border-color: rgba(99,102,241,0.2);
-            box-shadow:
-                0 12px 40px rgba(99,102,241,0.08),
-                0 4px 16px rgba(0,0,0,0.04),
-                inset 0 1px 0 rgba(255,255,255,0.8);
+            border-color: rgba(99,102,241,0.15);
+            box-shadow: 0 12px 40px rgba(99,102,241,0.06), 0 4px 16px rgba(0,0,0,0.03);
         }
 
-        .card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .card:hover::after {
-            opacity: 1;
-        }
-
-        .card:active {
-            transform: translateY(-1px);
-        }
+        .card:hover::before { transform: scaleX(1); }
+        .card:hover::after { opacity: 1; }
 
         .card-icon {
             font-size: 22px;
@@ -417,17 +467,10 @@
             transition: width 0.25s ease;
         }
 
-        .footer a:hover {
-            color: #6366f1;
-        }
+        .footer a:hover { color: #6366f1; }
+        .footer a:hover::after { width: 100%; }
 
-        .footer a:hover::after {
-            width: 100%;
-        }
-
-        .footer .sep {
-            color: #e5e7eb;
-        }
+        .footer .sep { color: #e5e7eb; }
 
         /* ==================== 响应式 ==================== */
         @media (max-width: 700px) {
@@ -437,8 +480,7 @@
             .header { flex-direction: column; text-align: center; }
             .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
-            .float-shape-1 { width: 200px; height: 200px; }
-            .float-shape-2 { width: 120px; height: 120px; }
+            .orbit-ring { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -449,25 +491,33 @@
     </style>
 </head>
 <body>
-    <!-- 噪点纹理 -->
-    <div class="noise"></div>
+    <!-- 背景 -->
+    <div class="bg-layer">
+        <div class="noise"></div>
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+        <div class="grid-dots"></div>
+    </div>
 
-    <!-- 浮动装饰 -->
-    <div class="float-shape float-shape-1"></div>
-    <div class="float-shape float-shape-2"></div>
-    <div class="float-shape float-shape-3"></div>
-    <div class="float-shape float-shape-4"></div>
+    <!-- 轨道装饰 -->
+    <div class="orbit-deco">
+        <div class="orbit-ring"><span class="orbit-dot"></span></div>
+        <div class="orbit-ring"><span class="orbit-dot"></span></div>
+        <div class="orbit-ring"><span class="orbit-dot"></span></div>
+        <div class="orbit-ring"><span class="orbit-dot"></span></div>
+    </div>
 
-    <!-- 粒子 Canvas -->
+    <!-- 粒子 -->
     <canvas id="particles"></canvas>
 
     <div class="container">
         <!-- 头像 -->
         <div class="header">
             <div class="avatar-ring">
-                <svg viewBox="0 0 86 86" fill="none">
-                    <circle cx="43" cy="43" r="40" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
-                    <circle cx="43" cy="43" r="35" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
+                <svg viewBox="0 0 90 90" fill="none">
+                    <circle cx="45" cy="45" r="42" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
+                    <circle cx="45" cy="45" r="37" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
                     <defs>
                         <linearGradient id="ar1" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stop-color="#6366f1"/>
@@ -481,15 +531,14 @@
                 </svg>
                 <img src="img/avatar.jpg" alt="MIyanx">
             </div>
-            <div class="name-area">
-                <h1>MIyanx</h1>
-                <div class="tagline">developer &amp; tech blogger</div>
+            <div class="name-area" id="nameArea">
+                <h1 id="nameText" data-text="MIyanx" style="color:#1a1a2e;">MIyanx</h1>
+                <div class="tagline">/ Tech Notes &amp; Open Source /</div>
             </div>
         </div>
 
-        <!-- 主区域 -->
+        <!-- 主体 -->
         <div class="main-grid">
-            <!-- 终端 -->
             <div class="terminal">
                 <div class="terminal-dots">
                     <span></span><span></span><span></span>
@@ -497,9 +546,8 @@
                 <div class="terminal-body" id="terminal"></div>
             </div>
 
-            <!-- 卡片 -->
             <div class="cards">
-                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card" id="card1">
+                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card">
                     <span class="card-icon">📝</span>
                     <div class="card-body">
                         <div class="card-title">TECH BLOG</div>
@@ -507,7 +555,7 @@
                     </div>
                     <span class="card-arrow">→</span>
                 </a>
-                <a href="https://github.com/cxy1984" target="_blank" class="card" id="card2">
+                <a href="https://github.com/cxy1984" target="_blank" class="card">
                     <span class="card-icon">⚡</span>
                     <div class="card-body">
                         <div class="card-title">GITHUB</div>
@@ -537,7 +585,7 @@
     </div>
 
     <script>
-        // ==================== 粒子系统（白色主题版） ====================
+        // ==================== 粒子 ====================
         (function() {
             const cvs = document.getElementById('particles');
             const ctx = cvs.getContext('2d');
@@ -572,7 +620,7 @@
                 }
             }
 
-            const n = Math.min(60, Math.floor(w * h / 15000));
+            const n = Math.min(70, Math.floor(w * h / 12000));
             for (let i = 0; i < n; i++) pts.push(new Pt());
 
             function drawLines() {
@@ -613,12 +661,18 @@
                 { t: '> ', c: 'prompt' },
                 { t: 'cat /etc/motd', c: 'cmd' },
                 { br: true },
-                { t: '  欢迎来到我的数字空间 ✦', c: 'out' },
+                { t: '  / Tech Notes & Open Source /', c: 'out' },
                 { br: true },
                 { t: '> ', c: 'prompt' },
                 { t: 'ls projects/', c: 'cmd' },
                 { br: true },
-                { t: '  ai-blog/  auction/  ...', c: 'out' },
+                { t: '  ai-blog/', c: 'out' },
+                { t: '  auction/', c: 'out' },
+                { br: true },
+                { t: '> ', c: 'prompt' },
+                { t: 'cat skills.txt', c: 'cmd' },
+                { br: true },
+                { t: '  Java  Spring  MySQL  Docker', c: 'out' },
                 { br: true },
                 { t: '> ', c: 'prompt' },
             ];
@@ -626,10 +680,7 @@
             let buf = '', idx = 0;
 
             function tick() {
-                if (idx >= lines.length) {
-                    el.innerHTML = buf + '<span class="cursor-blink"></span>';
-                    return;
-                }
+                if (idx >= lines.length) { el.innerHTML = buf + '<span class="cursor-blink"></span>'; return; }
                 const seg = lines[idx];
                 if (seg.br) { buf += '<br>'; idx++; setTimeout(tick, 50); return; }
                 if (!seg._s) { seg._s = true; seg._i = 0; buf += `<span class="${seg.c}">`; }
@@ -644,6 +695,22 @@
                 }
             }
             setTimeout(tick, 500);
+        })();
+
+        // ==================== 点击名字变颜色 ====================
+        (function() {
+            const el = document.getElementById('nameText');
+            const colors = ['#1a1a2e', '#6366f1', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#6366f1'];
+            let idx = 0;
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                idx = (idx + 1) % colors.length;
+                this.style.color = colors[idx];
+                // 小反馈动画
+                this.style.transition = 'color 0.3s ease';
+                this.style.transform = 'scale(1.05)';
+                setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
+            });
         })();
     </script>
 </body>
