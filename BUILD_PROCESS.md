@@ -1,430 +1,429 @@
-﻿# npm run build 瀹屾暣娴佺▼鍒嗘瀽
+# npm run build 完整流程分析
 
-## 鎵ц鍛戒护閾?
+## 执行命令链
 
 ```bash
 npm run build
-  鈹溾攢 npm run convert-md-pandoc      # Markdown杞琀TML
-  鈹溾攢 npm run generate-index         # 鐢熸垚棣栭〉鍜屽垎椤靛垪琛?
-  鈹溾攢 npm run generate-sitemap       # 鐢熸垚sitemap.xml
-  鈹斺攢 npm run generate-overview      # 鐢熸垚姒傝椤甸潰
+  ├─ npm run convert-md-pandoc      # Markdown转HTML
+  ├─ npm run generate-index         # 生成首页和分页列表
+  ├─ npm run generate-sitemap       # 生成sitemap.xml
+  └─ npm run generate-overview      # 生成概览页面
 ```
 
 ---
 
-## 1锔忊儯 convert-md-pandoc (Markdown 鈫?HTML杞崲)
+## 1️⃣ convert-md-pandoc (Markdown → HTML转换)
 
-**鑴氭湰**: `src/convert_md_to_html_pandoc.js`
+**脚本**: `src/convert_md_to_html_pandoc.js`
 
-### 鎵ц娴佺▼
-- 鎵弿 `markdown/` 鐩綍鐨勬墍鏈夊勾鏈堟枃浠跺す (鏍煎紡: `YYYY-MM`)
-- 瀵规瘡涓猔.md`鏂囦欢:
-  - 浣跨敤Pandoc杞崲鎴怘TML鐗囨
-  - 浣跨敤 `template_seo.html` 鍖呰９鎴愬畬鏁撮〉闈?
-  - 浣跨敤 `article-detail.html` 鐢熸垚SPA鐢‵ragment
-  - 鏀寔澧為噺鏋勫缓 (浠呰浆鎹慨鏀硅繃鐨勬枃浠?
-  - 4涓苟鍙戣繘绋嬪姞閫熻浆鎹?
+### 执行流程
+- 扫描 `markdown/` 目录的所有年月文件夹 (格式: `YYYY-MM`)
+- 对每个`.md`文件:
+  - 使用Pandoc转换成HTML片段
+  - 使用 `template_seo.html` 包裹成完整页面
+  - 使用 `article-detail.html` 生成SPA用Fragment
+  - 支持增量构建 (仅转换修改过的文件)
+  - 4个并发进程加速转换
 
-### 鐢熸垚妯℃澘
+### 生成模板
 
-#### template_seo.html (璇︽儏椤垫ā鏉?
+#### template_seo.html (详情页模板)
 ```
-鐢ㄩ€? 鐢熸垚瀹屾暣鐨凷EO浼樺寲椤甸潰
-鍖呭惈:
-  - 瀹屾暣HTML鏂囨。缁撴瀯
-  - SEO鍏冩爣绛?(title, description, keywords)
-  - Open Graph鏍囩 (og:title, og:image绛?
-  - Twitter Card鏍囩
+用途: 生成完整的SEO优化页面
+包含:
+  - 完整HTML文档结构
+  - SEO元标签 (title, description, keywords)
+  - Open Graph标签 (og:title, og:image等)
+  - Twitter Card标签
   - Canonical URL
-  - Favicon閾炬帴
-  - 浠ｇ爜楂樹寒鏍峰紡 (Pandoc鐢熸垚)
+  - Favicon链接
+  - 代码高亮样式 (Pandoc生成)
 
-杈撳嚭: docs/{YYYY-MM}/{filename}.html
-绀轰緥: docs/2025-10/spring-assert.html
+输出: docs/{YYYY-MM}/{filename}.html
+示例: docs/2025-10/spring-assert.html
 ```
 
-#### article-detail.html (SPA鐢‵ragment妯℃澘)
+#### article-detail.html (SPA用Fragment模板)
 ```
-鐢ㄩ€? 涓篠ingle Page Application鎻愪緵鍐呭鐗囨
-鍖呭惈:
-  - <article>瀹瑰櫒
-  - 鏍囬 ({{TITLE}})
-  - 鏃ユ湡鍜屽垎绫诲厓鏁版嵁 ({{DATE}}, {{CATEGORY}})
-  - 鏂囩珷鍐呭 ({{CONTENT}})
-  - AI鐢熸垚鍐呭鎻愮ず璀﹀憡
-  - 浠ｇ爜澶嶅埗鎸夐挳鍔熻兘
-  - 椤佃剼
+用途: 为Single Page Application提供内容片段
+包含:
+  - <article>容器
+  - 标题 ({{TITLE}})
+  - 日期和分类元数据 ({{DATE}}, {{CATEGORY}})
+  - 文章内容 ({{CONTENT}})
+  - AI生成内容提示警告
+  - 代码复制按钮功能
+  - 页脚
 
-杈撳嚭: docs/{YYYY-MM}/{filename}-fragment.html
-绀轰緥: docs/2025-10/spring-assert-fragment.html
+输出: docs/{YYYY-MM}/{filename}-fragment.html
+示例: docs/2025-10/spring-assert-fragment.html
 ```
 
-### 杈撳嚭绀轰緥
+### 输出示例
 ```
-docs/2025-10/spring-assert.html           鈫?瀹屾暣椤甸潰(SEO鐢?
-docs/2025-10/spring-assert-fragment.html  鈫?Fragment (SPA鐢?
+docs/2025-10/spring-assert.html           ← 完整页面(SEO用)
+docs/2025-10/spring-assert-fragment.html  ← Fragment (SPA用)
 docs/2025-10/spring-beanutils.html
 docs/2025-10/spring-beanutils-fragment.html
 ```
 
 ---
 
-## 2锔忊儯 generate-index (鐢熸垚棣栭〉鍜屽垪琛ㄥ垎椤?
+## 2️⃣ generate-index (生成首页和列表分页)
 
-**鑴氭湰**: `src/generate_index_with_dates.js`
+**脚本**: `src/generate_index_with_dates.js`
 
-### 鎵ц娴佺▼
-1. 鏀堕泦鎵€鏈夋枃妗ｅ厓鏁版嵁 (Markdown + HTML)
-2. 鎻愬彇鏂囨。淇℃伅:
-   - 鏍囬 (浠嶮arkdown绗竴琛?# 鏍囬 鎴?HTML鐨?title>)
-   - 鎽樿 (Markdown鍓?0涓瓧绗?
-   - 淇敼鏃ユ湡
-   - 鏂囨。绫诲瀷 (Markdown/HTML)
-   - 鍒嗙被 (鐩綍鎴栨爣绛?
-3. 鎸変慨鏀规棩鏈熷€掑簭鎺掑垪 (鏈€鏂颁紭鍏?
-4. 姣?5鏉″垎椤典竴娆?
-5. 涓烘瘡椤电敓鎴愬垪琛ㄩ〉闈紝淇濆瓨鍒?`pages/` 鐩綍
+### 执行流程
+1. 收集所有文档元数据 (Markdown + HTML)
+2. 提取文档信息:
+   - 标题 (从Markdown第一行 # 标题 或 HTML的<title>)
+   - 摘要 (Markdown前30个字符)
+   - 修改日期
+   - 文档类型 (Markdown/HTML)
+   - 分类 (目录或标签)
+3. 按修改日期倒序排列 (最新优先)
+4. 每15条分页一次
+5. 为每页生成列表页面，保存到 `pages/` 目录
 
-### 鐢熸垚妯℃澘
+### 生成模板
 
-#### template_feed_list.html (鍒楄〃椤甸潰涓撶敤妯℃澘)
+#### template_feed_list.html (列表页面专用模板)
 ```
-鐢ㄩ€? 鐢熸垚鍒嗛〉鍒楄〃椤甸潰 (涓嶅寘鍚玥eader)
-鍖呭惈:
-  - 璀﹀憡鎻愮ず (AI鍗忓姪鐢熸垚澹版槑)
-  - Feed娴佸紡甯冨眬
-  - 姣忎釜鏂囨。鍗＄墖 (feed-item):
-    - 鏍囬 + 閾炬帴
-    - 鍙戝竷鏃ユ湡
-    - 鍒嗙被鏍囩
-    - 鎽樿棰勮
-    - "闃呰鏇村"閾炬帴
-  - 鍒嗛〉瀵艰埅:
-    - 涓婁竴椤?/ 涓嬩竴椤?鎸夐挳
-    - 鏁板瓧椤电爜閾炬帴 (1, 2, 3...)
-    - 褰撳墠椤甸珮浜樉绀?
-  - 椤佃剼
+用途: 生成分页列表页面 (不包含header)
+包含:
+  - 警告提示 (AI协助生成声明)
+  - Feed流式布局
+  - 每个文档卡片 (feed-item):
+    - 标题 + 链接
+    - 发布日期
+    - 分类标签
+    - 摘要预览
+    - "阅读更多"链接
+  - 分页导航:
+    - 上一页 / 下一页 按钮
+    - 数字页码链接 (1, 2, 3...)
+    - 当前页高亮显示
+  - 页脚
 
-璺緞閰嶇疆:
-  - 绗?椤? pages/index.html (SPA鍔犺浇)
-  - 绗?椤? pages/index2.html (SPA鍔犺浇)
-  - 绗?椤? pages/index3.html (SPA鍔犺浇)
-  - 绗琋椤? pages/indexN.html (SPA鍔犺浇)
-```
-
-### 杈撳嚭璇﹁В
-
-#### 鍒嗛〉缁撴瀯 (姣?5鏉℃枃妗?
-```
-绗?椤?(鏂囩珷1-15):
-  - 杈撳嚭鏂囦欢: pages/index.html
-  - 鐢ㄩ€? 琚玦ndex.html鐨凷PA鍔犺浇鏄剧ず
-  - 璁块棶: /pages/index.html
-
-绗?椤?(鏂囩珷16-30):
-  - 杈撳嚭鏂囦欢: pages/index2.html
-  - 璁块棶: /pages/index2.html
-
-绗?椤?(鏂囩珷31-45):
-  - 杈撳嚭鏂囦欢: pages/index3.html
-  - 璁块棶: /pages/index3.html
-
-绗?椤?(鏂囩珷46-60):
-  - 杈撳嚭鏂囦欢: pages/index4.html
-  - 璁块棶: /pages/index4.html
+路径配置:
+  - 第1页: pages/index.html (SPA加载)
+  - 第2页: pages/index2.html (SPA加载)
+  - 第3页: pages/index3.html (SPA加载)
+  - 第N页: pages/indexN.html (SPA加载)
 ```
 
-#### 鏂囨。鍗＄墖绀轰緥
+### 输出详解
+
+#### 分页结构 (每15条文档)
+```
+第1页 (文章1-15):
+  - 输出文件: pages/index.html
+  - 用途: 被index.html的SPA加载显示
+  - 访问: /pages/index.html
+
+第2页 (文章16-30):
+  - 输出文件: pages/index2.html
+  - 访问: /pages/index2.html
+
+第3页 (文章31-45):
+  - 输出文件: pages/index3.html
+  - 访问: /pages/index3.html
+
+第4页 (文章46-60):
+  - 输出文件: pages/index4.html
+  - 访问: /pages/index4.html
+```
+
+#### 文档卡片示例
 ```html
 <div class="feed-item">
   <div class="feed-item-header">
     <h2 class="feed-item-title">
-      <a href="/docs/2025-10/spring-assert.html">Spring Assert宸ュ叿绫昏瑙?/a>
+      <a href="/docs/2025-10/spring-assert.html">Spring Assert工具类详解</a>
     </h2>
     <div class="feed-item-meta">
       <span class="feed-item-date">2025/10/15</span>
-      <span class="feed-item-category">Markdown 鏂囨。</span>
+      <span class="feed-item-category">Markdown 文档</span>
     </div>
   </div>
   <div class="feed-item-content">
-    <p>鏈枃浠嬬粛Spring妗嗘灦涓瑼ssert宸ュ叿绫荤殑鐢ㄦ硶...</p>
+    <p>本文介绍Spring框架中Assert工具类的用法...</p>
   </div>
   <div class="feed-item-footer">
-    <a href="/docs/2025-10/spring-assert.html" class="read-more">闃呰鏇村 鈫?/a>
+    <a href="/docs/2025-10/spring-assert.html" class="read-more">阅读更多 →</a>
   </div>
 </div>
 ```
 
-#### 鍒嗛〉瀵艰埅绀轰緥 (绗?椤? pages/index2.html)
+#### 分页导航示例 (第2页: pages/index2.html)
 ```html
 <div class="pagination">
-  <a href="index.html">鈫?涓婁竴椤?/a>
+  <a href="index.html">← 上一页</a>
   <a href="index.html">1</a>
   <a href="#" class="current">2</a>
   <a href="index3.html">3</a>
   <a href="index4.html">4</a>
-  <a href="index3.html">涓嬩竴椤?鈫?/a>
+  <a href="index3.html">下一页 →</a>
 </div>
 ```
 
-鍒嗛〉閾炬帴璇存槑:
-- 鍚岀洰褰曞紩鐢?(閮藉湪 pages/ 鐩綍涓?
-- index.html = 绗?椤?
-- index2.html = 绗?椤?
-- index3.html = 绗?椤?
-- 绛夌瓑
+分页链接说明:
+- 同目录引用 (都在 pages/ 目录下)
+- index.html = 第1页
+- index2.html = 第2页
+- index3.html = 第3页
+- 等等
 
-### 褰撳墠椤圭洰鐨勫垎椤?
+### 当前项目的分页
 
-椤圭洰宸茬敓鎴愪互涓嬪垎椤垫枃浠?
+项目已生成以下分页文件:
 ```
-pages/index.html   鈫?绗?椤?
-pages/index2.html  鈫?绗?椤?
-pages/index3.html  鈫?绗?椤?
-pages/index4.html  鈫?绗?椤?
+pages/index.html   ← 第1页
+pages/index2.html  ← 第2页
+pages/index3.html  ← 第3页
+pages/index4.html  ← 第4页
 ```
 
 ---
 
-## 3锔忊儯 generate-sitemap (鐢熸垚SEO Sitemap)
+## 3️⃣ generate-sitemap (生成SEO Sitemap)
 
-**鑴氭湰**: `src/generate_sitemap.js`
+**脚本**: `src/generate_sitemap.js`
 
-### 鎵ц娴佺▼
-1. 鏀堕泦鎵€鏈夋枃妗ｇ殑瀹屾暣URL
-2. 鐢熸垚鏍囧噯 `sitemap.xml` 鏍煎紡
-3. 璁剧疆浼樺厛绾у拰鏇存柊棰戠巼
+### 执行流程
+1. 收集所有文档的完整URL
+2. 生成标准 `sitemap.xml` 格式
+3. 设置优先级和更新频率
 
-### 杈撳嚭: sitemap.xml
+### 输出: sitemap.xml
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- 棣栭〉 - 鏈€楂樹紭鍏堢骇 -->
+  <!-- 首页 - 最高优先级 -->
   <url>
-    <loc>https://cxy1984.github.io/ai-blog/index.html</loc>
+    <loc>https://www.caoayu.top/index.html</loc>
     <lastmod>2025-11-10T00:00:00.000Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
 
-  <!-- 鍒嗛〉 - 杈冮珮浼樺厛绾?-->
+  <!-- 分页 - 较高优先级 -->
   <url>
-    <loc>https://cxy1984.github.io/ai-blog/pages/index2.html</loc>
+    <loc>https://www.caoayu.top/pages/index2.html</loc>
     <lastmod>2025-11-10T00:00:00.000Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
-  <!-- 鎵€鏈夋枃妗?- 鏍囧噯浼樺厛绾?-->
+  <!-- 所有文档 - 标准优先级 -->
   <url>
-    <loc>https://cxy1984.github.io/ai-blog/docs/2025-10/spring-assert.html</loc>
+    <loc>https://www.caoayu.top/docs/2025-10/spring-assert.html</loc>
     <lastmod>2025-10-15T00:00:00.000Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://cxy1984.github.io/ai-blog/docs/2025-10/spring-beanutils.html</loc>
+    <loc>https://www.caoayu.top/docs/2025-10/spring-beanutils.html</loc>
     <lastmod>2025-10-14T00:00:00.000Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
-  <!-- ... 鏇村鏂囨。 ... -->
+  <!-- ... 更多文档 ... -->
 </urlset>
 ```
 
-### 浣滅敤
-- 甯姪鎼滅储寮曟搸鐖櫕鍙戠幇鍜岀储寮曟墍鏈夐〉闈?
-- 鍛婄煡鎼滅储寮曟搸椤甸潰鐨勯噸瑕佺▼搴?
-- 鎻愮ず鏇存柊棰戠巼浠ヤ究鍙婃椂閲嶆柊鐖彇
+### 作用
+- 帮助搜索引擎爬虫发现和索引所有页面
+- 告知搜索引擎页面的重要程度
+- 提示更新频率以便及时重新爬取
 
 ---
 
-## 4锔忊儯 generate-overview (鐢熸垚姒傝椤甸潰)
+## 4️⃣ generate-overview (生成概览页面)
 
-**鑴氭湰**: `src/generate_overview.js`
+**脚本**: `src/generate_overview.js`
 
-### 鎵ц娴佺▼
-1. 鏀堕泦鎵€鏈夋枃妗ｅ厓鏁版嵁
-2. 鐢熸垚JavaScript鏁扮粍 `const articles = [...]`
-3. 娉ㄥ叆鍒?`overview.html`
+### 执行流程
+1. 收集所有文档元数据
+2. 生成JavaScript数组 `const articles = [...]`
+3. 注入到 `overview.html`
 
-### 杈撳嚭: overview.html (鏇存柊)
+### 输出: overview.html (更新)
 
 ```javascript
 const articles = [
   {
     "type": "markdown",
     "url": "docs/2025-10/spring-assert.html",
-    "title": "Spring Assert宸ュ叿绫昏瑙?,
+    "title": "Spring Assert工具类详解",
     "date": "2025/10/15",
-    "category": "Markdown 鏂囨。"
+    "category": "Markdown 文档"
   },
   {
     "type": "markdown",
     "url": "docs/2025-10/spring-beanutils.html",
-    "title": "Spring BeanUtils宸ュ叿绫昏瑙?,
+    "title": "Spring BeanUtils工具类详解",
     "date": "2025/10/14",
-    "category": "Markdown 鏂囨。"
+    "category": "Markdown 文档"
   },
   {
     "type": "html",
     "url": "html/jvm-desc.html",
-    "title": "JVM绫诲瀷鎻忚堪绗﹁瑙?,
+    "title": "JVM类型描述符详解",
     "date": "2025/10/10",
-    "category": "HTML 鏂囨。"
+    "category": "HTML 文档"
   },
-  // ... 鏇村鏂囨。 ...
+  // ... 更多文档 ...
 ];
 ```
 
-### 鐢ㄩ€?
-- 鎻愪緵鍓嶇JavaScript鎺ュ彛
-- 鏀寔鍔ㄦ€佹悳绱€佺瓫閫夈€佹帓搴?
-- 涓嶉渶瑕佸悗绔疉PI灏辫兘瀹炵幇澶嶆潅鐨勬枃绔犳煡璇㈠姛鑳?
+### 用途
+- 提供前端JavaScript接口
+- 支持动态搜索、筛选、排序
+- 不需要后端API就能实现复杂的文章查询功能
 
 ---
 
-## 馃搳 妯℃澘浣跨敤鎬荤粨琛?
+## 📊 模板使用总结表
 
-| 鍔熻兘 | 妯℃澘鏂囦欢 | 杈撳嚭鏂囦欢 | 鐢ㄩ€?| 澶囨敞 |
+| 功能 | 模板文件 | 输出文件 | 用途 | 备注 |
 |------|---------|---------|------|------|
-| **璇︽儏椤礢EO** | `template_seo.html` | `docs/{骞存湀}/{鏂囦欢鍚峿.html` | 瀹屾暣椤甸潰锛孲EO浼樺寲 | 姣忕瘒鏂囩珷涓€涓?|
-| **SPA Fragment** | `article-detail.html` | `docs/{骞存湀}/{鏂囦欢鍚峿-fragment.html` | 鍓嶇SPA鍔ㄦ€佸姞杞?| 鐢ㄤ簬AJAX鑾峰彇鍐呭 |
-| **绗?椤靛垪琛?* | `template_feed_list.html` | `pages/index.html` | 棣栭〉feed灞曠ず | 琚玦ndex.html鍔犺浇 |
-| **鍒嗛〉鍒楄〃** | `template_feed_list.html` | `pages/index{N}.html` | 绗琋椤电殑鍒楄〃 | N 鈮?2 |
-| **SEO鍦板浘** | 鏃?| `sitemap.xml` | 鎼滅储寮曟搸绱㈠紩 | XML鏍煎紡 |
-| **姒傝椤?* | `overview.html` | `overview.html` (鏇存柊) | 鏂囩珷鏁版嵁+鎼滅储鍔熻兘 | 娉ㄥ叆articles鏁扮粍 |
+| **详情页SEO** | `template_seo.html` | `docs/{年月}/{文件名}.html` | 完整页面，SEO优化 | 每篇文章一个 |
+| **SPA Fragment** | `article-detail.html` | `docs/{年月}/{文件名}-fragment.html` | 前端SPA动态加载 | 用于AJAX获取内容 |
+| **第1页列表** | `template_feed_list.html` | `pages/index.html` | 首页feed展示 | 被index.html加载 |
+| **分页列表** | `template_feed_list.html` | `pages/index{N}.html` | 第N页的列表 | N ≥ 2 |
+| **SEO地图** | 无 | `sitemap.xml` | 搜索引擎索引 | XML格式 |
+| **概览页** | `overview.html` | `overview.html` (更新) | 文章数据+搜索功能 | 注入articles数组 |
 
 ---
 
-## 馃攧 瀹屾暣鏁版嵁娴佸悜鍥?
+## 🔄 完整数据流向图
 
 ```
 markdown/
-鈹溾攢 2025-10/
-鈹? 鈹溾攢 spring-assert.md
-鈹? 鈹溾攢 spring-beanutils.md
-鈹? 鈹斺攢 spring-collectionutils.md
-鈹斺攢 2025-09/
-   鈹溾攢 javascript-async.md
-   鈹斺攢 maven-resource.md
+├─ 2025-10/
+│  ├─ spring-assert.md
+│  ├─ spring-beanutils.md
+│  └─ spring-collectionutils.md
+└─ 2025-09/
+   ├─ javascript-async.md
+   └─ maven-resource.md
 
-        鈫?[convert-md-pandoc] (4涓苟鍙戣繘绋?
-        鈫?
+        ↓ [convert-md-pandoc] (4个并发进程)
+        ↓
 
 docs/
-鈹溾攢 2025-10/
-鈹? 鈹溾攢 spring-assert.html (SEO鐗?
-鈹? 鈹溾攢 spring-assert-fragment.html (SPA鐗?
-鈹? 鈹溾攢 spring-beanutils.html
-鈹? 鈹溾攢 spring-beanutils-fragment.html
-鈹? 鈹斺攢 spring-collectionutils.html
-鈹? 鈹斺攢 spring-collectionutils-fragment.html
-鈹斺攢 2025-09/
-   鈹溾攢 javascript-async.html
-   鈹溾攢 javascript-async-fragment.html
-   鈹溾攢 maven-resource.html
-   鈹斺攢 maven-resource-fragment.html
+├─ 2025-10/
+│  ├─ spring-assert.html (SEO版)
+│  ├─ spring-assert-fragment.html (SPA版)
+│  ├─ spring-beanutils.html
+│  ├─ spring-beanutils-fragment.html
+│  └─ spring-collectionutils.html
+│  └─ spring-collectionutils-fragment.html
+└─ 2025-09/
+   ├─ javascript-async.html
+   ├─ javascript-async-fragment.html
+   ├─ maven-resource.html
+   └─ maven-resource-fragment.html
 
-        鈫?[generate-index] (鏀堕泦鍏冩暟鎹?+ 鍒嗛〉)
-        鈫?
+        ↓ [generate-index] (收集元数据 + 分页)
+        ↓
 
 pages/
-鈹溾攢 index.html (绗?椤? 鏂囩珷1-15)
-鈹溾攢 index2.html (绗?椤? 鏂囩珷16-30)
-鈹溾攢 index3.html (绗?椤? 鏂囩珷31-45)
-鈹斺攢 index4.html (绗?椤? 鏂囩珷46-60)
+├─ index.html (第1页: 文章1-15)
+├─ index2.html (第2页: 文章16-30)
+├─ index3.html (第3页: 文章31-45)
+└─ index4.html (第4页: 文章46-60)
 
-index.html (SPA涓绘枃浠?
-        鈫?鍔犺浇 pages/index.html
+index.html (SPA主文件)
+        ↓ 加载 pages/index.html
 
-        鈫?[generate-sitemap]
-        鈫?
+        ↓ [generate-sitemap]
+        ↓
 
-sitemap.xml (SEO鍦板浘)
+sitemap.xml (SEO地图)
 
-        鈫?[generate-overview]
-        鈫?
+        ↓ [generate-overview]
+        ↓
 
-overview.html (鏇存柊 articles 鏁扮粍)
+overview.html (更新 articles 数组)
 ```
 
 ---
 
-## 馃挕 鍏抽敭鐗圭偣
+## 💡 关键特点
 
-### 1. 鍙岃緭鍑虹瓥鐣?
-- **瀹屾暣椤甸潰** (`*.html`): 鐢ㄤ簬SEO鍜岀洿鎺ヨ闂?
-- **Fragment鐗囨** (`*-fragment.html`): 鐢ㄤ簬SPA閫氳繃AJAX鍔犺浇
+### 1. 双输出策略
+- **完整页面** (`*.html`): 用于SEO和直接访问
+- **Fragment片段** (`*-fragment.html`): 用于SPA通过AJAX加载
 
-### 2. 鍒嗛〉鏈哄埗
-- 姣?5鏉℃枃妗ｄ竴椤?
-- 鏀寔澶氶〉瀵艰埅
-- 鍒嗛〉鏂囦欢鐙珛瀛樺偍鍦?`pages/` 鐩綍
+### 2. 分页机制
+- 每15条文档一页
+- 支持多页导航
+- 分页文件独立存储在 `pages/` 目录
 
-### 3. SEO浼樺寲
-- 姣忎釜椤甸潰鐙珛meta鏍囩
-- Open Graph鏀寔绀句氦鍒嗕韩
-- Sitemap鑷姩鎻愪氦鎼滅储寮曟搸
-- Canonical URL闃叉閲嶅鏀跺綍
+### 3. SEO优化
+- 每个页面独立meta标签
+- Open Graph支持社交分享
+- Sitemap自动提交搜索引擎
+- Canonical URL防止重复收录
 
-### 4. 澧為噺鏋勫缓
-- 浠呰浆鎹慨鏀硅繃鐨凪arkdown鏂囦欢
-- 瀵规瘮鏂囦欢淇敼鏃堕棿 (mtime)
-- 鍔犻€熼噸澶嶆瀯寤洪€熷害
+### 4. 增量构建
+- 仅转换修改过的Markdown文件
+- 对比文件修改时间 (mtime)
+- 加速重复构建速度
 
-### 5. 骞跺彂澶勭悊
-- Pandoc杞崲鏀寔4涓繘绋嬪苟琛?
-- 鍏呭垎鍒╃敤澶氭牳CPU
-- 鍔犻€熸暣浣撴瀯寤烘椂闂?
+### 5. 并发处理
+- Pandoc转换支持4个进程并行
+- 充分利用多核CPU
+- 加速整体构建时间
 
-### 6. 鐏垫椿鐨勬枃妗ｇ鐞?
-- 鏀寔鎸夊勾鏈堢粍缁囨枃妗?
-- Markdown鍜孒TML娣峰悎鏀寔
-- 鑷姩鎻愬彇鏍囬鍜屾憳瑕?
+### 6. 灵活的文档管理
+- 支持按年月组织文档
+- Markdown和HTML混合支持
+- 自动提取标题和摘要
 
 ---
 
-## 鈿欙笍 鏋勫缓鏃堕棿浼扮畻
+## ⚙️ 构建时间估算
 
-| 姝ラ | 鏂囦欢鏁?| 鑰楁椂 |
+| 步骤 | 文件数 | 耗时 |
 |------|-------|------|
-| convert-md-pandoc | ~100涓猰d | 10-15绉?(骞跺彂) |
-| generate-index | - | 0.5绉?|
-| generate-sitemap | - | 0.2绉?|
-| generate-overview | - | 0.3绉?|
-| **鎬昏€楁椂** | | **~11-16绉?* |
+| convert-md-pandoc | ~100个md | 10-15秒 (并发) |
+| generate-index | - | 0.5秒 |
+| generate-sitemap | - | 0.2秒 |
+| generate-overview | - | 0.3秒 |
+| **总耗时** | | **~11-16秒** |
 
 ---
 
-## 馃敡 甯歌闂
+## 🔧 常见问题
 
-### Q: 濡備綍淇敼鍒嗛〉鏁伴噺锛?
-**A**: 缂栬緫 `src/generate_index_with_dates.js` 鐨?`ITEMS_PER_PAGE` 甯搁噺 (榛樿15)
+### Q: 如何修改分页数量？
+**A**: 编辑 `src/generate_index_with_dates.js` 的 `ITEMS_PER_PAGE` 常量 (默认15)
 
-### Q: 濡備綍淇敼domain锛?
-**A**: 缂栬緫 `src/generate_sitemap.js` 鐨?`baseUrl` 鍜屽叾浠栬剼鏈腑鐨刄RL鍓嶇紑
+### Q: 如何修改domain？
+**A**: 编辑 `src/generate_sitemap.js` 的 `baseUrl` 和其他脚本中的URL前缀
 
-### Q: Fragment鏄仛浠€涔堢殑锛?
-**A**: Fragment鏄幓鎺塇TML鏂囨。缁撴瀯鐨勭函鍐呭鐗囨锛岀敤浜嶴PA閫氳繃AJAX鍔犺浇鍒伴〉闈腑
+### Q: Fragment是做什么的？
+**A**: Fragment是去掉HTML文档结构的纯内容片段，用于SPA通过AJAX加载到页面中
 
-### Q: 涓轰粈涔堣鐢熸垚涓や唤HTML锛?
+### Q: 为什么要生成两份HTML？
 **A**:
-- 瀹屾暣椤甸潰 = SEO鍙嬪ソ + 鍙嫭绔嬭闂?
-- Fragment = 蹇€熷姞杞?+ SPA闆嗘垚
+- 完整页面 = SEO友好 + 可独立访问
+- Fragment = 快速加载 + SPA集成
 
-### Q: Sitemap鎬庝箞鐢紵
-**A**: 鎻愪氦鍒癎oogle Search Console鍜孊ing Webmaster Tools锛屽府鍔╂悳绱㈠紩鎿庣储寮?
+### Q: Sitemap怎么用？
+**A**: 提交到Google Search Console和Bing Webmaster Tools，帮助搜索引擎索引
 
 ---
 
-## 馃殌 浼樺寲寤鸿
+## 🚀 优化建议
 
-1. **缂撳瓨浼樺寲**: 鍦‵ragment涓坊鍔燞TTP缂撳瓨澶?
-2. **鍥剧墖浼樺寲**: 鍦∕arkdown涓紭鍖栧浘鐗囧ぇ灏忓拰鏍煎紡
-3. **浠ｇ爜鍒嗗壊**: 鎸夊垎绫荤敓鎴愬崟鐙殑sitemap绱㈠紩
-4. **棰勫姞杞?*: 鍦ㄩ椤甸鍔犺浇甯歌闂〉闈㈢殑Fragment
-5. **CDN**: 鑰冭檻灏嗛潤鎬佹枃浠堕儴缃插埌CDN鍔犻€?
-
+1. **缓存优化**: 在Fragment中添加HTTP缓存头
+2. **图片优化**: 在Markdown中优化图片大小和格式
+3. **代码分割**: 按分类生成单独的sitemap索引
+4. **预加载**: 在首页预加载常访问页面的Fragment
+5. **CDN**: 考虑将静态文件部署到CDN加速
