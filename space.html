@@ -73,33 +73,36 @@
                     var av = args[ai];
                     if (Array.isArray(av)) {
                         for (var aj = 0; aj < av.length; aj++) {
-                            if (av[aj] != null && av[aj] !== true && av[aj] !== false) {
-                                children.push(av[aj]);
+                            var item = av[aj];
+                            if (item != null && item !== true && item !== false) {
+                                if (typeof item === 'object' && Object.keys(item).length === 0) continue;
+                                children.push(item);
                             }
                         }
                     } else if (av != null && av !== true && av !== false) {
+                        if (typeof av === 'object' && Object.keys(av).length === 0) continue;
                         children.push(av);
                     }
                 }
 
-                // Build element props
                 var elProps = {};
                 var delay = 0;
                 var animName = '';
 
                 if (props) {
+                    // First: copy className/style/key non-motion props
                     for (var k in props) {
-                        if (MOTION_PROPS[k]) {
-                            if (k === 'animate' || k === 'whileInView') animName = 'mpFI';
-                            if (k === 'initial') animName = 'mpFI';
-                            if (k === 'transition' && props[k] && props[k].delay) delay = props[k].delay;
-                        } else {
-                            elProps[k] = props[k];
+                        if (k === 'className') { elProps.className = props[k]; }
+                        else if (k === 'style') { elProps.style = props[k]; }
+                        else if (k === 'key') { /* handled by React */ }
+                        else if (MOTION_PROPS[k]) {
+                            if (k === 'animate' || k === 'whileInView' || k === 'initial') { animName = 'mpFI'; }
+                            if (k === 'transition' && props[k] && props[k].delay) { delay = props[k].delay; }
                         }
+                        else { elProps[k] = props[k]; }
                     }
                 }
 
-                // Add animation classes
                 if (animName) {
                     elProps.className = (elProps.className || '') + ' mpAnim ' + animName;
                 }
