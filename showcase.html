@@ -85,30 +85,49 @@
             position: absolute;
             left: 50%;
             top: 50%;
-            width: 48px;
-            height: 48px;
-            margin-left: -24px;
-            margin-top: -24px;
-            opacity: 0.2;
-            transition: opacity 0.5s ease;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .galaxy-item .gi-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px 6px 10px;
+            background: rgba(255,255,255,0.35);
+            border: 1px solid rgba(99,102,241,0.06);
+            border-radius: 100px;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transform-origin: center;
+            transition: all 0.4s ease;
         }
 
         .galaxy-item .gi-icon {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            background: rgba(255,255,255,0.4);
-            border-radius: 12px;
-            backdrop-filter: blur(4px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            font-size: 18px;
+            line-height: 1;
+            flex-shrink: 0;
         }
 
-        /* 鼠标移入时稍微亮一点 */
-        body:hover .galaxy-item {
-            opacity: 0.3;
+        .galaxy-item .gi-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: #818cf8;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .galaxy-item:hover .gi-label {
+            opacity: 1;
+        }
+
+        .galaxy-item:hover .gi-wrap {
+            background: rgba(255,255,255,0.7);
+            border-color: rgba(99,102,241,0.2);
+            box-shadow: 0 4px 20px rgba(99,102,241,0.06);
         }
 
         /* ==================== 粒子 Canvas ==================== */
@@ -168,6 +187,11 @@
             position: relative;
             z-index: 1;
             box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
+        }
+
+        .name-area {
+            user-select: none;
+            cursor: default;
         }
 
         .name-area h1 {
@@ -453,7 +477,7 @@
             .header { flex-direction: column; text-align: center; }
             .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
-            .galaxy-item { display: none; }
+            #techGalaxy { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -553,63 +577,135 @@
     </div>
 
     <script>
-        // ==================== 技术星系（白色主题版） ====================
+        // ==================== 技术星系（白色版·大厂全栈） ====================
         (function() {
             const container = document.getElementById('techGalaxy');
+
+            // 大厂Java全栈老炮技术栈 — 按领域分组
+            const groups = [
+                { label: 'Core', color: '#6366f1' },
+                { label: 'Data', color: '#10b981' },
+                { label: 'MQ', color: '#f59e0b' },
+                { label: 'Cloud', color: '#a855f7' },
+                { label: 'Ops', color: '#ec4899' },
+                { label: 'Tool', color: '#06b6d4' },
+            ];
+
             const techs = [
-                { icon: '☕', label: 'Java' },
-                { icon: '🍃', label: 'Spring' },
-                { icon: '🐬', label: 'MySQL' },
-                { icon: '🐳', label: 'Docker' },
-                { icon: '📦', label: 'Redis' },
-                { icon: '☁️', label: 'Linux' },
-                { icon: '📋', label: 'Maven' },
-                { icon: '🔧', label: 'Git' },
+                // Core (紫)
+                { icon: '☕', label: 'Java', group: 0, size: 1.0 },
+                { icon: '🔥', label: 'JVM', group: 0, size: 0.9 },
+                { icon: '🌱', label: 'Spring Boot', group: 0, size: 1.0 },
+                { icon: '⛅', label: 'Spring Cloud', group: 3, size: 0.9 },
+                { icon: '🗄️', label: 'MyBatis', group: 1, size: 0.85 },
+                { icon: '➕', label: 'MyBatis-Plus', group: 1, size: 0.7 },
+
+                // Data (绿)
+                { icon: '🐬', label: 'MySQL', group: 1, size: 0.95 },
+                { icon: '📦', label: 'Redis', group: 1, size: 0.9 },
+                { icon: '🔍', label: 'Elasticsearch', group: 1, size: 0.85 },
+                { icon: '🍃', label: 'MongoDB', group: 1, size: 0.7 },
+
+                // MQ (黄)
+                { icon: '📨', label: 'Kafka', group: 2, size: 0.85 },
+                { icon: '🚀', label: 'RocketMQ', group: 2, size: 0.8 },
+                { icon: '🐰', label: 'RabbitMQ', group: 2, size: 0.7 },
+
+                // Cloud (紫)
+                { icon: '🧭', label: 'Nacos', group: 3, size: 0.8 },
+                { icon: '🛡️', label: 'Sentinel', group: 3, size: 0.75 },
+                { icon: '🌉', label: 'Gateway', group: 3, size: 0.75 },
+
+                // Ops (粉)
+                { icon: '🐳', label: 'Docker', group: 4, size: 0.9 },
+                { icon: '⚓', label: 'K8s', group: 4, size: 0.85 },
+                { icon: '🔧', label: 'Jenkins', group: 4, size: 0.7 },
+                { icon: '🐧', label: 'Linux', group: 4, size: 0.85 },
+                { icon: '🌐', label: 'Nginx', group: 4, size: 0.75 },
+
+                // Tool (青)
+                { icon: '📋', label: 'Maven', group: 5, size: 0.75 },
+                { icon: '🔀', label: 'Git', group: 5, size: 0.8 },
+                { icon: '💡', label: 'IDEA', group: 5, size: 0.7 },
+
+                // Monitoring (额外)
+                { icon: '📊', label: 'Prometheus', group: 4, size: 0.7 },
+                { icon: '📈', label: 'Grafana', group: 4, size: 0.7 },
+                { icon: '🔭', label: 'SkyWalking', group: 3, size: 0.65 },
             ];
 
             const cx = window.innerWidth / 2;
             const cy = window.innerHeight / 2;
-            // 多轨道半径
-            const radii = [140, 180, 220, 260, 300, 340, 380, 280];
-            const speeds = [0.004, 0.006, 0.003, 0.007, 0.005, 0.004, 0.008, 0.002];
+
+            // 为每个技术生成轨道参数
+            const orbits = [
+                // 内圈 — 核心
+                { rMin: 120, rMax: 160, speedBase: 0.004, group: 0 },
+                // 中内圈 — 数据
+                { rMin: 170, rMax: 210, speedBase: 0.003, group: 1 },
+                // 中圈 — MQ
+                { rMin: 220, rMax: 250, speedBase: 0.005, group: 2 },
+                // 中外圈 — Cloud
+                { rMin: 260, rMax: 300, speedBase: 0.0025, group: 3 },
+                // 外圈 — Ops
+                { rMin: 310, rMax: 360, speedBase: 0.0035, group: 4 },
+                // 最外圈 — Tools
+                { rMin: 370, rMax: 410, speedBase: 0.002, group: 5 },
+            ];
+
+            // 分组颜色缓存
+            const groupColors = groups.map(g => g.color);
 
             techs.forEach((t, i) => {
                 const el = document.createElement('div');
                 el.className = 'galaxy-item';
-                el.innerHTML = `<div class="gi-icon">${t.icon}</div>`;
+                el.style.pointerEvents = 'auto'; // 允许 hover 显示 label
+
+                // 随机分配该组轨道
+                const orbCfg = orbits[t.group] || orbits[0];
+                const rBase = orbCfg.rMin + Math.random() * (orbCfg.rMax - orbCfg.rMin);
+                // 椭圆因子：轻微椭圆让轨道更自然
+                const ellipX = rBase * (0.85 + Math.random() * 0.15);
+                const ellipY = rBase * (0.85 + Math.random() * 0.15);
+
+                el.innerHTML = `
+                    <div class="gi-wrap" style="border-color: ${groupColors[t.group]}22;">
+                        <span class="gi-icon">${t.icon}</span>
+                        <span class="gi-label">${t.label}</span>
+                    </div>
+                `;
                 container.appendChild(el);
 
-                const r = radii[i] || 200;
-                const speed = speeds[i] || 0.005;
-                let angle = (i / techs.length) * Math.PI * 2;
-                // 加上随机偏移，看起来更自然
-                angle += (Math.random() - 0.5) * 0.5;
+                const speed = orbCfg.speedBase * (0.8 + Math.random() * 0.4);
+                let angle = (i / techs.length) * Math.PI * 2 + (Math.random() - 0.5) * 0.8;
+
+                // 获取 wrap 尺寸
+                const wrap = el.querySelector('.gi-wrap');
 
                 function orbit() {
                     angle += speed;
-                    const x = cx + r * Math.cos(angle) - 24;
-                    const y = cy + r * Math.sin(angle) - 24;
-                    el.style.left = `${x}px`;
-                    el.style.top = `${y}px`;
-                    // 根据远近微调透明度
-                    const front = Math.sin(angle) > 0;
-                    el.style.opacity = front ? '0.25' : '0.12';
-                    el.style.transform = front ? 'scale(1)' : 'scale(0.85)';
+                    const cos = Math.cos(angle);
+                    const sin = Math.sin(angle);
+                    const x = cx + ellipX * cos;
+                    const y = cy + ellipY * sin;
+
+                    el.style.transform = `translate(${x}px, ${y}px)`;
+
+                    // 远近效果
+                    const front = sin < 0;  // 上半部分在前
+                    const depth = front ? 1 : 0.7;
+                    const scale = 0.7 + 0.3 * depth;
+                    const opacity = 0.15 + 0.25 * depth;
+                    el.style.opacity = opacity;
+                    wrap.style.transform = `scale(${scale * (t.size || 1)})`;
+
                     requestAnimationFrame(orbit);
                 }
-
-                // 初始位置
-                const startX = cx + r * Math.cos(angle) - 24;
-                const startY = cy + r * Math.sin(angle) - 24;
-                el.style.left = `${startX}px`;
-                el.style.top = `${startY}px`;
 
                 orbit();
             });
 
-            // 窗口大小变化时重新计算中心
             window.addEventListener('resize', () => {
-                // 简化处理：刷新页面位置
                 location.reload();
             });
         })();
