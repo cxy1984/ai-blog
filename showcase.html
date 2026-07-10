@@ -488,20 +488,15 @@
         .status-bar {
             width: 100%;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            gap: 0;
             padding-top: 8px;
             border-top: 1px solid rgba(99,102,241,0.06);
             font-family: 'JetBrains Mono', monospace;
             font-size: 11px;
             color: #9ca3af;
             letter-spacing: 0.3px;
-        }
-
-        .status-bar .status-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
         }
 
         .status-bar .status-dot {
@@ -511,17 +506,12 @@
             border-radius: 50%;
             background: #10b981;
             animation: dotPulse 2s ease-in-out infinite;
+            margin-right: 4px;
         }
 
         @keyframes dotPulse {
             0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(16,185,129,0.3); }
             50% { opacity: 0.4; box-shadow: 0 0 8px rgba(16,185,129,0.1); }
-        }
-
-        .status-bar .status-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
         }
 
         .status-bar a {
@@ -550,10 +540,6 @@
             width: 100%;
         }
 
-        .status-bar .sep {
-            color: #e5e7eb;
-        }
-
         /* ==================== 响应式 ==================== */
         @media (max-width: 700px) {
             body { overflow-y: auto; align-items: flex-start; padding: 24px 0; }
@@ -564,9 +550,7 @@
             .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
             .galaxy-side { display: none; }
-            .status-bar { flex-direction: column; gap: 8px; }
-            .status-bar .status-left,
-            .status-bar .status-right { width: 100%; justify-content: center; }
+            .status-bar { flex-wrap: wrap; gap: 4px; }
         }
 
         @media (max-width: 480px) {
@@ -665,17 +649,13 @@
 
             <!-- 底部状态栏 -->
             <div class="status-bar">
-                <div class="status-left">
-                    <span class="status-dot"></span>
-                    <span>system online · v2.0</span>
-                </div>
-                <div class="status-right">
-                    <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
-                    <span class="sep">/</span>
-                    <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
-                    <span class="sep">/</span>
-                    <a href="https://cxy1984.github.io/ai-blog/showcase.html" target="_blank">#</a>
-                </div>
+                <span class="status-dot"></span>
+                <span style="margin:0 4px;color:#e5e7eb;">/</span>
+                <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
+                <span style="margin:0 4px;color:#e5e7eb;">/</span>
+                <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
+                <span style="margin:0 4px;color:#e5e7eb;">/</span>
+                <a href="https://cxy1984.github.io/ai-blog/showcase.html" target="_blank">#</a>
             </div>
         </div>
     </div>
