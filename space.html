@@ -16,7 +16,58 @@
     <script>window.Motion = window.FramerMotion;</script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #000; overflow-x: hidden; }
+        body { background: #000; overflow-x: hidden; min-height: 100vh; }
+
+        /* Starfield fallback */
+        .starfield {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 50% 30%, #0a0a1a 0%, #000 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+        .starfield::before {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1.5px 1.5px at 50% 10%, rgba(255,255,255,0.7), transparent),
+                radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 90% 80%, rgba(255,255,255,0.5), transparent),
+                radial-gradient(1.5px 1.5px at 15% 80%, rgba(255,255,255,0.4), transparent),
+                radial-gradient(1px 1px at 60% 90%, rgba(255,255,255,0.3), transparent),
+                radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.6), transparent),
+                radial-gradient(1px 1px at 40% 40%, rgba(255,255,255,0.2), transparent),
+                radial-gradient(1px 1px at 25% 50%, rgba(255,255,255,0.5), transparent);
+            background-size: 200px 200px;
+            animation: twinkle 4s ease-in-out infinite alternate;
+        }
+        .starfield::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                radial-gradient(1px 1px at 20% 30%, rgba(200,200,255,0.3), transparent),
+                radial-gradient(1px 1px at 55% 15%, rgba(200,200,255,0.5), transparent),
+                radial-gradient(1px 1px at 75% 65%, rgba(200,200,255,0.2), transparent),
+                radial-gradient(1px 1px at 35% 85%, rgba(200,200,255,0.4), transparent);
+            background-size: 300px 300px;
+            animation: twinkle 3s ease-in-out infinite alternate-reverse;
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .video-fallback {
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 50% 30%, #0a0a1a 0%, #000 70%);
+            z-index: -1;
+            animation: fallbackPulse 6s ease-in-out infinite alternate;
+        }
+        @keyframes fallbackPulse {
+            0% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
 
         .liquid-glass {
             background: rgba(255,255,255,0.01);
@@ -96,6 +147,7 @@
     </script>
 </head>
 <body>
+    <div class="starfield" id="starfield"></div>
     <div id="root"></div>
     <script type="text/babel">
         const { motion, AnimatePresence } = window.Motion;
@@ -138,6 +190,16 @@
             const videoRef = useRef(null);
             const rAFRef = useRef(null);
             const fadingOutRef = useRef(false);
+            const [errored, setErrored] = useState(false);
+            const [loaded, setLoaded] = useState(false);
+
+            // Timeout: if video doesn't load in 8s, show fallback
+            useEffect(() => {
+                const timer = setTimeout(() => {
+                    if (!loaded) setErrored(true);
+                }, 8000);
+                return () => clearTimeout(timer);
+            }, [loaded]);
 
             const fadeTo = useCallback((target, duration) => {
                 if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
@@ -162,9 +224,14 @@
                 if (!v) return;
 
                 const onLoaded = () => {
+                    setLoaded(true);
                     v.style.opacity = '0';
                     v.play().catch(() => {});
                     fadeTo(1, FADE_MS);
+                };
+
+                const onError = () => {
+                    setErrored(true);
                 };
 
                 const onTimeUpdate = () => {
@@ -185,16 +252,25 @@
                 };
 
                 v.addEventListener('loadeddata', onLoaded);
+                v.addEventListener('error', onError);
                 v.addEventListener('timeupdate', onTimeUpdate);
                 v.addEventListener('ended', onEnded);
+
+                // Check if video already loaded
+                if (v.readyState >= 3) { setLoaded(true); onLoaded(); }
 
                 return () => {
                     if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
                     v.removeEventListener('loadeddata', onLoaded);
+                    v.removeEventListener('error', onError);
                     v.removeEventListener('timeupdate', onTimeUpdate);
                     v.removeEventListener('ended', onEnded);
                 };
             }, [fadeTo]);
+
+            if (errored) {
+                return h('div', { className: 'video-fallback' });
+            }
 
             return h('video', {
                 ref: videoRef,
