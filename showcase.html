@@ -6,12 +6,12 @@
     <title>MIyanx | Digital Space</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #f8f9fb;
+            background: #f5f6fa;
             color: #1a1a2e;
             font-family: 'Noto Sans SC', sans-serif;
             min-height: 100vh;
@@ -22,69 +22,146 @@
             position: relative;
         }
 
-        /* ==================== 细微纹理 ==================== */
-        body::before {
-            content: '';
+        /* ==================== 噪点纹理 ==================== */
+        .noise {
             position: fixed;
             inset: 0;
-            background-image:
-                radial-gradient(circle at 20% 50%, rgba(99,102,241,0.04) 0%, transparent 50%),
-                radial-gradient(circle at 80% 50%, rgba(139,92,246,0.03) 0%, transparent 50%);
             z-index: 0;
+            pointer-events: none;
+            opacity: 0.35;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+            background-size: 256px 256px;
+            mix-blend-mode: multiply;
+        }
+
+        /* ==================== Canvas 粒子 ==================== */
+        #particles {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
             pointer-events: none;
         }
 
-        /* ==================== 网格装饰 ==================== */
-        .grid-dots {
+        /* ==================== 浮动几何形状 ==================== */
+        .float-shape {
             position: fixed;
-            inset: 0;
-            background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
-            background-size: 32px 32px;
-            opacity: 0.3;
-            z-index: 0;
+            border-radius: 50%;
+            z-index: 1;
             pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .float-shape-1 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(99,102,241,0.08), transparent 70%);
+            top: -80px;
+            right: -60px;
+            animation: floatA 12s ease-in-out infinite;
+        }
+
+        .float-shape-2 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(139,92,246,0.06), transparent 70%);
+            bottom: -40px;
+            left: -40px;
+            animation: floatB 15s ease-in-out infinite;
+        }
+
+        .float-shape-3 {
+            width: 180px;
+            height: 180px;
+            border: 1px solid rgba(99,102,241,0.1);
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            top: 40%;
+            left: -60px;
+            animation: floatC 18s ease-in-out infinite;
+        }
+
+        .float-shape-4 {
+            width: 120px;
+            height: 120px;
+            border: 1px solid rgba(99,102,241,0.08);
+            border-radius: 50%;
+            bottom: 30%;
+            right: -30px;
+            animation: floatA 20s ease-in-out infinite reverse;
+        }
+
+        @keyframes floatA {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            33% { transform: translate(20px, -30px) rotate(5deg); }
+            66% { transform: translate(-10px, 20px) rotate(-3deg); }
+        }
+
+        @keyframes floatB {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            50% { transform: translate(25px, 15px) rotate(8deg); }
+        }
+
+        @keyframes floatC {
+            0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+            50% { transform: translate(15px, -20px) rotate(180deg) scale(1.1); }
         }
 
         /* ==================== 主容器 ==================== */
         .container {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             max-width: 960px;
             width: 100%;
-            padding: 40px 32px;
+            padding: 32px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 36px;
+            gap: 32px;
         }
 
-        /* ==================== 顶部：头像 + 名称 ==================== */
+        /* ==================== 头像区域 ==================== */
         .header {
             display: flex;
             align-items: center;
             gap: 20px;
         }
 
-        .avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            overflow: hidden;
+        .avatar-ring {
+            position: relative;
+            width: 68px;
+            height: 68px;
             flex-shrink: 0;
-            box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
         }
 
-        .avatar img {
+        .avatar-ring svg {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 86px;
+            height: 86px;
+            transform: translate(-50%, -50%);
+            animation: ringSpin 8s linear infinite;
+        }
+
+        @keyframes ringSpin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .avatar-ring img {
             width: 100%;
             height: 100%;
+            border-radius: 50%;
             object-fit: cover;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
         }
 
         .name-area h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 28px;
-            font-weight: 900;
-            letter-spacing: 2px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 30px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
             color: #1a1a2e;
             line-height: 1.2;
         }
@@ -92,11 +169,12 @@
         .name-area .tagline {
             font-family: 'JetBrains Mono', monospace;
             font-size: 12px;
-            color: #6b7280;
-            letter-spacing: 1px;
+            color: #9ca3af;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
         }
 
-        /* ==================== 主体布局：终端 + 卡片 ==================== */
+        /* ==================== 主网格 ==================== */
         .main-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -105,19 +183,38 @@
             align-items: stretch;
         }
 
-        /* ==================== 终端 ==================== */
+        /* ==================== 终端（玻璃态） ==================== */
         .terminal {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 16px;
             padding: 20px 24px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.8);
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.9;
             min-height: 200px;
             display: flex;
             flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .terminal::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.12), rgba(139,92,246,0.06), rgba(99,102,241,0.08));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
         }
 
         .terminal-dots {
@@ -131,6 +228,7 @@
             width: 10px;
             height: 10px;
             border-radius: 50%;
+            transition: opacity 0.2s;
         }
         .terminal-dots span:nth-child(1) { background: #ef4444; }
         .terminal-dots span:nth-child(2) { background: #f59e0b; }
@@ -141,34 +239,23 @@
             color: #374151;
         }
 
-        .terminal-body .prompt {
-            color: #10b981;
-        }
-
-        .terminal-body .cmd {
-            color: #1a1a2e;
-            font-weight: 500;
-        }
-
-        .terminal-body .out {
-            color: #6366f1;
-        }
+        .terminal-body .prompt { color: #10b981; font-weight: 500; }
+        .terminal-body .cmd { color: #1a1a2e; font-weight: 500; }
+        .terminal-body .out { color: #6366f1; }
 
         .cursor-blink {
             display: inline-block;
             width: 7px;
-            height: 15px;
+            height: 16px;
             background: #6366f1;
             margin-left: 2px;
             vertical-align: text-bottom;
             animation: blink 1s step-end infinite;
         }
 
-        @keyframes blink {
-            50% { opacity: 0; }
-        }
+        @keyframes blink { 50% { opacity: 0; } }
 
-        /* ==================== 卡片列表 ==================== */
+        /* ==================== 卡片 ==================== */
         .cards {
             display: flex;
             flex-direction: column;
@@ -176,50 +263,105 @@
         }
 
         .card {
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 14px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(255,255,255,0.8);
+            border-radius: 16px;
             padding: 18px 22px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow:
+                0 2px 12px rgba(0,0,0,0.03),
+                inset 0 1px 0 rgba(255,255,255,0.8);
             text-decoration: none;
             color: inherit;
             display: flex;
             align-items: center;
             gap: 16px;
-            transition: all 0.25s ease;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
-        }
-
-        .card:hover {
-            border-color: #6366f1;
-            box-shadow: 0 4px 20px rgba(99,102,241,0.08);
-            transform: translateY(-2px);
-        }
-
-        .card:active {
+            overflow: hidden;
             transform: translateY(0);
         }
 
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1.5px;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
+            background-size: 200% 100%;
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
+            transform-origin: left;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.08), transparent, rgba(139,92,246,0.06));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(99,102,241,0.2);
+            box-shadow:
+                0 12px 40px rgba(99,102,241,0.08),
+                0 4px 16px rgba(0,0,0,0.04),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .card:active {
+            transform: translateY(-1px);
+        }
+
         .card-icon {
-            font-size: 24px;
+            font-size: 22px;
             flex-shrink: 0;
-            width: 40px;
-            height: 40px;
-            background: #f3f4f6;
-            border-radius: 10px;
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #f0f1ff, #f5f3ff);
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card:hover .card-icon {
+            transform: scale(1.08) rotate(-4deg);
         }
 
         .card-body {
             flex: 1;
             min-width: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .card-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 13px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 14px;
             font-weight: 700;
             letter-spacing: 0.5px;
             color: #1a1a2e;
@@ -234,12 +376,14 @@
         .card-arrow {
             color: #d1d5db;
             font-size: 18px;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .card:hover .card-arrow {
-            transform: translateX(4px);
+            transform: translateX(5px);
             color: #6366f1;
         }
 
@@ -247,8 +391,9 @@
         .footer {
             display: flex;
             justify-content: center;
-            gap: 24px;
-            padding-top: 8px;
+            align-items: center;
+            gap: 20px;
+            padding-top: 4px;
         }
 
         .footer a {
@@ -258,10 +403,26 @@
             text-decoration: none;
             transition: color 0.2s ease;
             letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        .footer a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 1px;
+            background: #6366f1;
+            transition: width 0.25s ease;
         }
 
         .footer a:hover {
             color: #6366f1;
+        }
+
+        .footer a:hover::after {
+            width: 100%;
         }
 
         .footer .sep {
@@ -270,39 +431,65 @@
 
         /* ==================== 响应式 ==================== */
         @media (max-width: 700px) {
-            body { overflow-y: auto; align-items: flex-start; padding: 20px 0; }
-            .container { padding: 20px 16px; gap: 24px; }
+            body { overflow-y: auto; align-items: flex-start; padding: 24px 0; }
+            .container { padding: 16px; gap: 24px; }
             .main-grid { grid-template-columns: 1fr; }
             .header { flex-direction: column; text-align: center; }
-            .name-area h1 { font-size: 22px; }
+            .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
+            .float-shape-1 { width: 200px; height: 200px; }
+            .float-shape-2 { width: 120px; height: 120px; }
         }
 
         @media (max-width: 480px) {
-            .container { padding: 16px 12px; }
+            .container { padding: 12px; gap: 16px; }
             .card { padding: 14px 16px; }
-            .card-title { font-size: 12px; }
-            .card-desc { font-size: 11px; }
+            .card-title { font-size: 13px; }
         }
     </style>
 </head>
 <body>
-    <div class="grid-dots"></div>
+    <!-- 噪点纹理 -->
+    <div class="noise"></div>
+
+    <!-- 浮动装饰 -->
+    <div class="float-shape float-shape-1"></div>
+    <div class="float-shape float-shape-2"></div>
+    <div class="float-shape float-shape-3"></div>
+    <div class="float-shape float-shape-4"></div>
+
+    <!-- 粒子 Canvas -->
+    <canvas id="particles"></canvas>
 
     <div class="container">
-        <!-- 头像 + 名称 -->
+        <!-- 头像 -->
         <div class="header">
-            <div class="avatar">
+            <div class="avatar-ring">
+                <svg viewBox="0 0 86 86" fill="none">
+                    <circle cx="43" cy="43" r="40" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
+                    <circle cx="43" cy="43" r="35" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
+                    <defs>
+                        <linearGradient id="ar1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#6366f1"/>
+                            <stop offset="100%" stop-color="#a855f7"/>
+                        </linearGradient>
+                        <linearGradient id="ar2" x1="100%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#a855f7"/>
+                            <stop offset="100%" stop-color="#6366f1"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
                 <img src="img/avatar.jpg" alt="MIyanx">
             </div>
             <div class="name-area">
                 <h1>MIyanx</h1>
-                <div class="tagline">// developer &amp; tech blogger</div>
+                <div class="tagline">developer &amp; tech blogger</div>
             </div>
         </div>
 
-        <!-- 终端 + 卡片 -->
+        <!-- 主区域 -->
         <div class="main-grid">
+            <!-- 终端 -->
             <div class="terminal">
                 <div class="terminal-dots">
                     <span></span><span></span><span></span>
@@ -310,8 +497,9 @@
                 <div class="terminal-body" id="terminal"></div>
             </div>
 
+            <!-- 卡片 -->
             <div class="cards">
-                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card">
+                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card" id="card1">
                     <span class="card-icon">📝</span>
                     <div class="card-body">
                         <div class="card-title">TECH BLOG</div>
@@ -319,7 +507,7 @@
                     </div>
                     <span class="card-arrow">→</span>
                 </a>
-                <a href="https://github.com/cxy1984" target="_blank" class="card">
+                <a href="https://github.com/cxy1984" target="_blank" class="card" id="card2">
                     <span class="card-icon">⚡</span>
                     <div class="card-body">
                         <div class="card-title">GITHUB</div>
@@ -327,7 +515,7 @@
                     </div>
                     <span class="card-arrow">→</span>
                 </a>
-                <div class="card" style="opacity:0.7;">
+                <div class="card" style="opacity:0.7; cursor:default;">
                     <span class="card-icon">🔮</span>
                     <div class="card-body">
                         <div class="card-title">MORE</div>
@@ -343,10 +531,76 @@
             <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
             <span class="sep">/</span>
             <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
+            <span class="sep">/</span>
+            <a href="https://cxy1984.github.io/ai-blog/showcase.html" target="_blank">#</a>
         </div>
     </div>
 
     <script>
+        // ==================== 粒子系统（白色主题版） ====================
+        (function() {
+            const cvs = document.getElementById('particles');
+            const ctx = cvs.getContext('2d');
+            let w, h, pts = [];
+
+            function resize() {
+                w = cvs.width = window.innerWidth;
+                h = cvs.height = window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            class Pt {
+                constructor() { this.reset(); }
+                reset() {
+                    this.x = Math.random() * w;
+                    this.y = Math.random() * h;
+                    this.s = Math.random() * 2.5 + 0.5;
+                    this.vx = (Math.random() - 0.5) * 0.2;
+                    this.vy = (Math.random() - 0.5) * 0.2;
+                    this.o = Math.random() * 0.25 + 0.05;
+                }
+                update() {
+                    this.x += this.vx; this.y += this.vy;
+                    if (this.x < -20 || this.x > w + 20 || this.y < -20 || this.y > h + 20) this.reset();
+                }
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.s, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(99,102,241,${this.o})`;
+                    ctx.fill();
+                }
+            }
+
+            const n = Math.min(60, Math.floor(w * h / 15000));
+            for (let i = 0; i < n; i++) pts.push(new Pt());
+
+            function drawLines() {
+                for (let i = 0; i < pts.length; i++) {
+                    for (let j = i + 1; j < pts.length; j++) {
+                        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < 80) {
+                            ctx.beginPath();
+                            ctx.moveTo(pts[i].x, pts[i].y);
+                            ctx.lineTo(pts[j].x, pts[j].y);
+                            ctx.strokeStyle = `rgba(99,102,241,${0.04 * (1 - d / 80)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function loop() {
+                ctx.clearRect(0, 0, w, h);
+                pts.forEach(p => { p.update(); p.draw(); });
+                drawLines();
+                requestAnimationFrame(loop);
+            }
+            loop();
+        })();
+
         // ==================== 打字机 ====================
         (function() {
             const el = document.getElementById('terminal');
