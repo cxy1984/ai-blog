@@ -396,7 +396,6 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 24px;
-            perspective: 1200px;
         }
 
         .card {
@@ -410,17 +409,16 @@
             text-decoration: none;
             color: inherit;
             display: block;
-            transform-style: preserve-3d;
             transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
                         border-color 0.3s ease,
                         box-shadow 0.4s ease;
             opacity: 0;
-            transform: translateY(30px) rotateX(5deg);
+            transform: translateY(30px);
         }
 
         .card.visible {
             opacity: 1;
-            transform: translateY(0) rotateX(0);
+            transform: translateY(0);
         }
 
         .card:nth-child(2) { transition-delay: 0.1s; }
