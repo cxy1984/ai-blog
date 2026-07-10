@@ -31,35 +31,24 @@
         st.textContent = css;
         document.head.appendChild(st);
       }
-      var motionPropNames = { initial: 1, animate: 1, whileInView: 1, viewport: 1, transition: 1, variants: 1, exit: 1, whileHover: 1, whileTap: 1, whileDrag: 1, whileFocus: 1, layout: 1, layoutId: 1, onAnimationStart: 1, onAnimationComplete: 1, drag: 1, dragConstraints: 1, dragElastic: 1 };
       function makeTag(tag) {
         return function(props) {
           var args = Array.prototype.slice.call(arguments, 1);
-          var children = [];
-          for (var i = 0; i < args.length; i++) {
-            if (Array.isArray(args[i])) { for (var j = 0; j < args[i].length; j++) children.push(args[i][j]); }
-            else if (args[i] != null && args[i] !== true && args[i] !== false) children.push(args[i]);
-          }
-          var elProps = {}, delay = 0, anim = '';
-          if (props) {
-            for (var k in props) {
-              if (motionPropNames[k]) {
-                if (k === 'animate' || k === 'whileInView') anim = 'mp_fadeIn';
-                if (k === 'transition' && props[k] && props[k].delay) delay = props[k].delay;
-              } else if (k !== 'key' || tag === '') {
-                elProps[k] = props[k];
+          // Use a flat array spread approach instead of manual children building
+          var flatArgs = [];
+          for (var ai = 0; ai < args.length; ai++) {
+            var av = args[ai];
+            if (Array.isArray(av)) {
+              for (var aj = 0; aj < av.length; aj++) {
+                flatArgs.push(av[aj]);
               }
+            } else {
+              flatArgs.push(av);
             }
           }
-          var cls = elProps.className || '';
-          if (anim) cls = cls + ' mp_anim ' + anim;
-          if (delay > 0) {
-            var existing = elProps.style || {};
-            elProps.style = Object.assign({}, existing, { animationDelay: delay + 's' });
-          }
-          elProps.className = cls.trim();
-          if (children.length === 0) children = null;
-          return React.createElement(tag, elProps, children);
+          // Filter out null/undefined/boolean
+          var cleanArgs = flatArgs.filter(function(x) { return x != null && x !== true && x !== false; });
+          return React.createElement.apply(React, [tag, props].concat(cleanArgs));
         };
       }
       for (var i = 0; i < tags.length; i++) motion[tags[i]] = makeTag(tags[i]);
