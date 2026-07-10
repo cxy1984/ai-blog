@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8f94a8"/>
-      <stop offset="50%" stop-color="#b74a43"/>
-      <stop offset="100%" stop-color="#ce3321"/>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#a855f7"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="6" fill="url(#grad)"/>
-  <text x="16" y="22" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="700" font-size="15" fill="white">AI</text>
+  <rect width="32" height="32" rx="6" fill="#1a1a2e"/>
+  <rect x="3" y="3" width="26" height="26" rx="4" fill="url(#g)" opacity="0.15"/>
+  <path d="M8 22V10l8 8 8-8v12" stroke="url(#g)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>
