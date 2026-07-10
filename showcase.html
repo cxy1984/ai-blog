@@ -6,223 +6,130 @@
     <title>MIyanx | Digital Space</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@300;400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        :root {
-            --bg1: #0a0e17;
-            --bg2: #0d111c;
-            --blue: #00d4ff;
-            --purple: #7c3aed;
-            --pink: #ec4899;
-            --green: #10b981;
-            --text: #e5e7eb;
-            --dim: #6b7280;
-            --border: #1f2937;
-        }
-
         body {
-            background: var(--bg1);
-            color: var(--text);
+            background: #f8f9fb;
+            color: #1a1a2e;
             font-family: 'Noto Sans SC', sans-serif;
-            overflow-x: hidden;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
         }
 
-        html {
-            scroll-behavior: smooth;
-        }
-
-        /* ==================== 粒子画布 ==================== */
-        #particles {
+        /* ==================== 细微纹理 ==================== */
+        body::before {
+            content: '';
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 50%, rgba(99,102,241,0.04) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(139,92,246,0.03) 0%, transparent 50%);
             z-index: 0;
             pointer-events: none;
         }
 
-        /* ==================== 扫描线 + 网格 ==================== */
-        .overlay {
+        /* ==================== 网格装饰 ==================== */
+        .grid-dots {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 1;
+            inset: 0;
+            background-image: radial-gradient(circle, #d1d5db 1px, transparent 1px);
+            background-size: 32px 32px;
+            opacity: 0.3;
+            z-index: 0;
             pointer-events: none;
-            background-image:
-                linear-gradient(rgba(0,212,255,0.02) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,212,255,0.02) 1px, transparent 1px);
-            background-size: 60px 60px;
-        }
-
-        .scanline {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: 2;
-            pointer-events: none;
-            background: repeating-linear-gradient(
-                0deg, transparent, transparent 2px,
-                rgba(0,212,255,0.006) 2px, rgba(0,212,255,0.006) 4px
-            );
         }
 
         /* ==================== 主容器 ==================== */
         .container {
             position: relative;
-            z-index: 3;
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        /* ==================== HERO ==================== */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }
-
-        .hero::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 200px;
-            background: linear-gradient(transparent, var(--bg1));
-            pointer-events: none;
-        }
-
-        .hero-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 30px;
-        }
-
-        /* ==================== 头像 ==================== */
-        .avatar-wrap {
-            position: relative;
-            width: 110px;
-            height: 110px;
-        }
-
-        .avatar-wrap svg {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 150px;
-            height: 150px;
-            transform: translate(-50%, -50%);
-            animation: spin 6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        .avatar-wrap img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            object-fit: cover;
-            position: relative;
             z-index: 1;
+            max-width: 960px;
+            width: 100%;
+            padding: 40px 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 36px;
         }
 
-        /* ==================== 故障文字 ==================== */
-        .glitch-wrapper {
-            position: relative;
+        /* ==================== 顶部：头像 + 名称 ==================== */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
-        .glitch {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 48px;
-            font-weight: 900;
-            color: var(--text);
-            position: relative;
-            letter-spacing: 4px;
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
         }
 
-        .glitch::before,
-        .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0;
-            left: 0;
+        .avatar img {
             width: 100%;
             height: 100%;
-            opacity: 0;
+            object-fit: cover;
         }
 
-        .glitch:hover::before {
-            opacity: 0.8;
-            color: var(--blue);
-            animation: glitch1 0.3s ease-in-out 3;
-            clip-path: inset(20% 0 40% 0);
+        .name-area h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: #1a1a2e;
+            line-height: 1.2;
         }
 
-        .glitch:hover::after {
-            opacity: 0.8;
-            color: var(--pink);
-            animation: glitch2 0.3s ease-in-out 3;
-            clip-path: inset(50% 0 10% 0);
-        }
-
-        @keyframes glitch1 {
-            0% { transform: translate(0); }
-            20% { transform: translate(-3px, 2px); }
-            40% { transform: translate(3px, -1px); }
-            60% { transform: translate(-2px, 3px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-
-        @keyframes glitch2 {
-            0% { transform: translate(0); }
-            20% { transform: translate(3px, -2px); }
-            40% { transform: translate(-3px, 1px); }
-            60% { transform: translate(2px, -3px); }
-            80% { transform: translate(-2px, 2px); }
-            100% { transform: translate(0); }
-        }
-
-        .subtitle {
+        .name-area .tagline {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--dim);
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            margin-top: 8px;
+            font-size: 12px;
+            color: #6b7280;
+            letter-spacing: 1px;
+        }
+
+        /* ==================== 主体布局：终端 + 卡片 ==================== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+            align-items: stretch;
         }
 
         /* ==================== 终端 ==================== */
-        .terminal-window {
-            background: rgba(17,24,39,0.7);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 24px 28px;
-            width: 100%;
-            max-width: 520px;
-            backdrop-filter: blur(20px);
-            box-shadow: 0 0 60px rgba(0,212,255,0.05);
-            text-align: left;
-            margin-top: 10px;
+        .terminal {
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 20px 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            line-height: 1.9;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
         }
 
         .terminal-dots {
             display: flex;
             gap: 8px;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
+            flex-shrink: 0;
         }
+
         .terminal-dots span {
-            width: 10px; height: 10px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
         }
         .terminal-dots span:nth-child(1) { background: #ef4444; }
@@ -230,526 +137,216 @@
         .terminal-dots span:nth-child(3) { background: #10b981; }
 
         .terminal-body {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            line-height: 1.9;
-            min-height: 120px;
+            flex: 1;
+            color: #374151;
         }
 
-        .terminal-body .prompt { color: var(--green); }
-        .terminal-body .cmd { color: var(--text); }
-        .terminal-body .out { color: var(--blue); }
+        .terminal-body .prompt {
+            color: #10b981;
+        }
+
+        .terminal-body .cmd {
+            color: #1a1a2e;
+            font-weight: 500;
+        }
+
+        .terminal-body .out {
+            color: #6366f1;
+        }
 
         .cursor-blink {
             display: inline-block;
-            width: 8px;
-            height: 16px;
-            background: var(--blue);
+            width: 7px;
+            height: 15px;
+            background: #6366f1;
             margin-left: 2px;
             vertical-align: text-bottom;
             animation: blink 1s step-end infinite;
         }
 
-        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
 
-        /* ==================== 引导箭头 ==================== */
-        .scroll-hint {
-            position: absolute;
-            bottom: 60px;
-            left: 50%;
-            transform: translateX(-50%);
+        /* ==================== 卡片列表 ==================== */
+        .cards {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            color: var(--dim);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            letter-spacing: 2px;
-            animation: bounce 2s ease infinite;
-        }
-
-        .scroll-hint .arrow {
-            font-size: 20px;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(8px); }
-        }
-
-        /* ==================== SECTION 通用 ==================== */
-        .section {
-            padding: 100px 0;
-            opacity: 0;
-            transform: translateY(40px);
-            transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-        }
-
-        .section.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .section-label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 12px;
-            letter-spacing: 6px;
-            color: var(--blue);
-            margin-bottom: 12px;
-            text-transform: uppercase;
-        }
-
-        .section-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 32px;
-            font-weight: 900;
-            margin-bottom: 50px;
-            position: relative;
-            display: inline-block;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 60px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--blue), var(--purple));
-        }
-
-        /* ==================== 技术星系 ==================== */
-        .galaxy {
-            position: relative;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 40px;
-        }
-
-        .galaxy-center {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: radial-gradient(circle, var(--blue), transparent);
-            box-shadow: 0 0 60px rgba(0,212,255,0.3), 0 0 120px rgba(0,212,255,0.1);
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-        }
-
-        .orbit-item {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            width: 56px;
-            height: 56px;
-            margin-left: -28px;
-            margin-top: -28px;
-            z-index: 1;
-            transition: all 0.3s ease;
-        }
-
-        .orbit-item .icon-wrap {
-            width: 56px;
-            height: 56px;
-            background: rgba(17,24,39,0.8);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 26px;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-            cursor: default;
-        }
-
-        .orbit-item:hover .icon-wrap {
-            border-color: var(--blue);
-            box-shadow: 0 0 30px rgba(0,212,255,0.2);
-            transform: scale(1.15);
-        }
-
-        .orbit-item .label {
-            text-align: center;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            color: var(--dim);
-            margin-top: 6px;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .orbit-item:hover .label {
-            opacity: 1;
-            color: var(--blue);
-        }
-
-        /* ==================== 项目卡片 ==================== */
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 24px;
+            gap: 12px;
         }
 
         .card {
-            background: rgba(17,24,39,0.5);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 32px;
-            backdrop-filter: blur(10px);
-            position: relative;
-            overflow: hidden;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 18px 22px;
             text-decoration: none;
             color: inherit;
-            display: block;
-            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
-                        border-color 0.3s ease,
-                        box-shadow 0.4s ease;
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        .card.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .card:nth-child(2) { transition-delay: 0.1s; }
-        .card:nth-child(3) { transition-delay: 0.2s; }
-
-        .card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--blue), var(--purple), var(--pink));
-            transform: scaleX(0);
-            transition: transform 0.5s ease;
-            transform-origin: left;
-        }
-
-        .card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                        rgba(0,212,255,0.06), transparent 60%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+            position: relative;
         }
 
         .card:hover {
-            border-color: rgba(0,212,255,0.3);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
-            transform: translateY(-8px) scale(1.02);
+            border-color: #6366f1;
+            box-shadow: 0 4px 20px rgba(99,102,241,0.08);
+            transform: translateY(-2px);
         }
 
-        .card:hover::before { transform: scaleX(1); }
-        .card:hover::after { opacity: 1; }
+        .card:active {
+            transform: translateY(0);
+        }
 
         .card-icon {
-            font-size: 36px;
-            margin-bottom: 18px;
-            display: block;
-            transition: transform 0.3s ease;
+            font-size: 24px;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .card:hover .card-icon {
-            transform: scale(1.15) rotate(-5deg);
+        .card-body {
+            flex: 1;
+            min-width: 0;
         }
 
         .card-title {
             font-family: 'Orbitron', sans-serif;
-            font-size: 17px;
+            font-size: 13px;
             font-weight: 700;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
+            color: #1a1a2e;
         }
 
         .card-desc {
-            font-size: 14px;
-            color: var(--dim);
-            line-height: 1.7;
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 2px;
         }
 
-        .card-tag {
-            display: inline-block;
-            margin-top: 16px;
-            padding: 4px 14px;
-            border-radius: 20px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 11px;
-            border: 1px solid var(--border);
-            color: var(--dim);
-            transition: all 0.3s ease;
+        .card-arrow {
+            color: #d1d5db;
+            font-size: 18px;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
         }
 
-        .card:hover .card-tag {
-            border-color: var(--blue);
-            color: var(--blue);
+        .card:hover .card-arrow {
+            transform: translateX(4px);
+            color: #6366f1;
         }
-
-        /* ==================== 全屏分隔 ==================== */
-        .divider {
-            text-align: center;
-            padding: 40px 0;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 11px;
-            letter-spacing: 8px;
-            color: var(--dim);
-            opacity: 0.4;
-            position: relative;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 30%;
-            height: 1px;
-            background: var(--border);
-        }
-        .divider::before { left: 0; }
-        .divider::after { right: 0; }
 
         /* ==================== 底部 ==================== */
         .footer {
-            padding: 60px 0 40px;
-            text-align: center;
-            border-top: 1px solid var(--border);
-        }
-
-        .footer-links {
             display: flex;
             justify-content: center;
-            gap: 28px;
-            margin-bottom: 20px;
+            gap: 24px;
+            padding-top: 8px;
         }
 
-        .footer-link {
+        .footer a {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 14px;
-            color: var(--dim);
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .footer-link::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 0;
-            height: 1px;
-            background: var(--blue);
-            transition: width 0.3s ease;
-        }
-
-        .footer-link:hover {
-            color: var(--blue);
-        }
-        .footer-link:hover::after {
-            width: 100%;
-        }
-
-        .footer-copy {
             font-size: 12px;
-            color: var(--dim);
-            opacity: 0.4;
+            color: #9ca3af;
+            text-decoration: none;
+            transition: color 0.2s ease;
+            letter-spacing: 0.5px;
+        }
+
+        .footer a:hover {
+            color: #6366f1;
+        }
+
+        .footer .sep {
+            color: #e5e7eb;
         }
 
         /* ==================== 响应式 ==================== */
-        @media (max-width: 640px) {
-            .glitch { font-size: 28px; letter-spacing: 2px; }
-            .terminal-window { padding: 16px 20px; }
-            .terminal-body { font-size: 12px; }
-            .galaxy { height: 320px; }
-            .section-title { font-size: 24px; }
-            .cards-grid { grid-template-columns: 1fr; }
+        @media (max-width: 700px) {
+            body { overflow-y: auto; align-items: flex-start; padding: 20px 0; }
+            .container { padding: 20px 16px; gap: 24px; }
+            .main-grid { grid-template-columns: 1fr; }
+            .header { flex-direction: column; text-align: center; }
+            .name-area h1 { font-size: 22px; }
+            .terminal { min-height: 160px; font-size: 12px; }
+        }
+
+        @media (max-width: 480px) {
+            .container { padding: 16px 12px; }
+            .card { padding: 14px 16px; }
+            .card-title { font-size: 12px; }
+            .card-desc { font-size: 11px; }
         }
     </style>
 </head>
 <body>
-    <canvas id="particles"></canvas>
-    <div class="overlay"></div>
-    <div class="scanline"></div>
+    <div class="grid-dots"></div>
 
     <div class="container">
-        <!-- HERO -->
-        <section class="hero">
-            <div class="hero-content">
-                <div class="avatar-wrap">
-                    <svg viewBox="0 0 150 150" fill="none">
-                        <circle cx="75" cy="75" r="70" stroke="url(#grad1)" stroke-width="2" stroke-dasharray="8 6" />
-                        <circle cx="75" cy="75" r="62" stroke="url(#grad2)" stroke-width="1" stroke-dasharray="3 10" opacity="0.6"/>
-                        <defs>
-                            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stop-color="#00d4ff"/>
-                                <stop offset="100%" stop-color="#7c3aed"/>
-                            </linearGradient>
-                            <linearGradient id="grad2" x1="100%" y1="0%" x2="0%" y2="100%">
-                                <stop offset="0%" stop-color="#ec4899"/>
-                                <stop offset="100%" stop-color="#00d4ff"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <img src="img/avatar.jpg" alt="avatar">
-                </div>
+        <!-- 头像 + 名称 -->
+        <div class="header">
+            <div class="avatar">
+                <img src="img/avatar.jpg" alt="MIyanx">
+            </div>
+            <div class="name-area">
+                <h1>MIyanx</h1>
+                <div class="tagline">// developer &amp; tech blogger</div>
+            </div>
+        </div>
 
-                <div class="glitch-wrapper">
-                    <h1 class="glitch" data-text="MIyanx">MIyanx</h1>
-                    <div class="subtitle">/ Tech Notes & Open Source /</div>
+        <!-- 终端 + 卡片 -->
+        <div class="main-grid">
+            <div class="terminal">
+                <div class="terminal-dots">
+                    <span></span><span></span><span></span>
                 </div>
-
-                <div class="terminal-window">
-                    <div class="terminal-dots">
-                        <span></span><span></span><span></span>
-                    </div>
-                    <div class="terminal-body" id="terminal"></div>
-                </div>
+                <div class="terminal-body" id="terminal"></div>
             </div>
 
-            <div class="scroll-hint">
-                <span>SCROLL</span>
-                <span class="arrow">↓</span>
-            </div>
-        </section>
-
-        <!-- 技术星系 -->
-        <section class="section" id="tech-section">
-            <div class="section-label">✦ TECHNOLOGY</div>
-            <h2 class="section-title">TECH GALAXY</h2>
-
-            <div class="galaxy" id="galaxy">
-                <div class="galaxy-center">⚡</div>
-            </div>
-        </section>
-
-        <!-- 项目 -->
-        <section class="section" id="project-section">
-            <div class="section-label">✦ PROJECTS</div>
-            <h2 class="section-title">EXPLORE</h2>
-
-            <div class="cards-grid">
-                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card" id="card1">
+            <div class="cards">
+                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card">
                     <span class="card-icon">📝</span>
-                    <div class="card-title">TECH BLOG</div>
-                    <div class="card-desc">技术笔记与学习记录，涵盖 Java、MySQL、Spring、Docker 等深度技术解析</div>
-                    <span class="card-tag">→ 访问</span>
+                    <div class="card-body">
+                        <div class="card-title">TECH BLOG</div>
+                        <div class="card-desc">技术笔记 · Java · MySQL · Spring</div>
+                    </div>
+                    <span class="card-arrow">→</span>
                 </a>
-                <a href="https://github.com/cxy1984" target="_blank" class="card" id="card2">
+                <a href="https://github.com/cxy1984" target="_blank" class="card">
                     <span class="card-icon">⚡</span>
-                    <div class="card-title">GITHUB</div>
-                    <div class="card-desc">开源项目与代码仓库，持续探索和积累中</div>
-                    <span class="card-tag">→ Follow</span>
+                    <div class="card-body">
+                        <div class="card-title">GITHUB</div>
+                        <div class="card-desc">开源项目 · 代码仓库</div>
+                    </div>
+                    <span class="card-arrow">→</span>
                 </a>
-                <div class="card" id="card3">
+                <div class="card" style="opacity:0.7;">
                     <span class="card-icon">🔮</span>
-                    <div class="card-title">COMING SOON</div>
-                    <div class="card-desc">更多项目正在路上，敬请期待</div>
-                    <span class="card-tag">✦ 即将到来</span>
+                    <div class="card-body">
+                        <div class="card-title">MORE</div>
+                        <div class="card-desc">更多项目即将到来</div>
+                    </div>
+                    <span class="card-arrow">→</span>
                 </div>
             </div>
-        </section>
+        </div>
 
         <!-- 底部 -->
-        <footer class="footer">
-            <div class="footer-links">
-                <a href="https://github.com/cxy1984" target="_blank" class="footer-link">GitHub</a>
-                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="footer-link">Blog</a>
-            </div>
-            <div class="footer-copy">© 2026 MIyanx · Built with ❤️</div>
-        </footer>
+        <div class="footer">
+            <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
+            <span class="sep">/</span>
+            <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
+        </div>
     </div>
 
     <script>
-        // ==================== 粒子系统 ====================
-        (function() {
-            const cvs = document.getElementById('particles');
-            const ctx = cvs.getContext('2d');
-            let w, h, pts = [], mouse = { x: -9999, y: -9999 };
-
-            function resize() {
-                w = cvs.width = window.innerWidth;
-                h = cvs.height = window.innerHeight;
-            }
-            resize();
-            window.addEventListener('resize', resize);
-            document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
-
-            class Pt {
-                constructor() { this.reset(); }
-                reset() {
-                    this.x = Math.random() * w;
-                    this.y = Math.random() * h;
-                    this.s = Math.random() * 2 + 0.3;
-                    this.vx = (Math.random() - 0.5) * 0.3;
-                    this.vy = (Math.random() - 0.5) * 0.3;
-                    this.o = Math.random() * 0.4 + 0.1;
-                }
-                update() {
-                    this.x += this.vx; this.y += this.vy;
-                    if (this.x < -10 || this.x > w + 10 || this.y < -10 || this.y > h + 10) this.reset();
-                }
-                draw() {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.s, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(0,212,255,${this.o})`;
-                    ctx.fill();
-                }
-            }
-
-            const n = Math.min(100, Math.floor(w * h / 10000));
-            for (let i = 0; i < n; i++) pts.push(new Pt());
-
-            function lines() {
-                for (let i = 0; i < pts.length; i++) {
-                    for (let j = i + 1; j < pts.length; j++) {
-                        const dx = pts[i].x - pts[j].x, dy = pts[i].y - pts[j].y;
-                        const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < 100) {
-                            ctx.beginPath();
-                            ctx.moveTo(pts[i].x, pts[i].y);
-                            ctx.lineTo(pts[j].x, pts[j].y);
-                            ctx.strokeStyle = `rgba(0,212,255,${0.06 * (1 - d / 100)})`;
-                            ctx.lineWidth = 0.5;
-                            ctx.stroke();
-                        }
-                    }
-                    const dx = pts[i].x - mouse.x, dy = pts[i].y - mouse.y;
-                    const d = Math.sqrt(dx * dx + dy * dy);
-                    if (d < 150) {
-                        ctx.beginPath();
-                        ctx.moveTo(pts[i].x, pts[i].y);
-                        ctx.lineTo(mouse.x, mouse.y);
-                        ctx.strokeStyle = `rgba(0,212,255,${0.15 * (1 - d / 150)})`;
-                        ctx.lineWidth = 0.6;
-                        ctx.stroke();
-                    }
-                }
-            }
-
-            function loop() {
-                ctx.clearRect(0, 0, w, h);
-                pts.forEach(p => { p.update(); p.draw(); });
-                lines();
-                requestAnimationFrame(loop);
-            }
-            loop();
-        })();
-
         // ==================== 打字机 ====================
         (function() {
             const el = document.getElementById('terminal');
@@ -775,7 +372,10 @@
             let buf = '', idx = 0;
 
             function tick() {
-                if (idx >= lines.length) { el.innerHTML = buf + '<span class="cursor-blink"></span>'; return; }
+                if (idx >= lines.length) {
+                    el.innerHTML = buf + '<span class="cursor-blink"></span>';
+                    return;
+                }
                 const seg = lines[idx];
                 if (seg.br) { buf += '<br>'; idx++; setTimeout(tick, 50); return; }
                 if (!seg._s) { seg._s = true; seg._i = 0; buf += `<span class="${seg.c}">`; }
@@ -789,89 +389,8 @@
                     setTimeout(tick, seg.c === 'cmd' ? 250 : 60);
                 }
             }
-            setTimeout(tick, 600);
+            setTimeout(tick, 500);
         })();
-
-        // ==================== 技术星系 ====================
-        (function() {
-            const container = document.getElementById('galaxy');
-            const techs = [
-                { icon: '☕', label: 'Java', color: '#f89820' },
-                { icon: '🍃', label: 'Spring', color: '#6db33f' },
-                { icon: '🐬', label: 'MySQL', color: '#4479a1' },
-                { icon: '🐳', label: 'Docker', color: '#2496ed' },
-                { icon: '📦', label: 'Redis', color: '#dc382d' },
-                { icon: '☁️', label: 'Linux', color: '#fcc624' },
-                { icon: '📋', label: 'Maven', color: '#c71a36' },
-                { icon: '🔧', label: 'Git', color: '#f05032' },
-            ];
-
-            const cx = container.offsetWidth / 2;
-            const cy = container.offsetHeight / 2;
-            const radius = Math.min(cx, cy) - 50;
-
-            techs.forEach((t, i) => {
-                const angle = (i / techs.length) * Math.PI * 2;
-                const r = radius * (0.5 + Math.random() * 0.5);
-                const div = document.createElement('div');
-                div.className = 'orbit-item';
-                div.style.animation = `orbit${i} 12s linear infinite`;
-                div.innerHTML = `
-                    <div class="icon-wrap" style="border-color: ${t.color}33;">${t.icon}</div>
-                    <div class="label">${t.label}</div>
-                `;
-
-                // 手动计算轨道位置
-                const startAngle = angle;
-                let angleOffset = startAngle;
-                div.style.left = '50%';
-                div.style.top = '50%';
-
-                // 用 JS 动画精确控制位置
-                const step = 0.008;
-                (function animateOrbit() {
-                    angleOffset += step;
-                    const x = cx + r * Math.cos(angleOffset) - 28;
-                    const y = cy + r * Math.sin(angleOffset) - 28;
-                    div.style.transform = `translate(${x}px, ${y}px)`;
-                    div._x = x;
-                    div._y = y;
-                    requestAnimationFrame(animateOrbit);
-                })();
-
-                container.appendChild(div);
-            });
-
-            // 重设大小时更新中心
-            window.addEventListener('resize', () => {
-                // 简单处理：页面刷新
-            });
-        })();
-
-        // ==================== Scroll Reveal ====================
-        (function() {
-            const obs = new IntersectionObserver(entries => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) {
-                        e.target.classList.add('visible');
-                        obs.unobserve(e.target);
-                    }
-                });
-            }, { threshold: 0.12 });
-
-            document.querySelectorAll('.section, .card').forEach(el => obs.observe(el));
-        })();
-
-        // ==================== 卡片鼠标跟随光效 ====================
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mousemove', e => {
-                const rect = card.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                card.style.setProperty('--mouse-x', x + '%');
-                card.style.setProperty('--mouse-y', y + '%');
-            });
-        });
     </script>
 </body>
 </html>
