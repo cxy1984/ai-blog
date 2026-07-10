@@ -31,17 +31,15 @@
             overflow: hidden;
         }
 
-        /* 噪点 */
         .noise {
             position: absolute;
             inset: 0;
-            opacity: 0.3;
+            opacity: 0.25;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             background-size: 256px 256px;
             mix-blend-mode: multiply;
         }
 
-        /* 浮动渐变体 */
         .blob {
             position: absolute;
             border-radius: 50%;
@@ -61,7 +59,6 @@
             50% { transform: translate(40px,20px) scale(1.15); }
         }
 
-        /* 技术网格点 */
         .grid-dots {
             position: absolute;
             inset: 0;
@@ -72,11 +69,49 @@
         }
 
         @keyframes gridPulse {
-            0%, 100% { opacity: 0.25; }
-            50% { opacity: 0.4; }
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.35; }
         }
 
-        /* ==================== Canvas 粒子 ==================== */
+        /* ==================== 技术星系（白色主题版） ==================== */
+        #techGalaxy {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .galaxy-item {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 48px;
+            height: 48px;
+            margin-left: -24px;
+            margin-top: -24px;
+            opacity: 0.2;
+            transition: opacity 0.5s ease;
+        }
+
+        .galaxy-item .gi-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        /* 鼠标移入时稍微亮一点 */
+        body:hover .galaxy-item {
+            opacity: 0.3;
+        }
+
+        /* ==================== 粒子 Canvas ==================== */
         #particles {
             position: fixed;
             inset: 0;
@@ -84,50 +119,10 @@
             pointer-events: none;
         }
 
-        /* ==================== 轨道装饰（技术星系简化版） ==================== */
-        .orbit-deco {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .orbit-ring {
-            position: absolute;
-            border: 1px solid rgba(99,102,241,0.06);
-            border-radius: 50%;
-            animation: orbitSpin 20s linear infinite;
-        }
-
-        .orbit-ring:nth-child(1) { width: 400px; height: 400px; }
-        .orbit-ring:nth-child(2) { width: 500px; height: 500px; animation-duration: 28s; animation-direction: reverse; }
-        .orbit-ring:nth-child(3) { width: 600px; height: 600px; animation-duration: 36s; }
-        .orbit-ring:nth-child(4) { width: 300px; height: 300px; animation-duration: 16s; animation-direction: reverse; border-style: dashed; }
-
-        .orbit-dot {
-            position: absolute;
-            width: 5px;
-            height: 5px;
-            background: rgba(99,102,241,0.15);
-            border-radius: 50%;
-        }
-
-        .orbit-ring:nth-child(1) .orbit-dot { top: -2.5px; left: 50%; }
-        .orbit-ring:nth-child(2) .orbit-dot { top: 50%; right: -2.5px; }
-        .orbit-ring:nth-child(3) .orbit-dot { bottom: -2.5px; left: 50%; }
-        .orbit-ring:nth-child(4) .orbit-dot { top: 50%; left: -2.5px; }
-
-        @keyframes orbitSpin {
-            to { transform: rotate(360deg); }
-        }
-
         /* ==================== 主容器 ==================== */
         .container {
             position: relative;
-            z-index: 2;
+            z-index: 3;
             max-width: 960px;
             width: 100%;
             padding: 32px;
@@ -146,8 +141,8 @@
 
         .avatar-ring {
             position: relative;
-            width: 68px;
-            height: 68px;
+            width: 72px;
+            height: 72px;
             flex-shrink: 0;
         }
 
@@ -155,10 +150,10 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 90px;
-            height: 90px;
+            width: 96px;
+            height: 96px;
             transform: translate(-50%, -50%);
-            animation: ringSpin 8s linear infinite;
+            animation: ringSpin 10s linear infinite;
         }
 
         @keyframes ringSpin {
@@ -175,23 +170,19 @@
             box-shadow: 0 0 0 2px rgba(99,102,241,0.12);
         }
 
-        .name-area {
-            cursor: pointer;
-            user-select: none;
-        }
-
         .name-area h1 {
             font-family: 'Space Grotesk', sans-serif;
             font-size: 30px;
             font-weight: 700;
             letter-spacing: -0.5px;
+            color: #1a1a2e;
             line-height: 1.2;
-            transition: color 0.4s ease;
-            position: relative;
             display: inline-block;
+            position: relative;
+            transition: color 0.2s ease;
         }
 
-        /* Glitch 效果 */
+        /* Glitch 悬停效果 */
         .name-area h1::before,
         .name-area h1::after {
             content: attr(data-text);
@@ -205,14 +196,14 @@
         }
 
         .name-area h1:hover::before {
-            opacity: 0.7;
+            opacity: 0.8;
             color: #6366f1;
             animation: glitch1 0.3s ease-in-out 3;
             clip-path: inset(20% 0 40% 0);
         }
 
         .name-area h1:hover::after {
-            opacity: 0.7;
+            opacity: 0.8;
             color: #ec4899;
             animation: glitch2 0.3s ease-in-out 3;
             clip-path: inset(50% 0 10% 0);
@@ -300,10 +291,7 @@
         .terminal-dots span:nth-child(2) { background: #f59e0b; }
         .terminal-dots span:nth-child(3) { background: #10b981; }
 
-        .terminal-body {
-            flex: 1;
-            color: #374151;
-        }
+        .terminal-body { flex: 1; color: #374151; }
 
         .terminal-body .prompt { color: #10b981; font-weight: 500; }
         .terminal-body .cmd { color: #1a1a2e; font-weight: 500; }
@@ -344,7 +332,6 @@
             transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             position: relative;
             overflow: hidden;
-            transform: translateY(0);
         }
 
         .card::before {
@@ -398,16 +385,9 @@
             z-index: 1;
         }
 
-        .card:hover .card-icon {
-            transform: scale(1.08) rotate(-4deg);
-        }
+        .card:hover .card-icon { transform: scale(1.08) rotate(-4deg); }
 
-        .card-body {
-            flex: 1;
-            min-width: 0;
-            position: relative;
-            z-index: 1;
-        }
+        .card-body { flex: 1; min-width: 0; position: relative; z-index: 1; }
 
         .card-title {
             font-family: 'Space Grotesk', sans-serif;
@@ -417,11 +397,7 @@
             color: #1a1a2e;
         }
 
-        .card-desc {
-            font-size: 12px;
-            color: #9ca3af;
-            margin-top: 2px;
-        }
+        .card-desc { font-size: 12px; color: #9ca3af; margin-top: 2px; }
 
         .card-arrow {
             color: #d1d5db;
@@ -432,10 +408,7 @@
             z-index: 1;
         }
 
-        .card:hover .card-arrow {
-            transform: translateX(5px);
-            color: #6366f1;
-        }
+        .card:hover .card-arrow { transform: translateX(5px); color: #6366f1; }
 
         /* ==================== 底部 ==================== */
         .footer {
@@ -480,7 +453,7 @@
             .header { flex-direction: column; text-align: center; }
             .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
-            .orbit-ring { display: none; }
+            .galaxy-item { display: none; }
         }
 
         @media (max-width: 480px) {
@@ -500,13 +473,8 @@
         <div class="grid-dots"></div>
     </div>
 
-    <!-- 轨道装饰 -->
-    <div class="orbit-deco">
-        <div class="orbit-ring"><span class="orbit-dot"></span></div>
-        <div class="orbit-ring"><span class="orbit-dot"></span></div>
-        <div class="orbit-ring"><span class="orbit-dot"></span></div>
-        <div class="orbit-ring"><span class="orbit-dot"></span></div>
-    </div>
+    <!-- 技术星系（白色版） -->
+    <div id="techGalaxy"></div>
 
     <!-- 粒子 -->
     <canvas id="particles"></canvas>
@@ -515,9 +483,9 @@
         <!-- 头像 -->
         <div class="header">
             <div class="avatar-ring">
-                <svg viewBox="0 0 90 90" fill="none">
-                    <circle cx="45" cy="45" r="42" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
-                    <circle cx="45" cy="45" r="37" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
+                <svg viewBox="0 0 96 96" fill="none">
+                    <circle cx="48" cy="48" r="45" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
+                    <circle cx="48" cy="48" r="39" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
                     <defs>
                         <linearGradient id="ar1" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stop-color="#6366f1"/>
@@ -531,8 +499,8 @@
                 </svg>
                 <img src="img/avatar.jpg" alt="MIyanx">
             </div>
-            <div class="name-area" id="nameArea">
-                <h1 id="nameText" data-text="MIyanx" style="color:#1a1a2e;">MIyanx</h1>
+            <div class="name-area">
+                <h1 data-text="MIyanx">MIyanx</h1>
                 <div class="tagline">/ Tech Notes &amp; Open Source /</div>
             </div>
         </div>
@@ -585,6 +553,67 @@
     </div>
 
     <script>
+        // ==================== 技术星系（白色主题版） ====================
+        (function() {
+            const container = document.getElementById('techGalaxy');
+            const techs = [
+                { icon: '☕', label: 'Java' },
+                { icon: '🍃', label: 'Spring' },
+                { icon: '🐬', label: 'MySQL' },
+                { icon: '🐳', label: 'Docker' },
+                { icon: '📦', label: 'Redis' },
+                { icon: '☁️', label: 'Linux' },
+                { icon: '📋', label: 'Maven' },
+                { icon: '🔧', label: 'Git' },
+            ];
+
+            const cx = window.innerWidth / 2;
+            const cy = window.innerHeight / 2;
+            // 多轨道半径
+            const radii = [140, 180, 220, 260, 300, 340, 380, 280];
+            const speeds = [0.004, 0.006, 0.003, 0.007, 0.005, 0.004, 0.008, 0.002];
+
+            techs.forEach((t, i) => {
+                const el = document.createElement('div');
+                el.className = 'galaxy-item';
+                el.innerHTML = `<div class="gi-icon">${t.icon}</div>`;
+                container.appendChild(el);
+
+                const r = radii[i] || 200;
+                const speed = speeds[i] || 0.005;
+                let angle = (i / techs.length) * Math.PI * 2;
+                // 加上随机偏移，看起来更自然
+                angle += (Math.random() - 0.5) * 0.5;
+
+                function orbit() {
+                    angle += speed;
+                    const x = cx + r * Math.cos(angle) - 24;
+                    const y = cy + r * Math.sin(angle) - 24;
+                    el.style.left = `${x}px`;
+                    el.style.top = `${y}px`;
+                    // 根据远近微调透明度
+                    const front = Math.sin(angle) > 0;
+                    el.style.opacity = front ? '0.25' : '0.12';
+                    el.style.transform = front ? 'scale(1)' : 'scale(0.85)';
+                    requestAnimationFrame(orbit);
+                }
+
+                // 初始位置
+                const startX = cx + r * Math.cos(angle) - 24;
+                const startY = cy + r * Math.sin(angle) - 24;
+                el.style.left = `${startX}px`;
+                el.style.top = `${startY}px`;
+
+                orbit();
+            });
+
+            // 窗口大小变化时重新计算中心
+            window.addEventListener('resize', () => {
+                // 简化处理：刷新页面位置
+                location.reload();
+            });
+        })();
+
         // ==================== 粒子 ====================
         (function() {
             const cvs = document.getElementById('particles');
@@ -606,7 +635,7 @@
                     this.s = Math.random() * 2.5 + 0.5;
                     this.vx = (Math.random() - 0.5) * 0.2;
                     this.vy = (Math.random() - 0.5) * 0.2;
-                    this.o = Math.random() * 0.25 + 0.05;
+                    this.o = Math.random() * 0.2 + 0.04;
                 }
                 update() {
                     this.x += this.vx; this.y += this.vy;
@@ -620,7 +649,7 @@
                 }
             }
 
-            const n = Math.min(70, Math.floor(w * h / 12000));
+            const n = Math.min(60, Math.floor(w * h / 15000));
             for (let i = 0; i < n; i++) pts.push(new Pt());
 
             function drawLines() {
@@ -632,7 +661,7 @@
                             ctx.beginPath();
                             ctx.moveTo(pts[i].x, pts[i].y);
                             ctx.lineTo(pts[j].x, pts[j].y);
-                            ctx.strokeStyle = `rgba(99,102,241,${0.04 * (1 - d / 80)})`;
+                            ctx.strokeStyle = `rgba(99,102,241,${0.03 * (1 - d / 80)})`;
                             ctx.lineWidth = 0.5;
                             ctx.stroke();
                         }
@@ -661,7 +690,7 @@
                 { t: '> ', c: 'prompt' },
                 { t: 'cat /etc/motd', c: 'cmd' },
                 { br: true },
-                { t: '  / Tech Notes & Open Source /', c: 'out' },
+                { t: '  欢迎来到我的数字空间 ✦', c: 'out' },
                 { br: true },
                 { t: '> ', c: 'prompt' },
                 { t: 'ls projects/', c: 'cmd' },
@@ -695,22 +724,6 @@
                 }
             }
             setTimeout(tick, 500);
-        })();
-
-        // ==================== 点击名字变颜色 ====================
-        (function() {
-            const el = document.getElementById('nameText');
-            const colors = ['#1a1a2e', '#6366f1', '#a855f7', '#ec4899', '#10b981', '#f59e0b', '#6366f1'];
-            let idx = 0;
-            el.addEventListener('click', function(e) {
-                e.stopPropagation();
-                idx = (idx + 1) % colors.length;
-                this.style.color = colors[idx];
-                // 小反馈动画
-                this.style.transition = 'color 0.3s ease';
-                this.style.transform = 'scale(1.05)';
-                setTimeout(() => { this.style.transform = 'scale(1)'; }, 200);
-            });
         })();
     </script>
 </body>
