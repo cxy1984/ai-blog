@@ -22,6 +22,23 @@
             position: relative;
         }
 
+        /* ==================== 顶部渐变横幅 ==================== */
+        .top-accent {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            z-index: 10;
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899, #a855f7, #6366f1);
+            background-size: 200% 100%;
+            animation: accentSlide 4s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(99,102,241,0.15);
+        }
+
+        @keyframes accentSlide {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
         /* ==================== 背景层 ==================== */
         .bg-layer {
             position: fixed;
@@ -64,7 +81,7 @@
             inset: 0;
             background-image: radial-gradient(circle, #c7d2fe 1px, transparent 1px);
             background-size: 40px 40px;
-            opacity: 0.25;
+            opacity: 0.3;
             animation: gridPulse 6s ease-in-out infinite;
         }
 
@@ -73,18 +90,11 @@
             50% { opacity: 0.35; }
         }
 
-        /* ==================== 技术星系（白色主题版） ==================== */
-        #techGalaxy {
-            position: fixed;
-            inset: 0;
-            z-index: 1;
-            pointer-events: none;
-        }
-
+        /* ==================== 两侧技术栈 ==================== */
         .galaxy-side {
             position: fixed;
             top: 0;
-            width: 100px;
+            width: 110px;
             height: 100%;
             z-index: 1;
             pointer-events: none;
@@ -98,21 +108,19 @@
             left: 50%;
             transform: translateX(-50%);
             pointer-events: auto;
-            transition: opacity 0.3s ease;
         }
 
         .galaxy-item .gi-wrap {
             display: flex;
             align-items: center;
             gap: 5px;
-            padding: 5px 12px 5px 8px;
-            background: rgba(255,255,255,0.3);
-            border: 1px solid rgba(99,102,241,0.05);
+            padding: 5px 14px 5px 10px;
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(99,102,241,0.08);
             border-radius: 100px;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
-            transform-origin: center;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            box-shadow: 0 2px 8px rgba(99,102,241,0.03);
             transition: all 0.3s ease;
         }
 
@@ -125,20 +133,19 @@
         .galaxy-item .gi-label {
             font-family: 'JetBrains Mono', monospace;
             font-size: 9px;
-            color: #818cf8;
+            color: #6366f1;
             letter-spacing: 0.5px;
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
 
-        .galaxy-item:hover .gi-label {
-            opacity: 1;
-        }
+        .galaxy-item:hover .gi-label { opacity: 1; }
 
         .galaxy-item:hover .gi-wrap {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.85);
             border-color: rgba(99,102,241,0.2);
+            box-shadow: 0 4px 16px rgba(99,102,241,0.08);
         }
 
         /* ==================== 粒子 Canvas ==================== */
@@ -155,7 +162,25 @@
             z-index: 3;
             max-width: 960px;
             width: 100%;
-            padding: 32px;
+            padding: 0 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ==================== 内容区块（带阴影层次） ==================== */
+        .content-card {
+            background: rgba(255,255,255,0.55);
+            border: 1px solid rgba(255,255,255,0.7);
+            border-radius: 24px;
+            padding: 36px 40px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow:
+                0 8px 40px rgba(0,0,0,0.04),
+                0 2px 12px rgba(99,102,241,0.03),
+                inset 0 1px 0 rgba(255,255,255,0.9);
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -167,6 +192,8 @@
             display: flex;
             align-items: center;
             gap: 20px;
+            width: 100%;
+            justify-content: center;
         }
 
         .avatar-ring {
@@ -214,10 +241,8 @@
             line-height: 1.2;
             display: inline-block;
             position: relative;
-            transition: color 0.2s ease;
         }
 
-        /* Glitch 悬停效果 */
         .name-area h1::before,
         .name-area h1::after {
             content: attr(data-text);
@@ -271,6 +296,14 @@
             margin-top: 2px;
         }
 
+        /* ==================== 分割线 ==================== */
+        .divider-line {
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.08), rgba(139,92,246,0.08), transparent);
+            margin: 0;
+        }
+
         /* ==================== 主网格 ==================== */
         .main-grid {
             display: grid;
@@ -282,13 +315,15 @@
 
         /* ==================== 终端 ==================== */
         .terminal {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.6);
             border: 1px solid rgba(255,255,255,0.8);
             border-radius: 16px;
             padding: 20px 24px;
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.8);
+            box-shadow:
+                0 4px 24px rgba(0,0,0,0.03),
+                inset 0 1px 0 rgba(255,255,255,0.8);
             font-family: 'JetBrains Mono', monospace;
             font-size: 13px;
             line-height: 1.9;
@@ -352,13 +387,15 @@
         }
 
         .card {
-            background: rgba(255,255,255,0.7);
+            background: rgba(255,255,255,0.6);
             border: 1px solid rgba(255,255,255,0.8);
             border-radius: 16px;
             padding: 18px 22px;
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.8);
+            box-shadow:
+                0 2px 12px rgba(0,0,0,0.02),
+                inset 0 1px 0 rgba(255,255,255,0.8);
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -374,7 +411,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 1.5px;
-            background: linear-gradient(90deg, #6366f1, #a855f7, #6366f1);
+            background: linear-gradient(90deg, #6366f1, #a855f7, #ec4899);
             background-size: 200% 100%;
             transform: scaleX(0);
             transition: transform 0.4s ease;
@@ -399,7 +436,9 @@
         .card:hover {
             transform: translateY(-3px);
             border-color: rgba(99,102,241,0.15);
-            box-shadow: 0 12px 40px rgba(99,102,241,0.06), 0 4px 16px rgba(0,0,0,0.03);
+            box-shadow:
+                0 12px 40px rgba(99,102,241,0.06),
+                0 4px 16px rgba(0,0,0,0.03);
         }
 
         .card:hover::before { transform: scaleX(1); }
@@ -445,60 +484,102 @@
 
         .card:hover .card-arrow { transform: translateX(5px); color: #6366f1; }
 
-        /* ==================== 底部 ==================== */
-        .footer {
+        /* ==================== 状态栏底部 ==================== */
+        .status-bar {
+            width: 100%;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 20px;
-            padding-top: 4px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(99,102,241,0.06);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: #9ca3af;
+            letter-spacing: 0.3px;
         }
 
-        .footer a {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
+        .status-bar .status-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-bar .status-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: dotPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes dotPulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 4px rgba(16,185,129,0.3); }
+            50% { opacity: 0.4; box-shadow: 0 0 8px rgba(16,185,129,0.1); }
+        }
+
+        .status-bar .status-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-bar a {
             color: #9ca3af;
             text-decoration: none;
             transition: color 0.2s ease;
-            letter-spacing: 0.5px;
             position: relative;
         }
 
-        .footer a::after {
+        .status-bar a::after {
             content: '';
             position: absolute;
-            bottom: -2px;
+            bottom: -1px;
             left: 0;
             width: 0;
             height: 1px;
             background: #6366f1;
-            transition: width 0.25s ease;
+            transition: width 0.2s ease;
         }
 
-        .footer a:hover { color: #6366f1; }
-        .footer a:hover::after { width: 100%; }
+        .status-bar a:hover {
+            color: #6366f1;
+        }
 
-        .footer .sep { color: #e5e7eb; }
+        .status-bar a:hover::after {
+            width: 100%;
+        }
+
+        .status-bar .sep {
+            color: #e5e7eb;
+        }
 
         /* ==================== 响应式 ==================== */
         @media (max-width: 700px) {
             body { overflow-y: auto; align-items: flex-start; padding: 24px 0; }
-            .container { padding: 16px; gap: 24px; }
+            .container { padding: 0 12px; }
+            .content-card { padding: 24px 20px; border-radius: 18px; gap: 24px; }
             .main-grid { grid-template-columns: 1fr; }
             .header { flex-direction: column; text-align: center; }
             .name-area h1 { font-size: 24px; }
             .terminal { min-height: 160px; font-size: 12px; }
-            #techGalaxy { display: none; }
+            .galaxy-side { display: none; }
+            .status-bar { flex-direction: column; gap: 8px; }
+            .status-bar .status-left,
+            .status-bar .status-right { width: 100%; justify-content: center; }
         }
 
         @media (max-width: 480px) {
-            .container { padding: 12px; gap: 16px; }
+            .content-card { padding: 20px 16px; gap: 20px; }
             .card { padding: 14px 16px; }
             .card-title { font-size: 13px; }
         }
     </style>
 </head>
 <body>
+    <!-- 顶部渐变线 -->
+    <div class="top-accent"></div>
+
     <!-- 背景 -->
     <div class="bg-layer">
         <div class="noise"></div>
@@ -508,7 +589,7 @@
         <div class="grid-dots"></div>
     </div>
 
-    <!-- 技术星系（左右两侧浮动） -->
+    <!-- 两侧技术栈 -->
     <div class="galaxy-side left" id="galaxyLeft"></div>
     <div class="galaxy-side right" id="galaxyRight"></div>
 
@@ -516,75 +597,86 @@
     <canvas id="particles"></canvas>
 
     <div class="container">
-        <!-- 头像 -->
-        <div class="header">
-            <div class="avatar-ring">
-                <svg viewBox="0 0 96 96" fill="none">
-                    <circle cx="48" cy="48" r="45" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
-                    <circle cx="48" cy="48" r="39" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
-                    <defs>
-                        <linearGradient id="ar1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#6366f1"/>
-                            <stop offset="100%" stop-color="#a855f7"/>
-                        </linearGradient>
-                        <linearGradient id="ar2" x1="100%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#a855f7"/>
-                            <stop offset="100%" stop-color="#6366f1"/>
-                        </linearGradient>
-                    </defs>
-                </svg>
-                <img src="img/avatar.jpg" alt="MIyanx">
-            </div>
-            <div class="name-area">
-                <h1 data-text="MIyanx">MIyanx</h1>
-                <div class="tagline">/ Tech Notes &amp; Open Source /</div>
-            </div>
-        </div>
-
-        <!-- 主体 -->
-        <div class="main-grid">
-            <div class="terminal">
-                <div class="terminal-dots">
-                    <span></span><span></span><span></span>
+        <div class="content-card">
+            <!-- 头像 -->
+            <div class="header">
+                <div class="avatar-ring">
+                    <svg viewBox="0 0 96 96" fill="none">
+                        <circle cx="48" cy="48" r="45" stroke="url(#ar1)" stroke-width="1.5" stroke-dasharray="4 6" />
+                        <circle cx="48" cy="48" r="39" stroke="url(#ar2)" stroke-width="1" stroke-dasharray="2 12" opacity="0.5"/>
+                        <defs>
+                            <linearGradient id="ar1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#6366f1"/>
+                                <stop offset="100%" stop-color="#a855f7"/>
+                            </linearGradient>
+                            <linearGradient id="ar2" x1="100%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" stop-color="#a855f7"/>
+                                <stop offset="100%" stop-color="#6366f1"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <img src="img/avatar.jpg" alt="MIyanx">
                 </div>
-                <div class="terminal-body" id="terminal"></div>
-            </div>
-
-            <div class="cards">
-                <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card">
-                    <span class="card-icon">📝</span>
-                    <div class="card-body">
-                        <div class="card-title">TECH BLOG</div>
-                        <div class="card-desc">技术笔记 · Java · MySQL · Spring</div>
-                    </div>
-                    <span class="card-arrow">→</span>
-                </a>
-                <a href="https://github.com/cxy1984" target="_blank" class="card">
-                    <span class="card-icon">⚡</span>
-                    <div class="card-body">
-                        <div class="card-title">GITHUB</div>
-                        <div class="card-desc">开源项目 · 代码仓库</div>
-                    </div>
-                    <span class="card-arrow">→</span>
-                </a>
-                <div class="card" style="opacity:0.7; cursor:default;">
-                    <span class="card-icon">🔮</span>
-                    <div class="card-body">
-                        <div class="card-title">MORE</div>
-                        <div class="card-desc">更多项目即将到来</div>
-                    </div>
-                    <span class="card-arrow">→</span>
+                <div class="name-area">
+                    <h1 data-text="MIyanx">MIyanx</h1>
+                    <div class="tagline">/ Tech Notes &amp; Open Source /</div>
                 </div>
             </div>
-        </div>
 
-        <!-- 底部 -->
-        <div class="footer">
-            <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
-            <span class="sep">/</span>
-            <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
-            <span class="sep">/</span>
-            <a href="https://cxy1984.github.io/ai-blog/showcase.html" target="_blank">#</a>
+            <!-- 分割线 -->
+            <div class="divider-line"></div>
+
+            <!-- 主体 -->
+            <div class="main-grid">
+                <div class="terminal">
+                    <div class="terminal-dots">
+                        <span></span><span></span><span></span>
+                    </div>
+                    <div class="terminal-body" id="terminal"></div>
+                </div>
+
+                <div class="cards">
+                    <a href="https://cxy1984.github.io/ai-blog/" target="_blank" class="card">
+                        <span class="card-icon">📝</span>
+                        <div class="card-body">
+                            <div class="card-title">TECH BLOG</div>
+                            <div class="card-desc">技术笔记 · Java · MySQL · Spring</div>
+                        </div>
+                        <span class="card-arrow">→</span>
+                    </a>
+                    <a href="https://github.com/cxy1984" target="_blank" class="card">
+                        <span class="card-icon">⚡</span>
+                        <div class="card-body">
+                            <div class="card-title">GITHUB</div>
+                            <div class="card-desc">开源项目 · 代码仓库</div>
+                        </div>
+                        <span class="card-arrow">→</span>
+                    </a>
+                    <div class="card" style="opacity:0.7; cursor:default;">
+                        <span class="card-icon">🔮</span>
+                        <div class="card-body">
+                            <div class="card-title">MORE</div>
+                            <div class="card-desc">更多项目即将到来</div>
+                        </div>
+                        <span class="card-arrow">→</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部状态栏 -->
+            <div class="status-bar">
+                <div class="status-left">
+                    <span class="status-dot"></span>
+                    <span>system online · v2.0</span>
+                </div>
+                <div class="status-right">
+                    <a href="https://github.com/cxy1984" target="_blank">GitHub</a>
+                    <span class="sep">/</span>
+                    <a href="https://cxy1984.github.io/ai-blog/" target="_blank">Blog</a>
+                    <span class="sep">/</span>
+                    <a href="https://cxy1984.github.io/ai-blog/showcase.html" target="_blank">#</a>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -624,7 +716,6 @@
                 { icon: '🔭', label: 'SkyWalking' },
             ];
 
-            // 分到左右两列
             const leftItems = [];
             const rightItems = [];
 
@@ -633,9 +724,8 @@
                 else rightItems.push(t);
             });
 
-            function createColumn(container, items, side) {
+            function createColumn(container, items) {
                 const h = window.innerHeight;
-                // 垂直均匀分布，留出上下边距
                 const padding = 60;
                 const spacing = (h - padding * 2) / items.length;
 
@@ -651,34 +741,29 @@
                     container.appendChild(el);
 
                     const baseY = padding + i * spacing + spacing / 2;
-                    const speed = 0.15 + Math.random() * 0.25;  // 上下浮动速度
-                    const range = 12 + Math.random() * 18;      // 浮动幅度
-                    const drift = (Math.random() - 0.5) * 20;    // 水平偏移
-                    const delay = Math.random() * Math.PI * 2;   // 相位偏移
-                    let time = delay;
+                    const speed = 0.15 + Math.random() * 0.25;
+                    const range = 12 + Math.random() * 18;
+                    const drift = (Math.random() - 0.5) * 20;
+                    let time = Math.random() * Math.PI * 2;
 
                     function float() {
-                        time += speed * 0.016;  // 约60fps
+                        time += speed * 0.016;
                         const offsetY = Math.sin(time) * range;
                         const offsetX = Math.cos(time * 0.7) * 4;
                         el.style.top = `${baseY + offsetY}px`;
                         el.style.transform = `translateX(calc(-50% + ${drift + offsetX}px))`;
-
-                        // 透明度随位置微微变化
-                        el.style.opacity = 0.2 + 0.15 * (0.5 + 0.5 * Math.sin(time * 0.5));
-
+                        // 更高透明度，更明显
+                        el.style.opacity = 0.35 + 0.2 * (0.5 + 0.5 * Math.sin(time * 0.5));
                         requestAnimationFrame(float);
                     }
                     float();
                 });
             }
 
-            createColumn(leftCol, leftItems, 'left');
-            createColumn(rightCol, rightItems, 'right');
+            createColumn(leftCol, leftItems);
+            createColumn(rightCol, rightItems);
 
-            window.addEventListener('resize', () => {
-                location.reload();
-            });
+            window.addEventListener('resize', () => { location.reload(); });
         })();
 
         // ==================== 粒子 ====================
