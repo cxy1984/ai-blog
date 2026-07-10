@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether — Beyond the Sky</title>
+    <link rel="icon" type="image/svg+xml" href="/ai-blog/favicon.svg?v=3">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js"></script>
+    <script>window.Motion = window.FramerMotion;</script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; overflow-x: hidden; }
+
+        .liquid-glass {
+            background: rgba(255,255,255,0.01);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: none;
+            box-shadow: inset 0 1px 1px rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .liquid-glass::before {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.45) 0%,
+                rgba(255,255,255,0.15) 20%,
+                rgba(255,255,255,0) 40%,
+                rgba(255,255,255,0) 60%,
+                rgba(255,255,255,0.15) 80%,
+                rgba(255,255,255,0.45) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        .liquid-glass-strong {
+            background: rgba(255,255,255,0.01);
+            background-blend-mode: luminosity;
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
+            border: none;
+            box-shadow: 4px 4px 4px rgba(0,0,0,0.05), inset 0 1px 1px rgba(255,255,255,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+        .liquid-glass-strong::before {
+            content: "";
+            position: absolute; inset: 0;
+            border-radius: inherit;
+            padding: 1.4px;
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.5) 0%,
+                rgba(255,255,255,0.2) 20%,
+                rgba(255,255,255,0) 40%,
+                rgba(255,255,255,0) 60%,
+                rgba(255,255,255,0.2) 80%,
+                rgba(255,255,255,0.5) 100%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        heading: ['Instrument Serif', 'serif'],
+                        body: ['Barlow', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        DEFAULT: '9999px',
+                    }
+                }
+            }
+        };
+        // Suppress Framer Motion dev warnings about list keys
+        const _error = console.error;
+        console.error = function(msg) {
+            if (typeof msg === 'string' && msg.includes('each child in a list')) return;
+            _error.apply(console, arguments);
+        };
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+        const { motion, AnimatePresence } = window.Motion;
+        const { useState, useEffect, useRef, useCallback, createElement: h, Fragment } = React;
+
+        // ─── Icons ───
+        const ArrowUpRight = (props) => h('svg', { ...props, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('path', { d: 'M7 17L17 7' }),
+            h('path', { d: 'M7 7h10v10' })
+        );
+        const Play = (props) => h('svg', { ...props, viewBox: '0 0 24 24', fill: 'currentColor' },
+            h('polygon', { points: '6 4 20 12 6 20 6 4' })
+        );
+        const ClockIcon = () => h('svg', { width: 28, height: 28, viewBox: '0 0 24 24', fill: 'none', stroke: 'white', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('circle', { cx: 12, cy: 12, r: 10 }),
+            h('path', { d: 'M12 6v6l4 2' })
+        );
+        const GlobeIcon = () => h('svg', { width: 28, height: 28, viewBox: '0 0 24 24', fill: 'none', stroke: 'white', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round' },
+            h('circle', { cx: 12, cy: 12, r: 10 }),
+            h('path', { d: 'M2 12h20' }),
+            h('path', { d: 'M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z' })
+        );
+
+        // ─── Material Icons ───
+        const IconImage = () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'currentColor', style: { width: 24, height: 24, color: 'white' } },
+            h('path', { d: 'M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21H5Zm1-4h12l-3.75-5-3 4L9 13l-3 4Z' })
+        );
+        const IconMovie = () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'currentColor', style: { width: 24, height: 24, color: 'white' } },
+            h('path', { d: 'M4 6.47 5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.89-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4Z' })
+        );
+        const IconLightbulb = () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'currentColor', style: { width: 24, height: 24, color: 'white' } },
+            h('path', { d: 'M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1Zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7Z' })
+        );
+
+        // ─── FadingVideo ───
+        const FADE_MS = 500;
+        const FADE_OUT_LEAD = 0.55;
+
+        const FadingVideo = ({ src, className, style: styleProp, fullBleed }) => {
+            const videoRef = useRef(null);
+            const rAFRef = useRef(null);
+            const fadingOutRef = useRef(false);
+
+            const fadeTo = useCallback((target, duration) => {
+                if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
+                const v = videoRef.current;
+                if (!v) return;
+                const start = performance.now();
+                const from = parseFloat(v.style.opacity) || 0;
+                const diff = target - from;
+
+                function tick(now) {
+                    const elapsed = now - start;
+                    const t = Math.min(elapsed / duration, 1);
+                    const eased = 1 - Math.pow(1 - t, 3);
+                    if (v) v.style.opacity = from + diff * eased;
+                    if (t < 1) rAFRef.current = requestAnimationFrame(tick);
+                }
+                rAFRef.current = requestAnimationFrame(tick);
+            }, []);
+
+            useEffect(() => {
+                const v = videoRef.current;
+                if (!v) return;
+
+                const onLoaded = () => {
+                    v.style.opacity = '0';
+                    v.play().catch(() => {});
+                    fadeTo(1, FADE_MS);
+                };
+
+                const onTimeUpdate = () => {
+                    if (!fadingOutRef.current && v.duration > 0 && v.duration - v.currentTime <= FADE_OUT_LEAD && v.duration - v.currentTime > 0) {
+                        fadingOutRef.current = true;
+                        fadeTo(0, FADE_MS);
+                    }
+                };
+
+                const onEnded = () => {
+                    v.style.opacity = '0';
+                    setTimeout(() => {
+                        v.currentTime = 0;
+                        v.play().catch(() => {});
+                        fadingOutRef.current = false;
+                        fadeTo(1, FADE_MS);
+                    }, 100);
+                };
+
+                v.addEventListener('loadeddata', onLoaded);
+                v.addEventListener('timeupdate', onTimeUpdate);
+                v.addEventListener('ended', onEnded);
+
+                return () => {
+                    if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
+                    v.removeEventListener('loadeddata', onLoaded);
+                    v.removeEventListener('timeupdate', onTimeUpdate);
+                    v.removeEventListener('ended', onEnded);
+                };
+            }, [fadeTo]);
+
+            return h('video', {
+                ref: videoRef,
+                src,
+                autoPlay: true,
+                muted: true,
+                playsInline: true,
+                preload: 'auto',
+                className,
+                style: { opacity: 0, ...styleProp },
+            });
+        };
+
+        // ─── BlurText ───
+        const BlurText = ({ text, delay: delayProp = 0 }) => {
+            const ref = useRef(null);
+            const [triggered, setTriggered] = useState(false);
+
+            useEffect(() => {
+                const el = ref.current;
+                if (!el) return;
+                const obs = new IntersectionObserver(([entry]) => {
+                    if (entry.isIntersecting) { setTriggered(true); obs.disconnect(); }
+                }, { threshold: 0.1 });
+                obs.observe(el);
+                return () => obs.disconnect();
+            }, []);
+
+            const words = text.split(' ');
+
+            return h('p', { ref,
+                style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' }
+            }, words.map((w, i) => h(motion.span, {
+                key: i,
+                style: { display: 'inline-block', marginRight: '0.28em' },
+                initial: triggered ? undefined : { filter: 'blur(10px)', opacity: 0, y: 50 },
+                animate: triggered ? {
+                    filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'],
+                    opacity: [0, 0.5, 1],
+                    y: [50, -5, 0],
+                } : undefined,
+                transition: {
+                    duration: 0.7,
+                    times: [0, 0.5, 1],
+                    ease: 'easeOut',
+                    delay: delayProp + (i * 100) / 1000,
+                }
+            }, w)));
+        };
+
+        // ─── Navbar ───
+        const Navbar = () => {
+            const links = ['Home', 'Voyages', 'Worlds', 'Innovation', 'Plan Launch'];
+            return h('nav', { className: 'fixed top-4 left-0 right-0 px-8 lg:px-16 z-50 flex items-center justify-between' },
+                // Logo
+                h('div', { className: 'w-12 h-12 liquid-glass rounded-full flex items-center justify-center flex-shrink-0' },
+                    h('span', { className: 'font-heading italic text-white text-lg' }, 'a')
+                ),
+                // Center
+                h('div', { className: 'hidden md:flex items-center gap-2 liquid-glass rounded-full px-1.5 py-1.5' },
+                    ...links.map(l => h('span', { key: l, className: 'px-3 py-2 text-sm font-medium text-white/90 font-body cursor-pointer hover:text-white transition' }, l)),
+                    h('span', { className: 'bg-white text-black rounded-full px-4 py-2 text-sm font-medium font-body flex items-center gap-1.5 cursor-pointer whitespace-nowrap' },
+                        'Claim a Spot',
+                        h(ArrowUpRight, { className: 'h-4 w-4' })
+                    )
+                ),
+                // Right spacer
+                h('div', { className: 'w-12 flex-shrink-0 hidden md:block' })
+            );
+        };
+
+        // ─── Capabilities Card ───
+        const CapCard = ({ icon, tags, title, body, index }) => {
+            return h(motion.div, {
+                className: 'liquid-glass rounded-[1.25rem] p-6 min-h-[360px] flex flex-col',
+                initial: { opacity: 0, y: 40 },
+                whileInView: { opacity: 1, y: 0 },
+                viewport: { once: true, amount: 0.2 },
+                transition: { duration: 0.6, delay: 0.15 * index, ease: 'easeOut' }
+            },
+                // Top row
+                h('div', { className: 'flex items-start justify-between gap-4' },
+                    h('div', { className: 'w-11 h-11 liquid-glass rounded-[0.75rem] flex items-center justify-center flex-shrink-0' }, icon),
+                    h('div', { className: 'flex flex-wrap justify-end gap-1.5 flex-1' },
+                        ...tags.map((t, i) => h('span', { key: i, className: 'liquid-glass rounded-full px-3 py-1 text-[11px] text-white/90 font-body whitespace-nowrap' }, t))
+                    )
+                ),
+                // Spacer
+                h('div', { className: 'flex-1' }),
+                // Bottom
+                h('div', { className: 'mt-6' },
+                    h('h3', { className: 'font-heading italic text-white text-3xl md:text-4xl tracking-[-1px] leading-none' }, title),
+                    h('p', { className: 'mt-3 text-sm text-white/90 font-body font-light leading-snug max-w-[32ch]' }, body)
+                )
+            );
+        };
+
+        // ─── Section 1: Hero ───
+        const Hero = () => {
+            return h('section', { className: 'relative w-full h-screen overflow-hidden' },
+                // Background video
+                h(FadingVideo, {
+                    src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4',
+                    className: 'absolute left-1/2 top-0 -translate-x-1/2 object-cover object-top z-0',
+                    style: { width: '120%', height: '120%' }
+                }),
+                // Content layer
+                h('div', { className: 'relative z-10 flex flex-col h-full' },
+                    h(Navbar),
+                    // Center content
+                    h('div', { className: 'flex-1 flex flex-col items-center justify-center px-4 pt-24' },
+                        // Badge
+                        h(motion.div, {
+                            className: 'liquid-glass rounded-full inline-flex items-center gap-2 mb-6',
+                            initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
+                            animate: { filter: 'blur(0px)', opacity: 1, y: 0 },
+                            transition: { duration: 0.6, delay: 0.4, ease: 'easeOut' }
+                        },
+                            h('span', { className: 'bg-white text-black px-3 py-1 text-xs font-semibold rounded-full font-body' }, 'New'),
+                            h('span', { className: 'text-sm text-white/90 pr-3 font-body' }, 'Maiden Crewed Voyage to Mars Arrives 2026')
+                        ),
+                        // Headline
+                        h(BlurText, {
+                            text: 'Venture Past Our Sky Across the Universe',
+                            delay: 0.5,
+                        }),
+                        // Subheading
+                        h(motion.p, {
+                            className: 'mt-4 text-sm md:text-base text-white max-w-2xl font-body font-light leading-tight text-center',
+                            initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
+                            animate: { filter: 'blur(0px)', opacity: 1, y: 0 },
+                            transition: { duration: 0.6, delay: 0.8, ease: 'easeOut' }
+                        }, 'Discover the universe in ways once unimaginable. Our pioneering vessels and breakthrough engineering bring deep-space exploration within reach\u2014secure and extraordinary.'),
+                        // CTAs
+                        h(motion.div, {
+                            className: 'flex items-center gap-6 mt-6',
+                            initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
+                            animate: { filter: 'blur(0px)', opacity: 1, y: 0 },
+                            transition: { duration: 0.6, delay: 1.1, ease: 'easeOut' }
+                        },
+                            h('span', { className: 'liquid-glass-strong rounded-full px-5 py-2.5 text-sm font-medium text-white font-body flex items-center gap-2 cursor-pointer' },
+                                'Start Your Voyage',
+                                h(ArrowUpRight, { className: 'h-5 w-5' })
+                            ),
+                            h('span', { className: 'text-sm text-white font-body flex items-center gap-1.5 cursor-pointer hover:underline' },
+                                'View Liftoff',
+                                h(Play, { className: 'h-4 w-4' })
+                            )
+                        ),
+                        // Stats
+                        h(motion.div, {
+                            className: 'flex items-stretch gap-4 mt-8',
+                            initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
+                            animate: { filter: 'blur(0px)', opacity: 1, y: 0 },
+                            transition: { duration: 0.6, delay: 1.3, ease: 'easeOut' }
+                        },
+                            h('div', { className: 'liquid-glass p-5 w-[220px] rounded-[1.25rem] flex flex-col gap-3' },
+                                h(ClockIcon),
+                                h('div', { className: 'text-4xl font-heading italic text-white tracking-[-1px] leading-none' }, '34.5 Min'),
+                                h('div', { className: 'text-xs text-white font-body font-light mt-1' }, 'Average Videos Watch Time')
+                            ),
+                            h('div', { className: 'liquid-glass p-5 w-[220px] rounded-[1.25rem] flex flex-col gap-3' },
+                                h(GlobeIcon),
+                                h('div', { className: 'text-4xl font-heading italic text-white tracking-[-1px] leading-none' }, '2.8B+'),
+                                h('div', { className: 'text-xs text-white font-body font-light mt-1' }, 'Users Across the Globe')
+                            )
+                        )
+                    ),
+                    // Partners
+                    h(motion.div, {
+                        className: 'flex flex-col items-center gap-4 pb-8',
+                        initial: { opacity: 0, y: 20 },
+                        animate: { opacity: 1, y: 0 },
+                        transition: { duration: 0.6, delay: 1.4, ease: 'easeOut' }
+                    },
+                        h('div', { className: 'liquid-glass rounded-full px-3.5 py-1 text-xs font-medium text-white font-body' },
+                            'Collaborating with top aerospace pioneers globally'
+                        ),
+                        h('div', { className: 'flex items-center gap-12 md:gap-16 font-heading italic text-white text-2xl md:text-3xl tracking-tight' },
+                            h('span', null, 'Aeon'),
+                            h('span', { className: 'opacity-60' }, '\u00B7'),
+                            h('span', null, 'Vela'),
+                            h('span', { className: 'opacity-60' }, '\u00B7'),
+                            h('span', null, 'Apex'),
+                            h('span', { className: 'opacity-60' }, '\u00B7'),
+                            h('span', null, 'Orbit'),
+                            h('span', { className: 'opacity-60' }, '\u00B7'),
+                            h('span', null, 'Zeno')
+                        )
+                    )
+                )
+            );
+        };
+
+        // ─── Section 2: Capabilities ───
+        const Capabilities = () => {
+            const cards = [
+                {
+                    icon: h(IconImage, null),
+                    tags: ['Natural Context', 'Photo Realism', 'Infinite Settings', 'Eco-Vibe'],
+                    title: 'AI Scenery',
+                    body: 'AI analyzes your product to create indistinguishable natural environments \u2014 from Icelandic cliffs to misty forests.'
+                },
+                {
+                    icon: h(IconMovie, null),
+                    tags: ['Scale Fast', 'Visual Consistency', 'Time Saver', 'Ready to Post'],
+                    title: 'Batch Production',
+                    body: 'Style your entire product line in minutes. Create a unified visual identity for catalogues and social media without weeks of retouching.'
+                },
+                {
+                    icon: h(IconLightbulb, null),
+                    tags: ['Ray Tracing', 'Physical Shadows', 'Studio Quality', 'Sunlight Sync'],
+                    title: 'Smart Lighting',
+                    body: 'Automatic lighting and material adjustment. Achieve flawless integration with realistic shadows and sunlight.'
+                }
+            ];
+
+            return h('section', { className: 'relative min-h-screen w-full overflow-hidden' },
+                // Background video
+                h(FadingVideo, {
+                    src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_094631_d30ab262-45ee-4b7d-99f3-5d5848c8ef13.mp4',
+                    className: 'absolute inset-0 w-full h-full object-cover z-0',
+                }),
+                // Content
+                h('div', { className: 'relative z-10 px-8 md:px-16 lg:px-20 pt-24 pb-10 flex flex-col min-h-screen' },
+                    // Header
+                    h('div', { className: 'mb-auto' },
+                        h(motion.p, {
+                            className: 'text-sm font-body text-white/80 mb-6',
+                            initial: { opacity: 0, y: 20 },
+                            whileInView: { opacity: 1, y: 0 },
+                            viewport: { once: true },
+                            transition: { duration: 0.5 }
+                        }, '// Capabilities'),
+                        h(motion.h2, {
+                            className: 'font-heading italic text-white text-6xl md:text-7xl lg:text-[6rem] leading-[0.9] tracking-[-3px]',
+                            initial: { opacity: 0, y: 30 },
+                            whileInView: { opacity: 1, y: 0 },
+                            viewport: { once: true },
+                            transition: { duration: 0.6, delay: 0.1 }
+                        }, 'Production', h('br'), 'evolved')
+                    ),
+                    // Cards
+                    h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mt-16' },
+                        ...cards.map((c, i) => h(CapCard, { key: i, ...c, index: i }))
+                    )
+                )
+            );
+        };
+
+        // ─── App ───
+        const App = () => {
+            return h(Fragment, null,
+                h(Hero, null),
+                h(Capabilities, null)
+            );
+        };
+
+        window.App = App;
+    </script>
+    <script type="text/babel">
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(React.createElement(React.StrictMode, null, React.createElement(window.App)));
+    </script>
+</body>
+</html>
