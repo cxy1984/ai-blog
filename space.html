@@ -12,115 +12,119 @@
     <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
-    <!-- framer-motion → use dynamic import to detect availability, fallback to polyfill -->
+
+    <!-- ═══════════════════════════════════════════════════════
+         Motion Polyfill — replaces framer-motion with CSS animations
+         (framer-motion v11+ has no UMD build, so we use pure CSS)
+         ═══════════════════════════════════════════════════════ -->
     <script>
+    (function() {
         // Suppress Framer Motion dev warnings about list keys
-        const _error = console.error;
+        var _error = console.error;
         console.error = function(msg) {
-            if (typeof msg === 'string' && msg.includes('each child in a list')) return;
+            if (typeof msg === 'string' && msg.indexOf('each child in a list') !== -1) return;
             _error.apply(console, arguments);
         };
 
-        // Load framer-motion — try ESM dynamic import, fallback to window assignment
-        window.__motionReady = new Promise(function(resolve) {
-            var s = document.createElement('script');
-            s.src = 'https://unpkg.com/framer-motion@11.11.17/dist/framer-motion.js';
-            s.onload = function() {
-                // Check if window.FramerMotion or window.Motion exists
-                var M = window.FramerMotion || window.Motion;
-                if (M && M.motion) {
-                    window.Motion = M;
-                    console.log('[framer] loaded via UMD');
-                    resolve(true);
-                } else {
-                    // Try dynamic import as fallback
-                    import('https://unpkg.com/framer-motion@11.11.17/dist/es/index.mjs')
-                        .then(function(mod) {
-                            window.Motion = mod;
-                            console.log('[framer] loaded via ESM');
-                            resolve(true);
-                        })
-                        .catch(function() {
-                            resolve(false);
-                        });
-                }
-            };
-            s.onerror = function() {
-                resolve(false);
-            };
-            document.head.appendChild(s);
-        });
-    </script>
-    <script>
-        // Backup: if framer-motion fails, provide minimal polyfill
-        window.__motionReady.then(function(loaded) {
-            if (loaded) return;
-            console.warn('[framer] not available, using CSS polyfill');
-            // Inject CSS keyframes
-            var style = document.createElement('style');
-            style.textContent = [
-                '@keyframes mpFadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(20px); } to { opacity: 1; filter: blur(0px); transform: translateY(0); } }',
-                '@keyframes mpFadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } }',
-                '.mpInit { opacity: 0 !important; }',
-                '.mpAnim { animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); }',
-                '.mpFI { animation-name: mpFadeIn; animation-duration: 0.6s; }',
-                '.mpFIUp { animation-name: mpFadeInUp; animation-duration: 0.6s; }',
-            ].join('\n');
-            document.head.appendChild(style);
+        // Inject CSS keyframes once
+        (function() {
+            var id = '__motionCSS';
+            if (document.getElementById(id)) return;
+            var st = document.createElement('style');
+            st.id = id;
+            var css = '';
+            css += '@keyframes mpFadeIn { from { opacity: 0; filter: blur(10px); transform: translateY(20px); } to { opacity: 1; filter: blur(0px); transform: translateY(0); } } ';
+            css += '@keyframes mpFadeInUp { from { opacity: 0; transform: translateY(40px); } to { opacity: 1; transform: translateY(0); } } ';
+            css += '@keyframes mpBlurWords { 0% { filter: blur(10px); opacity: 0; transform: translateY(50px); } 50% { filter: blur(5px); opacity: 0.5; transform: translateY(-5px); } 100% { filter: blur(0px); opacity: 1; transform: translateY(0); } } ';
+            css += '.mpAnim { animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1); } ';
+            css += '.mpFI { animation-name: mpFadeIn; animation-duration: 0.6s; } ';
+            css += '.mpFIUp { animation-name: mpFadeInUp; animation-duration: 0.6s; } ';
+            css += '.mpBW { animation-name: mpBlurWords; animation-duration: 0.7s; } ';
+            css += '.mpHidden { opacity: 0; }';
+            st.textContent = css;
+            document.head.appendChild(st);
+        })();
 
-            var MAX_RETRIES = 5;
-            function tryPatchMotion(n) {
-                if (n > MAX_RETRIES) return;
-                if (window.Motion && window.Motion.motion) return;
-                var tags = ('div,span,p,h1,h2,h3,h4,h5,h6,section,nav,article,aside,header,footer,main,' +
-                    'a,button,ul,li,ol,form,input,label,textarea,select,img,figure,figcaption,blockquote,pre,code,' +
-                    'table,thead,tbody,tr,td,th,br,hr,small,strong,em,i,b,sup,sub').split(',');
-                var motion = {};
-                tags.forEach(function(t) {
-                    motion[t] = function(props) {
-                        var args = Array.prototype.slice.call(arguments, 1);
-                        var flat = [];
-                        for (var ai = 0; ai < args.length; ai++) {
-                            var av = args[ai];
-                            if (Array.isArray(av)) { for (var aj = 0; aj < av.length; aj++) flat.push(av[aj]); }
-                            else flat.push(av);
-                        }
-                        var clean = flat.filter(function(x) { return x != null && x !== true && x !== false; });
-                        var elProps = {};
-                        var animClass = '';
-                        var delay = 0;
-                        if (props) {
-                            for (var k in props) {
-                                if (k === 'initial') { animClass = 'mpFI'; }
-                                else if (k === 'animate' || k === 'whileInView') { animClass = 'mpFI'; }
-                                else if (k === 'transition' && props[k] && props[k].delay) { delay = props[k].delay; }
-                                else if (k === 'viewport' || k === 'variants' || k === 'exit' || k === 'layout' ||
-                                    k === 'layoutId' || k === 'onAnimationStart' || k === 'onAnimationComplete') {}
-                                else { elProps[k] = props[k]; }
+        // HTML tags that framer-motion supports via motion.[tag]
+        var TAGS = ('a abbr address area article aside audio b base bdi bdo blockquote body br ' +
+            'button canvas caption cite code col colgroup data datalist dd del details dfn dialog ' +
+            'div dl dt em embed fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 head ' +
+            'header hgroup hr html i iframe img input ins kbd label legend li link main map mark ' +
+            'menu meta meter nav noscript object ol optgroup option output p picture pre progress ' +
+            'q rp rt ruby s samp script section select slot small source span strong style sub ' +
+            'summary sup table tbody td template textarea tfoot th thead time title tr track u ul var video wbr').split(' ');
+
+        // Motion-specific props that should NOT be passed to DOM elements
+        var MOTION_PROPS = {
+            initial: 1, animate: 1, whileInView: 1, viewport: 1, transition: 1,
+            variants: 1, exit: 1, whileHover: 1, whileTap: 1, whileDrag: 1, whileFocus: 1,
+            layout: 1, layoutId: 1, onAnimationStart: 1, onAnimationComplete: 1,
+            drag: 1, dragConstraints: 1, dragElastic: 1
+        };
+
+        var motionStub = {};
+
+        function makeMotionTag(tagName) {
+            return function(props) {
+                // Collect children from rest args
+                var args = Array.prototype.slice.call(arguments, 1);
+                var children = [];
+                for (var ai = 0; ai < args.length; ai++) {
+                    var av = args[ai];
+                    if (Array.isArray(av)) {
+                        for (var aj = 0; aj < av.length; aj++) {
+                            if (av[aj] != null && av[aj] !== true && av[aj] !== false) {
+                                children.push(av[aj]);
                             }
                         }
-                        var cls = elProps.className || '';
-                        if (animClass) cls = cls + ' mpAnim ' + animClass;
-                        if (delay > 0) {
-                            elProps.style = Object.assign({}, elProps.style || {}, { animationDelay: delay + 's' });
+                    } else if (av != null && av !== true && av !== false) {
+                        children.push(av);
+                    }
+                }
+
+                // Build element props
+                var elProps = {};
+                var delay = 0;
+                var animName = '';
+
+                if (props) {
+                    for (var k in props) {
+                        if (MOTION_PROPS[k]) {
+                            if (k === 'animate' || k === 'whileInView') animName = 'mpFI';
+                            if (k === 'initial') animName = 'mpFI';
+                            if (k === 'transition' && props[k] && props[k].delay) delay = props[k].delay;
+                        } else {
+                            elProps[k] = props[k];
                         }
-                        elProps.className = cls.trim();
-                        return React.createElement(t, elProps, clean.length ? clean : null);
-                    };
-                });
-                window.Motion = window.Motion || {};
-                window.Motion.motion = motion;
-                window.Motion.AnimatePresence = function(p) { return p.children; };
-            }
-            tryPatchMotion(0);
-            // Retry a few times in case framer-motion loads late
-            var iv = setInterval(function() {
-                tryPatchMotion(0);
-                if (window.Motion && window.Motion.motion) clearInterval(iv);
-            }, 200);
-            setTimeout(function() { clearInterval(iv); }, 3000);
-        });
+                    }
+                }
+
+                // Add animation classes
+                if (animName) {
+                    elProps.className = (elProps.className || '') + ' mpAnim ' + animName;
+                }
+                if (delay > 0) {
+                    if (!elProps.style) elProps.style = {};
+                    elProps.style.animationDelay = delay + 's';
+                }
+
+                return React.createElement(tagName, elProps, children.length > 0 ? children : null);
+            };
+        }
+
+        for (var ti = 0; ti < TAGS.length; ti++) {
+            motionStub[TAGS[ti]] = makeMotionTag(TAGS[ti]);
+        }
+
+        window.Motion = {
+            motion: motionStub,
+            AnimatePresence: function(p) { return p.children; }
+        };
+
+        console.log('[motion] polyfill ready');
+    })();
     </script>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #000; overflow-x: hidden; min-height: 100vh; }
@@ -230,6 +234,7 @@
             pointer-events: none;
         }
     </style>
+
     <script>
         tailwind.config = {
             theme: {
@@ -250,9 +255,11 @@
     <div class="starfield" id="starfield"></div>
     <div id="root"></div>
 
-    <!-- ===== Initial render: wait for framer-motion, then render App ===== -->
+    <!-- ════════════════════════════════════════════════
+         React App — all components via <script type="text/babel">
+         ════════════════════════════════════════════════ -->
     <script type="text/babel">
-        const { motion, AnimatePresence } = window.Motion || {};
+        const { motion, AnimatePresence } = window.Motion;
         const { useState, useEffect, useRef, useCallback, createElement: h, Fragment } = React;
 
         // ─── Icons ───
@@ -272,8 +279,6 @@
             h('path', { d: 'M2 12h20' }),
             h('path', { d: 'M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z' })
         );
-
-        // ─── Material Icons ───
         const IconImage = () => h('svg', { width: 24, height: 24, viewBox: '0 0 24 24', fill: 'currentColor', style: { width: 24, height: 24, color: 'white' } },
             h('path', { d: 'M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21H5Zm1-4h12l-3.75-5-3 4L9 13l-3 4Z' })
         );
@@ -285,62 +290,63 @@
         );
 
         // ─── FadingVideo ───
-        const FADE_MS = 500;
-        const FADE_OUT_LEAD = 0.55;
+        var FADE_MS = 500;
+        var FADE_OUT_LEAD = 0.55;
 
-        const FadingVideo = ({ src, className, style: styleProp }) => {
-            const videoRef = useRef(null);
-            const rAFRef = useRef(null);
-            const fadingOutRef = useRef(false);
-            const [errored, setErrored] = useState(false);
-            const [loaded, setLoaded] = useState(false);
+        var FadingVideo = function(_ref) {
+            var src = _ref.src, className = _ref.className, styleProp = _ref.style;
+            var videoRef = useRef(null);
+            var rAFRef = useRef(null);
+            var fadingOutRef = useRef(false);
+            var _useState = useState(false), errored = _useState[0], setErrored = _useState[1];
+            var _useState2 = useState(false), loaded = _useState2[0], setLoaded = _useState2[1];
 
-            useEffect(() => {
-                const timer = setTimeout(() => {
+            useEffect(function() {
+                var timer = setTimeout(function() {
                     if (!loaded) setErrored(true);
                 }, 8000);
-                return () => clearTimeout(timer);
+                return function() { clearTimeout(timer); };
             }, [loaded]);
 
-            const fadeTo = useCallback((target, duration) => {
+            var fadeTo = useCallback(function(target, duration) {
                 if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
-                const v = videoRef.current;
+                var v = videoRef.current;
                 if (!v) return;
-                const start = performance.now();
-                const from = parseFloat(v.style.opacity) || 0;
-                const diff = target - from;
+                var start = performance.now();
+                var from = parseFloat(v.style.opacity) || 0;
+                var diff = target - from;
                 function tick(now) {
-                    const elapsed = now - start;
-                    const t = Math.min(elapsed / duration, 1);
-                    const eased = 1 - Math.pow(1 - t, 3);
+                    var elapsed = now - start;
+                    var t = Math.min(elapsed / duration, 1);
+                    var eased = 1 - Math.pow(1 - t, 3);
                     if (v) v.style.opacity = from + diff * eased;
                     if (t < 1) rAFRef.current = requestAnimationFrame(tick);
                 }
                 rAFRef.current = requestAnimationFrame(tick);
             }, []);
 
-            useEffect(() => {
-                const v = videoRef.current;
+            useEffect(function() {
+                var v = videoRef.current;
                 if (!v) return;
 
-                const onLoaded = () => {
+                var onLoaded = function() {
                     setLoaded(true);
                     v.style.opacity = '0';
-                    v.play().catch(() => {});
+                    v.play()['catch'](function() {});
                     fadeTo(1, FADE_MS);
                 };
-                const onError = () => setErrored(true);
-                const onTimeUpdate = () => {
+                var onError = function() { setErrored(true); };
+                var onTimeUpdate = function() {
                     if (!fadingOutRef.current && v.duration > 0 && v.duration - v.currentTime <= FADE_OUT_LEAD && v.duration - v.currentTime > 0) {
                         fadingOutRef.current = true;
                         fadeTo(0, FADE_MS);
                     }
                 };
-                const onEnded = () => {
+                var onEnded = function() {
                     v.style.opacity = '0';
-                    setTimeout(() => {
+                    setTimeout(function() {
                         v.currentTime = 0;
-                        v.play().catch(() => {});
+                        v.play()['catch'](function() {});
                         fadingOutRef.current = false;
                         fadeTo(1, FADE_MS);
                     }, 100);
@@ -353,7 +359,7 @@
 
                 if (v.readyState >= 3) { setLoaded(true); onLoaded(); }
 
-                return () => {
+                return function() {
                     if (rAFRef.current) cancelAnimationFrame(rAFRef.current);
                     v.removeEventListener('loadeddata', onLoaded);
                     v.removeEventListener('error', onError);
@@ -364,56 +370,60 @@
 
             if (errored) return h('div', { className: 'video-fallback' });
             return h('video', {
-                ref: videoRef, src, autoPlay: true, muted: true, playsInline: true,
-                preload: 'auto', className, style: { opacity: 0, ...styleProp },
+                ref: videoRef, src: src, autoPlay: true, muted: true, playsInline: true,
+                preload: 'auto', className: className, style: { opacity: 0, ...styleProp },
             });
         };
 
         // ─── BlurText ───
-        const BlurText = ({ text, delay: delayProp = 0 }) => {
-            const ref = useRef(null);
-            const [triggered, setTriggered] = useState(false);
+        var BlurText = function(_ref) {
+            var text = _ref.text, delayProp = _ref.delay;
+            if (delayProp === undefined) delayProp = 0;
+            var ref = useRef(null);
+            var _useState3 = useState(false), triggered = _useState3[0], setTriggered = _useState3[1];
 
-            useEffect(() => {
-                const el = ref.current;
+            useEffect(function() {
+                var el = ref.current;
                 if (!el) return;
-                const obs = new IntersectionObserver(([entry]) => {
-                    if (entry.isIntersecting) { setTriggered(true); obs.disconnect(); }
+                var obs = new IntersectionObserver(function(entries) {
+                    if (entries[0].isIntersecting) { setTriggered(true); obs.disconnect(); }
                 }, { threshold: 0.1 });
                 obs.observe(el);
-                return () => obs.disconnect();
+                return function() { obs.disconnect(); };
             }, []);
 
-            const words = text.split(' ');
-            return h('p', { ref, style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' } },
-                words.map((w, i) => h(motion.span, {
-                    key: i,
-                    style: { display: 'inline-block', marginRight: '0.28em' },
-                    initial: triggered ? undefined : { filter: 'blur(10px)', opacity: 0, y: 50 },
-                    animate: triggered ? {
-                        filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'],
-                        opacity: [0, 0.5, 1],
-                        y: [50, -5, 0],
-                    } : undefined,
-                    transition: {
-                        duration: 0.7,
-                        times: [0, 0.5, 1],
-                        ease: 'easeOut',
-                        delay: delayProp + (i * 100) / 1000,
-                    }
-                }, w))
+            var words = text.split(' ');
+            return h('p', { ref: ref, style: { display: 'flex', flexWrap: 'wrap', justifyContent: 'center', rowGap: '0.1em' } },
+                words.map(function(w, i) {
+                    return h(motion.span, {
+                        key: i,
+                        style: { display: 'inline-block', marginRight: '0.28em' },
+                        initial: triggered ? undefined : { filter: 'blur(10px)', opacity: 0, y: 50 },
+                        animate: triggered ? {
+                            filter: ['blur(10px)', 'blur(5px)', 'blur(0px)'],
+                            opacity: [0, 0.5, 1],
+                            y: [50, -5, 0],
+                        } : undefined,
+                        transition: {
+                            duration: 0.7,
+                            times: [0, 0.5, 1],
+                            ease: 'easeOut',
+                            delay: delayProp + (i * 100) / 1000,
+                        }
+                    }, w);
+                })
             );
         };
 
         // ─── Navbar ───
-        const Navbar = () => {
-            const links = ['Home', 'Voyages', 'Worlds', 'Innovation', 'Plan Launch'];
+        var Navbar = function() {
+            var links = ['Home', 'Voyages', 'Worlds', 'Innovation', 'Plan Launch'];
             return h('nav', { className: 'fixed top-4 left-0 right-0 px-8 lg:px-16 z-50 flex items-center justify-between' },
                 h('div', { className: 'w-12 h-12 liquid-glass rounded-full flex items-center justify-center flex-shrink-0' },
                     h('span', { className: 'font-heading italic text-white text-lg' }, 'a')
                 ),
                 h('div', { className: 'hidden md:flex items-center gap-2 liquid-glass rounded-full px-1.5 py-1.5' },
-                    ...links.map(l => h('span', { key: l, className: 'px-3 py-2 text-sm font-medium text-white/90 font-body cursor-pointer hover:text-white transition' }, l)),
+                    links.map(function(l) { return h('span', { key: l, className: 'px-3 py-2 text-sm font-medium text-white/90 font-body cursor-pointer hover:text-white transition' }, l); }),
                     h('span', { className: 'bg-white text-black rounded-full px-4 py-2 text-sm font-medium font-body flex items-center gap-1.5 cursor-pointer whitespace-nowrap' },
                         'Claim a Spot', h(ArrowUpRight, { className: 'h-4 w-4' })
                     )
@@ -423,7 +433,8 @@
         };
 
         // ─── Capabilities Card ───
-        const CapCard = ({ icon, tags, title, body, index }) => {
+        var CapCard = function(_ref) {
+            var icon = _ref.icon, tags = _ref.tags, title = _ref.title, body = _ref.body, index = _ref.index;
             return h(motion.div, {
                 className: 'liquid-glass rounded-[1.25rem] p-6 min-h-[360px] flex flex-col',
                 initial: { opacity: 0, y: 40 },
@@ -434,7 +445,7 @@
                 h('div', { className: 'flex items-start justify-between gap-4' },
                     h('div', { className: 'w-11 h-11 liquid-glass rounded-[0.75rem] flex items-center justify-center flex-shrink-0' }, icon),
                     h('div', { className: 'flex flex-wrap justify-end gap-1.5 flex-1' },
-                        ...tags.map((t, i) => h('span', { key: i, className: 'liquid-glass rounded-full px-3 py-1 text-[11px] text-white/90 font-body whitespace-nowrap' }, t))
+                        tags.map(function(t, i) { return h('span', { key: i, className: 'liquid-glass rounded-full px-3 py-1 text-[11px] text-white/90 font-body whitespace-nowrap' }, t); })
                     )
                 ),
                 h('div', { className: 'flex-1' }),
@@ -446,7 +457,7 @@
         };
 
         // ─── Section 1: Hero ───
-        const Hero = () => {
+        var Hero = function() {
             return h('section', { className: 'relative w-full h-screen overflow-hidden' },
                 h(FadingVideo, {
                     src: 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260418_080021_d598092b-c4c2-4e53-8e46-94cf9064cd50.mp4',
@@ -456,7 +467,6 @@
                 h('div', { className: 'relative z-10 flex flex-col h-full' },
                     h(Navbar),
                     h('div', { className: 'flex-1 flex flex-col items-center justify-center px-4 pt-24' },
-                        // Badge
                         h(motion.div, {
                             className: 'liquid-glass rounded-full inline-flex items-center gap-2 mb-6',
                             initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
@@ -466,16 +476,13 @@
                             h('span', { className: 'bg-white text-black px-3 py-1 text-xs font-semibold rounded-full font-body' }, 'New'),
                             h('span', { className: 'text-sm text-white/90 pr-3 font-body' }, 'Maiden Crewed Voyage to Mars Arrives 2026')
                         ),
-                        // Headline
                         h(BlurText, { text: 'Venture Past Our Sky Across the Universe', delay: 0.5 }),
-                        // Subheading
                         h(motion.p, {
                             className: 'mt-4 text-sm md:text-base text-white max-w-2xl font-body font-light leading-tight text-center',
                             initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
                             animate: { filter: 'blur(0px)', opacity: 1, y: 0 },
                             transition: { duration: 0.6, delay: 0.8, ease: 'easeOut' }
                         }, 'Discover the universe in ways once unimaginable. Our pioneering vessels and breakthrough engineering bring deep-space exploration within reach\u2014secure and extraordinary.'),
-                        // CTAs
                         h(motion.div, {
                             className: 'flex items-center gap-6 mt-6',
                             initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
@@ -489,7 +496,6 @@
                                 'View Liftoff', h(Play, { className: 'h-4 w-4' })
                             )
                         ),
-                        // Stats
                         h(motion.div, {
                             className: 'flex items-stretch gap-4 mt-8',
                             initial: { filter: 'blur(10px)', opacity: 0, y: 20 },
@@ -508,7 +514,6 @@
                             )
                         )
                     ),
-                    // Partners
                     h(motion.div, {
                         className: 'flex flex-col items-center gap-4 pb-8',
                         initial: { opacity: 0, y: 20 },
@@ -535,8 +540,8 @@
         };
 
         // ─── Section 2: Capabilities ───
-        const Capabilities = () => {
-            const cards = [
+        var Capabilities = function() {
+            var cards = [
                 {
                     icon: h(IconImage, null),
                     tags: ['Natural Context', 'Photo Realism', 'Infinite Settings', 'Eco-Vibe'],
@@ -580,42 +585,21 @@
                         }, 'Production', h('br'), 'evolved')
                     ),
                     h('div', { className: 'grid grid-cols-1 md:grid-cols-3 gap-6 mt-16' },
-                        ...cards.map((c, i) => h(CapCard, { key: i, ...c, index: i }))
+                        cards.map(function(c, i) { return h(CapCard, { key: i, icon: c.icon, tags: c.tags, title: c.title, body: c.body, index: i }); })
                     )
                 )
             );
         };
 
-        // ─── App ───
-        const App = () => {
+        var App = function() {
             return h(Fragment, null,
                 h(Hero, null),
                 h(Capabilities, null)
             );
         };
 
-        window.App = App;
+        var root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(h(React.StrictMode, null, h(App, null)));
     </script>
-    <script>
-        // Delay rendering until framer-motion (or fallback polyfill) is ready
-        (function() {
-            function tryRender(n) {
-                if (n > 50) {
-                    document.getElementById('root').innerHTML = '<div style="color:white;text-align:center;padding:40vh 20px;font-family:sans-serif">Loading... Please refresh.</div>';
-                    return;
-                }
-                if (window.Motion && window.Motion.motion && window.App) {
-                    try {
-                        var root = ReactDOM.createRoot(document.getElementById('root'));
-                        root.render(React.createElement(React.StrictMode, null, React.createElement(window.App)));
-                    } catch(e) {
-                        console.error('[render]', e);
-                        setTimeout(function() { tryRender(n + 1); }, 200);
-                    }
-                } else {
-                    setTimeout(function() { tryRender(n + 1); }, 100);
-                }
-            }
-            tryRender(0);
-        })();
-    </script>
+</body>
+</html>
