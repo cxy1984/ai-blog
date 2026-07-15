@@ -561,6 +561,14 @@
         }
         .card-space:hover .card-title { color: #818cf8 !important; }
         .card-jack:hover .card-title { color: #c084fc !important; }
+        .card-lightning .card-icon {
+            background: linear-gradient(135deg, #0f172a, #1e3a5f) !important;
+            color: #fbbf24 !important;
+        }
+        .card-lightning:hover .card-icon {
+            box-shadow: 0 0 20px rgba(251,191,36,0.4);
+        }
+        .card-lightning:hover .card-title { color: #fbbf24 !important; }
 
         .status-bar a {
             color: #9ca3af;
@@ -697,6 +705,14 @@
                         <div class="card-body">
                             <div class="card-title">JACK</div>
                             <div class="card-desc">3D Creator 作品集 · 暗黑风格</div>
+                        </div>
+                        <span class="card-arrow card-arrow-glow">✦</span>
+                    </a>
+                    <a href="https://github.com/cxy1984/LightningDeal" target="_blank" class="card card-showcase card-lightning">
+                        <span class="card-icon">⚡</span>
+                        <div class="card-body">
+                            <div class="card-title">LightningDeal</div>
+                            <div class="card-desc">高并发秒杀系统 · Spring Boot + Redis + RocketMQ</div>
                         </div>
                         <span class="card-arrow card-arrow-glow">✦</span>
                     </a>
@@ -884,7 +900,7 @@
                 { t: 'ls projects/', c: 'cmd' },
                 { br: true },
                 { t: '  ai-blog/', c: 'out' },
-                { t: '  auction/', c: 'out' },
+                { t: '  LightningDeal/', c: 'out' },
                 { br: true },
                 { t: '> ', c: 'prompt' },
                 { t: 'cat skills.txt', c: 'cmd' },
