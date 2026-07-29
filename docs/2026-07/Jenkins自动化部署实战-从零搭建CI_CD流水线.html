@@ -7,13 +7,10 @@
     <title>从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</title>
     <!-- SEO Meta Tags -->
     <meta name="description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
-
-日期：2026-02-20
-
 写在前面
 我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
 
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
     <meta name="keywords" content="从零搭建, Jenkins, CI, CD, 流水线, 一个, Spring, Boot, 项目的自动化部署实战" />
     <meta name="author" content="AI 个人笔记" />
     <meta name="robots" content="index, follow" />
@@ -22,13 +19,10 @@
     <meta property="og:type" content="article" />
     <meta property="og:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
     <meta property="og:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
-
-日期：2026-02-20
-
 写在前面
 我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
 
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
     <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
     <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/Jenkins自动化部署实战-从零搭建CI_CD流水线.html" />
     <meta property="og:site_name" content="AI 个人笔记" />
@@ -37,13 +31,10 @@
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
     <meta property="twitter:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
-
-日期：2026-02-20
-
 写在前面
 我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
 
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
     <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
 
     <!-- Canonical URL -->
@@ -743,9 +734,6 @@
             ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
           </div>
           <div class="post-content" id="post-content"><h1 id="从零搭建-jenkins-cicd-流水线：一个-spring-boot-项目的自动化部署实战">从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</h1>
-<blockquote>
-<p>日期：2026-02-20</p>
-</blockquote>
 <h2 id="写在前面">写在前面</h2>
 <p>我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：</p>
 <blockquote>
@@ -754,6 +742,9 @@
 <p>三个环境（dev / test / pro）、多台机器来回切换，漏一步就要排查半天。痛定思痛，决定用 Jenkins 把这一套流程全自动化。</p>
 <p>这篇文章完整记录了从零搭建到跑通 CI/CD 的全过程，包括踩过的坑和解决方案。</p>
 <hr>
+<blockquote>
+<p>日期：2026-07-18</p>
+</blockquote>
 <h2 id="一、环境情况">一、环境情况</h2>
 <p>项目技术栈：Spring Boot 2.6.4 + MyBatis Plus + JDK 8 + Maven，代码托管在 SVN。</p>
 <p>服务器有三台：</p>

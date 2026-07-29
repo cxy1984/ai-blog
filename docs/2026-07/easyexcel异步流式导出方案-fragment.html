@@ -355,10 +355,7 @@
       <div class="warning">
         ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
       </div>
-      <div class="post-content" id="post-content"><blockquote>
-<p>日期：2026-10-08</p>
-</blockquote>
-<h2 id="问题背景">问题背景</h2>
+      <div class="post-content" id="post-content"><h2 id="问题背景">问题背景</h2>
 <p>财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。</p>
 <p>原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：</p>
 <pre><code class="language-java">List&lt;Entity&gt; list = mapper.selectList(wrapper);      // 全量加载
@@ -398,25 +395,13 @@ public ThreadPoolTaskExecutor exportExecutor() {
 </code></pre>
 <p><strong>参数为什么这样定？</strong></p>
 <p>核心决策因子是数据库连接池的容量。每个导出持有 1 个长连接（Cursor 流式查询），假设业务连接池最大 20：</p>
-<table>
-<thead>
-<tr>
-<th>core</th>
-<th>最坏情况</th>
-<th>是否安全</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>2</td>
-<td>导出吃掉 2 个连接，业务剩 18 个</td>
-<td>✅</td>
-</tr>
-<tr>
-<td>10</td>
-<td>导出吃掉 10 个连接，业务只剩 10 个</td>
-<td>❌ 高峰期业务可能拿不到连接</td>
-</tr>
-</tbody></table>
+<p>| core | 最坏情况 | 是否安全 |
+|---</p>
+<blockquote>
+<p>日期：2026-07-29---|---------|---------|
+| 2 | 导出吃掉 2 个连接，业务剩 18 个 | ✅ |
+| 10 | 导出吃掉 10 个连接，业务只剩 10 个 | ❌ 高峰期业务可能拿不到连接 |</p>
+</blockquote>
 <p><code>queue=10</code>：缓冲 10 个突发请求，第 11 个触发拒绝策略，返回&quot;导出排队已满，请稍后重试&quot;。</p>
 <p>核心原则：<strong>宁可拒绝导出，不能让下单因为连接池被占满而挂掉。</strong></p>
 <h3 id="controller-实现">Controller 实现</h3>

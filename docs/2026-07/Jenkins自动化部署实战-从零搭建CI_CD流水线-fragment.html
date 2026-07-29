@@ -355,10 +355,7 @@
       <div class="warning">
         ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
       </div>
-      <div class="post-content" id="post-content"><blockquote>
-<p>日期：2026-02-20</p>
-</blockquote>
-<h2 id="写在前面">写在前面</h2>
+      <div class="post-content" id="post-content"><h2 id="写在前面">写在前面</h2>
 <p>我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：</p>
 <blockquote>
 <p>本地 Windows 上 <code>mvn package</code> → 手动 SCP 上传到服务器 → SSH 登录 → <code>kill</code> 旧进程 → <code>nohup</code> 启动新进程 → 刷新浏览器看有没有起来</p>
@@ -366,6 +363,9 @@
 <p>三个环境（dev / test / pro）、多台机器来回切换，漏一步就要排查半天。痛定思痛，决定用 Jenkins 把这一套流程全自动化。</p>
 <p>这篇文章完整记录了从零搭建到跑通 CI/CD 的全过程，包括踩过的坑和解决方案。</p>
 <hr>
+<blockquote>
+<p>日期：2026-07-18</p>
+</blockquote>
 <h2 id="一、环境情况">一、环境情况</h2>
 <p>项目技术栈：Spring Boot 2.6.4 + MyBatis Plus + JDK 8 + Maven，代码托管在 SVN。</p>
 <p>服务器有三台：</p>
