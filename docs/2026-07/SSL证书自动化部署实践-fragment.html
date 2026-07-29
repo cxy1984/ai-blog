@@ -1,0 +1,904 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">告别手动 SSL 证书管理：一次配置，永久自动续签</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/7/29</div>
+          <div class="post-category">2026-07</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><blockquote>
+<p>背景：公司十几个域名，每三个月手动更新一次 SSL 证书，下载、上传、解压、覆盖、重载，繁琐且容易遗忘。这次终于下决心彻底自动化了。</p>
+</blockquote>
+<hr>
+<h2 id="一、原来的流程有多痛苦">一、原来的流程有多痛苦</h2>
+<pre><code>腾讯云申请免费证书（3个月）
+  → 下载验证文件
+  → 上传到服务器指定目录
+  → 等腾讯云验证通过
+  → 下载证书 zip 包
+  → 解压
+  → 找到 nginx 证书目录
+  → 覆盖 .pem 和 .key 文件
+  → nginx -s reload
+  → 检查是否生效
+</code></pre>
+<p>这只是一张证书的流程。如果十几个域名分散在多台服务器上，每次续签就是一场噩梦。</p>
+<hr>
+<h2 id="二、选型：为什么用-acmesh">二、选型：为什么用 acme.sh</h2>
+<p>调研了几个方案：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>继续腾讯云手动</td>
+<td>熟悉</td>
+<td>累、易漏</td>
+</tr>
+<tr>
+<td>Caddy 替换 nginx</td>
+<td>证书全自动</td>
+<td>迁移成本高，历史包袱重</td>
+</tr>
+<tr>
+<td>certbot 官方客户端</td>
+<td>官方支持</td>
+<td>依赖 Python，配置繁琐</td>
+</tr>
+<tr>
+<td><strong>acme.sh</strong></td>
+<td>纯 shell，零依赖，一条命令搞定</td>
+<td>国内 GitHub 访问慢（可解决）</td>
+</tr>
+</tbody></table>
+<p>最终选了 acme.sh，原因就一个：<strong>不改 nginx 配置、不改证书路径，只替换文件内容</strong>。</p>
+<hr>
+<h2 id="三、技术原理">三、技术原理</h2>
+<h3 id="31-acmesh-做了什么">3.1 acme.sh 做了什么</h3>
+<pre><code>① 向 Let&#39;s Encrypt（或 ZeroSSL）发起证书申请
+② CA 返回一个验证令牌
+③ acme.sh 把验证文件放到你网站的 webroot 目录下
+④ CA 访问 http://你的域名/.well-known/acme-challenge/xxx 验证
+⑤ 验证通过 → 签发 90 天证书
+⑥ acme.sh 把证书拷贝到 nginx 的证书路径
+⑦ nginx -s reload
+</code></pre>
+<p>整个过程 30 秒，全自动。</p>
+<h3 id="32-webroot-验证-vs-dns-验证">3.2 webroot 验证 vs DNS 验证</h3>
+<table>
+<thead>
+<tr>
+<th>验证方式</th>
+<th>适用场景</th>
+<th>前提条件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>webroot</td>
+<td>单域名</td>
+<td>服务器有公网 80 端口，webroot 可写</td>
+</tr>
+<tr>
+<td>DNS API</td>
+<td>通配符 + 单域名</td>
+<td>域名 DNS 托管在支持 API 的服务商</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>我们的域名 DNS 托管在商中在线，没有公开 API，所以本次只能用 webroot 模式签发单域名证书。通配符证书需要 DNS API，下一步计划把 DNS 迁移到腾讯云 DNSPod。</p>
+</blockquote>
+<h3 id="33-自动续签机制">3.3 自动续签机制</h3>
+<p>acme.sh 安装时自动添加 crontab：</p>
+<pre><code>0 0 * * * ~/.acme.sh/acme.sh --cron --home ~/.acme.sh
+</code></pre>
+<p>每天零点检查一次：</p>
+<pre><code>证书剩余 &gt; 60 天 → 跳过
+证书剩余 ≤ 60 天 → 重新签发 → 覆盖文件 → nginx -s reload
+</code></pre>
+<p>证书等效有效期始终维持在 30~90 天之间，永远不会过期。</p>
+<hr>
+<h2 id="四、实战部署">四、实战部署</h2>
+<h3 id="41-解决国内-github-访问问题">4.1 解决国内 GitHub 访问问题</h3>
+<p>acme.sh 官方仓库在 GitHub，国内服务器直接安装会超时。用 Gitee 镜像：</p>
+<pre><code class="language-bash">cd /root
+git clone https://gitee.com/neilpang/acme.sh.git
+cd acme.sh
+./acme.sh --install -m ssl@你的域名.cn
+</code></pre>
+<h3 id="42-注册账号">4.2 注册账号</h3>
+<pre><code class="language-bash">~/.acme.sh/acme.sh --register-account -m ssl@你的域名.cn
+</code></pre>
+<p>Let&#39;s Encrypt 注册只需一个邮箱，不需要密码，甚至邮箱不存在也能签发证书。邮箱仅用于过期提醒。</p>
+<h3 id="43-签发证书">4.3 签发证书</h3>
+<p>需要先确认 webroot 路径——就是 nginx 配置中 <code>root</code> 指令指向的目录：</p>
+<pre><code class="language-bash">~/.acme.sh/acme.sh --issue \
+    -d 你的域名.cn \
+    -w /你的/webroot/路径
+</code></pre>
+<p>如果有多个子域名在同一台服务器上，可以签发一张 SAN 证书：</p>
+<pre><code class="language-bash">~/.acme.sh/acme.sh --issue \
+    -d www.你的域名.cn \
+    -d api.你的域名.cn \
+    -d admin.你的域名.cn \
+    -w /你的/webroot/路径
+</code></pre>
+<h3 id="44-部署到-nginx--设置自动续签">4.4 部署到 nginx + 设置自动续签</h3>
+<pre><code class="language-bash">~/.acme.sh/acme.sh --install-cert -d 你的域名.cn \
+    --key-file       /你的/nginx/证书路径/xxx.key \
+    --fullchain-file /你的/nginx/证书路径/xxx_bundle.pem \
+    --reloadcmd      &quot;nginx -s reload&quot;
+</code></pre>
+<p>路径就是 nginx 配置中 <code>ssl_certificate</code> 和 <code>ssl_certificate_key</code> 的值。<strong>文件内容会替换，但路径和 nginx 配置完全不动。</strong></p>
+<hr>
+<h2 id="五、完整命令模板（新服务器通用）">五、完整命令模板（新服务器通用）</h2>
+<pre><code class="language-bash"># 第一步：安装（带检测，避免重复安装）
+if [ ! -f ~/.acme.sh/acme.sh ]; then
+    cd /root
+    git clone https://gitee.com/neilpang/acme.sh.git
+    cd acme.sh &amp;&amp; ./acme.sh --install -m ssl@你的域名.cn
+    ~/.acme.sh/acme.sh --register-account -m ssl@你的域名.cn
+fi
+
+# 第二步：签发
+~/.acme.sh/acme.sh --issue \
+    -d 你要签的域名 \
+    -w /nginx配置中的root路径
+
+# 第三步：部署
+~/.acme.sh/acme.sh --install-cert -d 你要签的域名 \
+    --key-file       /证书的key文件路径 \
+    --fullchain-file /证书的pem文件路径 \
+    --reloadcmd      &quot;nginx -s reload&quot;
+</code></pre>
+<hr>
+<h2 id="六、踩坑记录">六、踩坑记录</h2>
+<h3 id="61-dns-不在腾讯云">6.1 DNS 不在腾讯云</h3>
+<p>最初想用腾讯云 DNS API 签发通配符证书，结果发现域名的 DNS 托管在商中在线，不是腾讯云 DNSPod。acme.sh 的 DNS API 插件调不动，只能改用 webroot 模式。</p>
+<p><strong>教训</strong>：动手前先 <code>whois</code> 确认域名的 DNS 托管商。</p>
+<h3 id="62-301-跳转干扰验证">6.2 301 跳转干扰验证</h3>
+<p>有些域名的 nginx 配了 301 跳转（比如 <code>business</code> 跳转到 <code>www</code>），导致浏览器看到的证书是跳转目标的。验证时要直接用 <code>openssl s_client</code> 命令绕过跳转：</p>
+<pre><code class="language-bash">openssl s_client -connect 域名:443 -servername 域名 2&gt;/dev/null | openssl x509 -noout -dates
+</code></pre>
+<h3 id="63-zerossl-默认-ca">6.3 ZeroSSL 默认 CA</h3>
+<p>acme.sh 安装后默认使用 ZeroSSL 作为 CA 而不是 Let&#39;s Encrypt。功能上没区别（都是免费 90 天），如果一定想换回 Let&#39;s Encrypt：</p>
+<pre><code class="language-bash">~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+</code></pre>
+<hr>
+<h2 id="七、运维命令速查">七、运维命令速查</h2>
+<pre><code class="language-bash"># 查看已签发证书列表
+~/.acme.sh/acme.sh --list
+
+# 查看某张证书的有效期
+openssl x509 -in /证书路径/xxx_bundle.pem -noout -dates
+
+# 手动触发续签
+~/.acme.sh/acme.sh --cron --home ~/.acme.sh
+
+# 查看 crontab 是否正常
+crontab -l | grep acme
+
+# 升级 acme.sh
+~/.acme.sh/acme.sh --upgrade
+</code></pre>
+<hr>
+<h2 id="八、效果对比">八、效果对比</h2>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>迁移前</th>
+<th>迁移后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>证书来源</td>
+<td>腾讯云免费证书</td>
+<td>Let&#39;s Encrypt / ZeroSSL</td>
+</tr>
+<tr>
+<td>续签操作</td>
+<td>手动，每 3 个月操作一次</td>
+<td>全自动，零人工</td>
+</tr>
+<tr>
+<td>单次耗时</td>
+<td>约 20 分钟 / 域名</td>
+<td>0</td>
+</tr>
+<tr>
+<td>忘记续签风险</td>
+<td>高（服务直接挂）</td>
+<td>无</td>
+</tr>
+<tr>
+<td>新服务器接入</td>
+<td>要搞半天</td>
+<td>3 条命令，5 分钟</td>
+</tr>
+<tr>
+<td>nginx 配置</td>
+<td>不需要改</td>
+<td>不需要改</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="九、下一步计划">九、下一步计划</h2>
+<ol>
+<li>将 DNS 从商中在线迁移到腾讯云 DNSPod，开启 DNS API 验证</li>
+<li>用通配符证书 <code>*.域名.cn</code> 替代多个单域名证书</li>
+<li>用 Ansible 批量推送 acme.sh 到剩余服务器</li>
+<li>接入监控告警，证书剩余天数低于阈值时通知</li>
+</ol>
+<hr>
+<blockquote>
+<p>总结：十几张证书从手动到自动，核心就是放下对&quot;腾讯云证书服务&quot;的依赖，拥抱 Let&#39;s Encrypt 生态。acme.sh 这个工具麻雀虽小五脏俱全。</p>
+</blockquote>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>
