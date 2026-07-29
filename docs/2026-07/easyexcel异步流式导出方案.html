@@ -4,50 +4,50 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/ai-blog/favicon.svg?v=3">
-    <title>从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</title>
+    <title>30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成</title>
     <!-- SEO Meta Tags -->
-    <meta name="description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+    <meta name="description" content="30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成
 
-日期：2026-02-20
+日期：2026-10-08
 
-写在前面
-我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
-
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
-    <meta name="keywords" content="从零搭建, Jenkins, CI, CD, 流水线, 一个, Spring, Boot, 项目的自动化部署实战" />
+问题背景
+财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。
+原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：
+Lis..." />
+    <meta name="keywords" content="30, 万条对账报表导出, OOM, 崩溃到, 分钟稳定完成" />
     <meta name="author" content="AI 个人笔记" />
     <meta name="robots" content="index, follow" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="article" />
-    <meta property="og:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
-    <meta property="og:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+    <meta property="og:title" content="30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成" />
+    <meta property="og:description" content="30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成
 
-日期：2026-02-20
+日期：2026-10-08
 
-写在前面
-我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
-
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
+问题背景
+财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。
+原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：
+Lis..." />
     <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
-    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/Jenkins自动化部署实战-从零搭建CI_CD流水线.html" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/easyexcel异步流式导出方案.html" />
     <meta property="og:site_name" content="AI 个人笔记" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
-    <meta property="twitter:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+    <meta property="twitter:title" content="30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成" />
+    <meta property="twitter:description" content="30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成
 
-日期：2026-02-20
+日期：2026-10-08
 
-写在前面
-我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
-
-本地 Windows 上 mvn package → 手动 SCP 上传到服..." />
+问题背景
+财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。
+原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：
+Lis..." />
     <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
 
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/Jenkins自动化部署实战-从零搭建CI_CD流水线.html" />
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/easyexcel异步流式导出方案.html" />
 
     <!-- Favicon -->
 
@@ -733,7 +733,7 @@
       <div class="main-content">
         <article class="post">
           <header class="post-header">
-            <h1 class="post-title">从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</h1>
+            <h1 class="post-title">30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成</h1>
             <div class="post-meta">
               <div class="post-date">2026/7/29</div>
               <div class="post-category">2026-07</div>
@@ -742,357 +742,273 @@
           <div class="warning">
             ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
           </div>
-          <div class="post-content" id="post-content"><h1 id="从零搭建-jenkins-cicd-流水线：一个-spring-boot-项目的自动化部署实战">从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</h1>
+          <div class="post-content" id="post-content"><h1 id="30-万条对账报表导出：从-oom-崩溃到-2-分钟稳定完成">30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成</h1>
 <blockquote>
-<p>日期：2026-02-20</p>
+<p>日期：2026-10-08</p>
 </blockquote>
-<h2 id="写在前面">写在前面</h2>
-<p>我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：</p>
-<blockquote>
-<p>本地 Windows 上 <code>mvn package</code> → 手动 SCP 上传到服务器 → SSH 登录 → <code>kill</code> 旧进程 → <code>nohup</code> 启动新进程 → 刷新浏览器看有没有起来</p>
-</blockquote>
-<p>三个环境（dev / test / pro）、多台机器来回切换，漏一步就要排查半天。痛定思痛，决定用 Jenkins 把这一套流程全自动化。</p>
-<p>这篇文章完整记录了从零搭建到跑通 CI/CD 的全过程，包括踩过的坑和解决方案。</p>
-<hr>
-<h2 id="一、环境情况">一、环境情况</h2>
-<p>项目技术栈：Spring Boot 2.6.4 + MyBatis Plus + JDK 8 + Maven，代码托管在 SVN。</p>
-<p>服务器有三台：</p>
+<h2 id="问题背景">问题背景</h2>
+<p>财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。</p>
+<p>原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：</p>
+<pre><code class="language-java">List&lt;Entity&gt; list = mapper.selectList(wrapper);      // 全量加载
+List&lt;ExportVO&gt; voList = new ArrayList&lt;&gt;();
+for (Entity e : list) { voList.add(convert(e)); }     // 全量转换
+EasyExcel.write(os, ExportVO.class).sheet(&quot;报表&quot;).doWrite(voList); // 一次性写入
+</code></pre>
+<p>3 万条触发 OutOfMemoryError，服务重启；即使不 OOM，同步等待 2 分钟被 Nginx 60s 超时截断，用户只能看到 504。</p>
+<h2 id="整体方案">整体方案</h2>
+<pre><code>用户点导出 → 秒返 taskId → 后台异步生成 → Redis 记录进度 → 前端轮询 → 拿到 URL 下载
+
+Controller 只负责提交任务（200ms 内完成），真正导出在独立线程池中执行：
+  ① MyBatis Cursor 流式逐条查询（不一次性加载）
+  ② 每 2000 条写一次 EasyExcel（写完即释放）
+  ③ 上传 OSS + 返回预签名 URL（30 分钟有效）
+  ④ Redis 每批更新进度（前端 3 秒轮询一次）
+</code></pre>
+<p>下面逐个技术点展开。</p>
+<h2 id="一、异步提交--线程池隔离">一、异步提交 + 线程池隔离</h2>
+<h3 id="为什么异步">为什么异步</h3>
+<p>同步模式下，用户点击导出 → Controller 线程阻塞 2 分钟等 Excel 生成完 → 才返回 response。一旦超过 Nginx 超时阈值（典型 60s），连接被 kill，用户看到 504，生成了也白生成了。</p>
+<p>异步模式下，Controller 只做&quot;接收请求 + 提交任务&quot;，200ms 内返回 taskId。真正的导出交给后台线程，用户不需要干等。</p>
+<h3 id="线程池为什么必须独立">线程池为什么必须独立</h3>
+<p>如果导出任务和业务请求共用 Tomcat 线程池——3 个人同时导出，3 个 Tomcat 线程各占一个数据库连接，一占就是 2 分钟。高峰期这 3 个线程被导出吃掉，正常下单请求可能拿不到连接直接报错。</p>
+<p><strong>导出线程池独立配置</strong>：</p>
+<pre><code class="language-java">@Bean(&quot;exportExecutor&quot;)
+public ThreadPoolTaskExecutor exportExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);       // 最多同时 2 个导出任务
+    executor.setMaxPoolSize(4);        // 队列满时最多再加 2 个临时线程
+    executor.setQueueCapacity(10);     // 最多排队 10 个
+    executor.setRejectedExecutionHandler(
+        new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+    return executor;
+}
+</code></pre>
+<p><strong>参数为什么这样定？</strong></p>
+<p>核心决策因子是数据库连接池的容量。每个导出持有 1 个长连接（Cursor 流式查询），假设业务连接池最大 20：</p>
 <table>
 <thead>
 <tr>
-<th>机器</th>
-<th>IP</th>
-<th>角色</th>
+<th>core</th>
+<th>最坏情况</th>
+<th>是否安全</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>SVN 服务器</td>
-<td>xxx.xxx.xxx.18（内网）/ xxx.xxx.xxx.118（公网）</td>
-<td>代码仓库（VisualSVN）</td>
+<td>2</td>
+<td>导出吃掉 2 个连接，业务剩 18 个</td>
+<td>✅</td>
 </tr>
 <tr>
-<td>Jenkins 服务器</td>
-<td>xxx.xxx.xxx.197</td>
-<td>构建调度（CentOS 7）</td>
-</tr>
-<tr>
-<td>测试服务器</td>
-<td>xxx.xxx.xxx.175</td>
-<td>应用运行（CentOS 7）</td>
+<td>10</td>
+<td>导出吃掉 10 个连接，业务只剩 10 个</td>
+<td>❌ 高峰期业务可能拿不到连接</td>
 </tr>
 </tbody></table>
-<p>目标流水线：</p>
-<pre><code>SVN 拉代码 → Maven 编译 → 发送 JAR 到 175 → 停旧进程 → 备份 → 启动 → 健康检查
+<p><code>queue=10</code>：缓冲 10 个突发请求，第 11 个触发拒绝策略，返回&quot;导出排队已满，请稍后重试&quot;。</p>
+<p>核心原则：<strong>宁可拒绝导出，不能让下单因为连接池被占满而挂掉。</strong></p>
+<h3 id="controller-实现">Controller 实现</h3>
+<pre><code class="language-java">@PostMapping(&quot;/export/submit&quot;)
+public R&lt;String&gt; submit(@RequestBody ExportDTO dto) {
+    String taskId = IdUtil.fastSimpleUUID();
+    exportService.submitAsync(dto, taskId);   // 异步执行，不等结果
+    return R.ok(taskId);                       // 秒返
+}
 </code></pre>
-<hr>
-<h2 id="二、jenkins-环境准备（197-服务器）">二、Jenkins 环境准备（197 服务器）</h2>
-<h3 id="21-安装-maven">2.1 安装 Maven</h3>
-<p>CentOS 7 已经 EOL，<code>yum install maven</code> 只能装到 3.0.5（2011 年版本），Spring Boot 项目完全跑不动。</p>
-<p>直接到 Apache 归档站下载 3.8.6：</p>
-<pre><code class="language-bash">cd /usr/local
-wget https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-tar -zxvf apache-maven-3.8.6-bin.tar.gz
-ln -sf /usr/local/apache-maven-3.8.6/bin/mvn /usr/local/bin/mvn
+<h2 id="二、redis-进度追踪--前端轮询">二、Redis 进度追踪 + 前端轮询</h2>
+<p>异步之后，用户怎么知道生成完了没有？Redis 做&quot;黑板&quot;——后端线程写进度，前端定时来读。</p>
+<h3 id="redis-数据结构">Redis 数据结构</h3>
+<pre><code>Key:   export:task:{taskId}
+Value: { &quot;status&quot;: &quot;RUNNING&quot;, &quot;total&quot;: 300000, &quot;processed&quot;: 120000, &quot;percent&quot;: 40, &quot;url&quot;: null }
+TTL:   30 分钟（过期自动清理）
 </code></pre>
-<blockquote>
-<p>中间试了清华镜像、阿里云镜像、Apache 官方源，要么 403 要么 404，最后 <code>archive.apache.org</code> 成功了，虽然慢（15KB/s，下了 9 分钟），但好歹能用。</p>
-</blockquote>
-<h3 id="22-配置-maven-镜像">2.2 配置 Maven 镜像</h3>
-<p>Maven 3.8+ 默认禁止 HTTP 仓库，项目里引用的阿里云镜像恰恰是 HTTP 的，编译直接报错：</p>
-<pre><code>Blocked mirror for repositories: [central (http://maven.aliyun.com/...)]
-</code></pre>
-<p>在 <code>/usr/local/apache-maven-3.8.6/conf/settings.xml</code> 配一个 HTTPS 镜像解决：</p>
-<pre><code class="language-xml">&lt;mirrors&gt;
-    &lt;mirror&gt;
-        &lt;id&gt;aliyun&lt;/id&gt;
-        &lt;mirrorOf&gt;central&lt;/mirrorOf&gt;
-        &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
-    &lt;/mirror&gt;
-&lt;/mirrors&gt;
-</code></pre>
-<h3 id="23-jdk-双版本共存">2.3 JDK 双版本共存</h3>
-<p>Jenkins 本身需要 JDK 11+（系统装的 Amazon Corretto 21），但项目是用 JDK 8 开发的。</p>
-<p>试着用 JDK 21 编译，报了经典错误：</p>
-<pre><code>Fatal error compiling: java.lang.NoSuchFieldError: 
-Class com.sun.tools.javac.tree.JCTree$JCImport does not have member field &#39;qualid&#39;
-</code></pre>
-<p><code>maven-compiler-plugin:3.8.1</code> 不兼容 JDK 21。解决方案是保留 JDK 21 给 Jenkins 用，额外装 JDK 8 给 Maven 编译用：</p>
-<pre><code class="language-bash"># 安装 JDK 8（Amazon Corretto）
-wget https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
-rpm -ivh amazon-corretto-8-x64-linux-jdk.rpm
+<h3 id="后端每批更新">后端每批更新</h3>
+<pre><code class="language-java">// 每写完 2000 条，更新一次 Redis 进度
+if (batch.size() &gt;= 2000) {
+    writer.write(batch, sheet);
+    batch.clear();
+    redis.set(&quot;export:task:&quot; + taskId, toJson(RUNNING, total, processed), 30, MINUTES);
+}
 
-# 结果：/usr/lib/jvm/java-1.8.0-amazon-corretto
-</code></pre>
-<p>Pipeline 里编译前切一下环境变量：</p>
-<pre><code class="language-groovy">sh &quot;export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto &amp;&amp; mvn clean package&quot;
-</code></pre>
-<p>Jenkins 继续用 JDK 21，Maven 用 JDK 8，互不影响。</p>
-<hr>
-<h2 id="三、svn-连接问题花最多时间的坑">三、SVN 连接问题——花最多时间的坑</h2>
-<h3 id="31-问题现象">3.1 问题现象</h3>
-<p>SVN 公网地址是 <code>https://xxx.xxx.xxx.118/svn/DOC/SOURCE/Java/auctionNew</code>，在本地 Windows 上完全正常。</p>
-<p>但在同机房的 Jenkins 服务器（197）上，无论是命令行 <code>svn</code> 还是 Jenkins 内置的 SVNKit，都报：</p>
-<pre><code>svn: E175002: OPTIONS request failed on &#39;/svn/DOC/SOURCE/Java/auctionNew&#39;
-400 Bad Request
-</code></pre>
-<h3 id="32-排查过程">3.2 排查过程</h3>
-<pre><code>ping xxx.xxx.xxx.118       ✅ 通（延迟 0.3ms，同机房）
-443 端口                   ✅ 通
-curl https://xxx.xxx.xxx.118/svn/DOC/   ❌ 301 无 Location 头
-curl https://xxx.xxx.xxx.118/svn/DOC/SOURCE/...  ❌ Empty reply from server
-</code></pre>
-<p>从响应头发现 <code>Server: AR</code>——这是<strong>华为 AR 路由器</strong>在中间。SVN 的真实服务器躲在华为 AR 后面，AR 对外做 SSL 终结和反向代理。</p>
-<h3 id="33-根因：nat-hairpin（回环问题）">3.3 根因：NAT Hairpin（回环问题）</h3>
-<p>网络拓扑大概是这样的：</p>
-<pre><code>外网用户（你本地 Windows）
-   │
-   ▼
-xxx.xxx.xxx.118（华为 AR 公网 IP）
-   │  NAT 转发
-   ▼
-xxx.xxx.xxx.18（SVN 真实内网 IP）      ← 正常工作
+// 全部完成
+String url = ossClient.uploadAndSign(ossKey, tempFile);
+redis.set(&quot;export:task:&quot; + taskId, toJson(DONE, url), 30, MINUTES);
 
-
-内网机器（Jenkins 197）
-   │
-   ▼
-xxx.xxx.xxx.118（华为 AR 公网 IP）
-   │  ⚠️ 路由器不知道怎么把从内网来的请求&quot;折回&quot;内网
-   ▼
-400 Bad Request / 301 无 Location
+// 异常失败
+redis.set(&quot;export:task:&quot; + taskId, toJson(FAILED, errorMsg), 30, MINUTES);
 </code></pre>
-<p>这就是经典的 <strong>NAT Hairpin（也叫 NAT Loopback）</strong>——从内网访问网关的公网 IP，路由器无法正确处理。</p>
-<h3 id="34-解决">3.4 解决</h3>
-<p>直接用 SVN 的内网 IP <code>xxx.xxx.xxx.18</code>，绕过华为 AR：</p>
-<pre><code>旧：https://xxx.xxx.xxx.118/svn/DOC/SOURCE/Java/auctionNew  ❌
-新：https://xxx.xxx.xxx.18/svn/DOC/SOURCE/Java/auctionNew    ✅
-</code></pre>
-<p>直连 VisualSVN Server，Host key 提示接受一下，认证通过，一切正常。</p>
-<hr>
-<h2 id="四、ssh-免密配置">四、SSH 免密配置</h2>
-<p>Jenkins 需要 SSH 到 175 执行部署命令。175 的 SSH 端口是 <strong>65522</strong>（非默认 22）。</p>
-<p>坑：Jenkins 服务以 <code>jenkins</code> 用户运行，而平时手动操作的密钥配在了 <code>root</code> 用户下。</p>
-<pre><code class="language-bash"># 为 jenkins 用户生成密钥
-su - jenkins -s /bin/bash -c &quot;ssh-keygen -t rsa -b 2048 -N &#39;&#39; -f /var/lib/jenkins/.ssh/id_rsa&quot;
-
-# 复制公钥到 175
-cat /var/lib/jenkins/.ssh/id_rsa.pub | ssh -p 65522 root@xxx.xxx.xxx.175 \
-  &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys&quot;
-
-# 验证免密登录
-su - jenkins -s /bin/bash -c &quot;ssh -p 65522 root@xxx.xxx.xxx.175 hostname&quot;
-</code></pre>
-<hr>
-<h2 id="五、pipeline-脚本">五、Pipeline 脚本</h2>
-<p>最终可用的 Jenkinsfile：</p>
-<pre><code class="language-groovy">pipeline {
-    agent any
-
-    environment {
-        SVN_URL = &quot;https://xxx.xxx.xxx.18/svn/DOC/SOURCE/Java/auctionNew&quot;
-        MAVEN_HOME = &quot;/usr/local/apache-maven-3.8.6&quot;
-        JAVA_HOME = &quot;/usr/lib/jvm/java-1.8.0-amazon-corretto&quot;
-        REMOTE_USER = &quot;root&quot;
-        APP_PORT = &quot;9099&quot;
-        SSH_PORT = &quot;65522&quot;
-        REMOTE_HOST = &quot;xxx.xxx.xxx.175&quot;
-        REMOTE_DIR = &quot;/data/workspace/auctionNew&quot;
-        PROJECT_DIR = &quot;auctionNew&quot;
+<h3 id="前端-3-秒轮询">前端 3 秒轮询</h3>
+<pre><code class="language-javascript">const timer = setInterval(async () =&gt; {
+    const { data } = await fetch(`/export/status/${taskId}`).then(r =&gt; r.json());
+    if (data.status === &#39;DONE&#39;) {
+        clearInterval(timer);
+        window.open(data.url);
+    } else if (data.status === &#39;FAILED&#39;) {
+        clearInterval(timer);
+        alert(&#39;导出失败：&#39; + data.error);
     }
-
-    stages {
-
-        // 1. 拉取代码
-        stage(&quot;SVN Checkout&quot;) {
-            steps {
-                checkout([$class: &#39;SubversionSCM&#39;,
-                    locations: [[credentialsId: &#39;svn-account&#39;, depthOption: &#39;INFINITY&#39;,
-                        ignoreExternalsOption: true, remote: &quot;${SVN_URL}&quot;]],
-                    workspaceUpdater: [$class: &#39;UpdateUpdater&#39;]])
-            }
-        }
-
-        // 2. 编译
-        stage(&quot;Maven Build&quot;) {
-            steps {
-                sh &quot;&quot;&quot;
-                    export JAVA_HOME=${JAVA_HOME}
-                    export PATH=\$JAVA_HOME/bin:\$PATH
-                    cd \$WORKSPACE/${PROJECT_DIR}
-                    ${MAVEN_HOME}/bin/mvn clean package -Dmaven.test.skip=true
-                &quot;&quot;&quot;
-            }
-        }
-
-        // 3. 部署
-        stage(&quot;Deploy&quot;) {
-            steps {
-                // 发送 JAR
-                sh &quot;ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} &#39;mkdir -p ${REMOTE_DIR}&#39;&quot;
-                sh &quot;scp -P ${SSH_PORT} -o StrictHostKeyChecking=no \$WORKSPACE/${PROJECT_DIR}/target/auctionNew.jar ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/&quot;
-                
-                // 在 175 上：停服 → 备份 → 启动
-                sh &quot;&quot;&quot;
-                    ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} &#39;
-                        port=${APP_PORT}
-                        job=auctionNew
-
-                        # 停止旧进程
-                        pid=\$(netstat -tlnp 2&gt;/dev/null | grep \${port} | awk &quot;{print \\\$7}&quot; | awk -F/ &quot;{print \\\$1}&quot;)
-                        [ -n &quot;\$pid&quot; ] &amp;&amp; kill -9 \$pid &amp;&amp; sleep 2
-
-                        # 备份 &amp; 替换
-                        mkdir -p /data/\${job}/jar /data/\${job}/logs
-                        [ -f /data/\${job}/jar/\${job}.jar ] &amp;&amp; mv /data/\${job}/jar/\${job}.jar /data/\${job}/jar/\${job}-\$(date &quot;+%Y%m%d%H%M%S&quot;).jar
-                        cp ${REMOTE_DIR}/\${job}.jar /data/\${job}/jar/\${job}.jar
-                        chmod 755 /data/\${job}/jar/\${job}.jar
-
-                        # 启动
-                        nohup /usr/bin/java -server \\
-                            -Xms512M -Xmx512M -XX:MetaspaceSize=256M -XX:MaxMetaspaceSize=256M \\
-                            -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError \\
-                            -XX:HeapDumpPath=/data/\${job}/logs/dump.hprof \\
-                            -Xloggc:/data/\${job}/logs/gc.log \\
-                            -Dfile.encoding=UTF-8 -Dspring.profiles.active=test \\
-                            -jar /data/\${job}/jar/\${job}.jar --server.port=\${port} \\
-                            &gt; /data/\${job}/logs/info.log 2&gt;&amp;1 &amp;
-                        sleep 3
-                        ps -ef | grep \${job}.jar | grep -v grep &amp;&amp; echo &quot;Started OK&quot; || echo &quot;Start Failed&quot;
-                    &#39;
-                &quot;&quot;&quot;
-            }
-        }
-
-        // 4. 健康检查
-        stage(&quot;Health Check&quot;) {
-            steps {
-                script {
-                    for (int i = 0; i &lt; 30; i++) {
-                        sleep 2
-                        def code = sh(returnStdout: true,
-                            script: &quot;curl -s -o /dev/null -w &#39;%{http_code}&#39; http://${REMOTE_HOST}:${APP_PORT}&quot;).trim()
-                        if (code == &quot;200&quot; || code == &quot;404&quot; || code == &quot;302&quot;) {
-                            echo &quot;Application is UP (HTTP ${code})&quot;
-                            return
-                        }
-                    }
-                    error &quot;Health check failed after 60 seconds&quot;
-                }
-            }
+    // RUNNING → 更新进度条，3 秒后再查
+}, 3000);
+</code></pre>
+<p><strong>为什么轮询而不是 WebSocket？</strong> 导出是低频操作（每人每月几次），3 秒间隔开销忽略不计。WebSocket 额外引入长连接维护、心跳保活、断线重连，收益与复杂度不匹配。况且 Redis 自带 TTL 过期，30 分钟后任务状态自动清理，零维护。</p>
+<h2 id="三、mybatis-cursor-流式查询">三、MyBatis Cursor 流式查询</h2>
+<h3 id="为什么不是-selectlist">为什么不是 selectList</h3>
+<p><code>selectList</code> 一次性把 30 万条全部加载到 JVM 堆内存——30 万 × 2KB ≈ 600 MB。加上后续的 ExportVO 转换和 EasyExcel 内部缓冲，轻松突破 1 GB，OOM 是必然结果。</p>
+<h3 id="cursor-的工作原理">Cursor 的工作原理</h3>
+<pre><code class="language-java">// Mapper 返回 Cursor 而非 List
+@Select(&quot;SELECT * FROM view_platform_service_fee WHERE ... ORDER BY pay_time&quot;)
+@Options(resultSetType = ResultSetType.FORWARD_ONLY, fetchSize = Integer.MIN_VALUE)
+Cursor&lt;Entity&gt; selectByCursor(@Param(&quot;dto&quot;) ExportDTO dto);
+</code></pre>
+<p>两个注解的含义：</p>
+<table>
+<thead>
+<tr>
+<th>注解</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>resultSetType = FORWARD_ONLY</code></td>
+<td>结果集只进不退，不允许 <code>previous()</code> 跳回，MySQL 可以更高效地流式输出</td>
+</tr>
+<tr>
+<td><code>fetchSize = Integer.MIN_VALUE</code></td>
+<td>MySQL JDBC 驱动约定：逐行拉取。每次 <code>next()</code> 时从网络流中解析一行，不缓存全量</td>
+</tr>
+</tbody></table>
+<p>对比三种方式的内存行为：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>内存中同时存在的行数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>selectList</code></td>
+<td>全部 30 万行</td>
+</tr>
+<tr>
+<td><code>fetchSize = 1000</code></td>
+<td>1000 行（一批）</td>
+</tr>
+<tr>
+<td><code>fetchSize = MIN_VALUE</code></td>
+<td>1 行（逐行）</td>
+</tr>
+</tbody></table>
+<h3 id="cursor-使用要点">Cursor 使用要点</h3>
+<p>**必须加 @Transactional(readOnly = true)**：</p>
+<pre><code class="language-java">@Transactional(readOnly = true)
+public void doExport() {
+    try (Cursor&lt;Entity&gt; cursor = mapper.selectByCursor(dto)) {
+        for (Entity e : cursor) {
+            // 逐条消费
         }
     }
 }
 </code></pre>
-<hr>
-<h2 id="六、文件流转全景">六、文件流转全景</h2>
-<p>整个部署过程中，文件经历了以下流转：</p>
-<pre><code>SVN 仓库（xxx.xxx.xxx.18）
-     │  checkout（Jenkins SubversionSCM）
-     ▼
-197：/var/lib/jenkins/workspace/auctionNew-test/auctionNew/
-     │  Maven compile + package
-     ▼
-197：/var/lib/.../target/auctionNew.jar
-     │  scp（端口 65522）
-     ▼
-175：/data/workspace/auctionNew/auctionNew.jar         ← 中转站
-     │  cp
-     ▼
-175：/data/auctionNew/jar/auctionNew.jar               ← 运行位置
-     │  nohup java -jar
-     ▼
-175：日志 → /data/auctionNew/logs/{info.log, gc.log}
+<p>原因：MyBatis 默认每次查询后关闭 SqlSession（归还连接）。Cursor 是懒加载迭代器，<code>next()</code> 时才真正去读数据——如果 SqlSession 已关闭，连接已还池，<code>next()</code> 就直接报 <code>Cursor is closed</code>。<code>@Transactional</code> 强制连接在方法执行期间保持打开，<code>readOnly = true</code> 告诉 MySQL 不做写操作，省去不必要的行锁和 undo log。</p>
+<p><strong>必须用 try-with-resources</strong>：确保 Cursor 正常关闭，连接释放回池。</p>
+<p><strong>不能跨线程使用</strong>：Cursor 绑定了创建它的数据库连接，传递给另一个线程消费会导致连接状态混乱。</p>
+<h2 id="四、easyexcel-分批写入">四、EasyExcel 分批写入</h2>
+<p>EasyExcel 支持 <code>ExcelWriter</code> 的流式写入模式——创建一次 writer，多次调用 <code>write()</code>，最后关闭时统一 flush：</p>
+<pre><code class="language-java">try (Cursor&lt;Entity&gt; cursor = mapper.selectByCursor(dto);
+     ExcelWriter writer = EasyExcel.write(tempFile, ExportVO.class).build()) {
+
+    WriteSheet sheet = EasyExcel.writerSheet(&quot;平台服务费&quot;).build();
+    List&lt;ExportVO&gt; batch = new ArrayList&lt;&gt;(2000);
+
+    for (Entity entity : cursor) {
+        batch.add(convert(entity));
+        if (batch.size() &gt;= 2000) {
+            writer.write(batch, sheet);   // 写一批
+            batch.clear();                 // 释放引用，GC 回收
+        }
+    }
+    if (!batch.isEmpty()) {
+        writer.write(batch, sheet);       // 写最后不足 2000 条的一批
+    }
+    // try-with-resources 自动调用 writer.close()，刷盘
+}
 </code></pre>
-<p>175 上最终的文件布局：</p>
-<pre><code>/data/
-├── workspace/auctionNew/       ← 中转（每次 scp 覆盖）
-│   └── auctionNew.jar
-└── auctionNew/                 ← 运行目录
-    ├── jar/
-    │   ├── auctionNew.jar          ← 当前运行
-    │   └── auctionNew-YYYYMMDDHHmmss.jar  ← 上一次备份
-    └── logs/
-        ├── info.log               ← 应用日志
-        └── gc.log                 ← GC 日志
+<p><strong>2000 条一批怎么定？</strong></p>
+<ul>
+<li>太小（如 100 条）：EasyExcel 内部 flush 和 IO 开销增大</li>
+<li>太大（如 20000 条）：每批 List 内存变大，写入失败损失也大</li>
+<li>2000 条 × 单 ExportVO 约 1 KB ≈ 2 MB 一批，内存友好，flush 频率合理</li>
+</ul>
+<p><strong>为什么是 EasyExcel？</strong></p>
+<p>EasyExcel 本质是 Apache POI <code>SXSSFWorkbook</code> 的封装，但它做了几件关键优化：注解驱动避免手写 Cell 操作、共享字符串表复用、更激进的 flush 策略。在国内 Java 生态中已是事实标准（阿里出品，GitHub 30k+ star），百万行以内是最佳选择。</p>
+<h2 id="五、oss-落盘--预签名-url">五、OSS 落盘 + 预签名 URL</h2>
+<p>导出的最终交付物是一个能下载的 Excel 文件。为什么不直接写 <code>HttpServletResponse.getOutputStream()</code>？</p>
+<p><strong>因为异步模型下，Response 已经不可用了。</strong> Controller 秒返 taskId 后 HTTP 连接关闭，OutputStream 没了，文件必须落地到其他地方。</p>
+<p>OSS 方案的优势：</p>
+<pre><code>原来：生成在内存 → 写 Response → 用户下载
+      → 写一半浏览器关闭 → 文件丢失，前功尽弃
+
+现在：生成 → 写本地临时文件 → 上传 OSS → 返回预签名 URL
+      → 下载中断？OSS 上的文件还在，再下一次
+      → 误关弹窗？URL 30 分钟内可重复下载
+      → 转发给同事？发 URL 就行
 </code></pre>
-<hr>
-<h2 id="七、踩坑总结">七、踩坑总结</h2>
+<p>预签名 URL 的本质：给 OSS 私有 Bucket 的文件开一张&quot;30 分钟内有效&quot;的临时通行证，前端拿到后直接 <code>&lt;a href&gt;</code> 下载，不经过后端，流量走 OSS 带宽。</p>
+<pre><code class="language-java">// 上传
+String ossKey = &quot;export/&quot; + DateUtil.today() + &quot;/&quot; + taskId + &quot;_&quot; + fileName;
+ossClient.upload(ossKey, tempFile);
+
+// 生成 30 分钟有效的下载链接
+String signedUrl = ossClient.generatePresignedUrl(ossKey, 30, TimeUnit.MINUTES);
+// → &quot;https://bucket.oss-cn-hangzhou.aliyuncs.com/export/...?Expires=...&amp;Signature=...&quot;
+</code></pre>
+<h2 id="六、效果">六、效果</h2>
 <table>
 <thead>
 <tr>
-<th>坑</th>
-<th>现象</th>
-<th>解决方案</th>
+<th>指标</th>
+<th>优化前</th>
+<th>优化后</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><strong>NAT Hairpin</strong></td>
-<td>内网访问公网 SVN 返回 400</td>
-<td>改用内网 IP 直连</td>
+<td>3 万条</td>
+<td>OOM → 服务重启</td>
+<td>8 秒</td>
 </tr>
 <tr>
-<td><strong>JDK 版本不兼容</strong></td>
-<td><code>NoSuchFieldError: JCImport.qualid</code></td>
-<td>装 JDK 8，编译时切换 JAVA_HOME</td>
+<td>15 万条</td>
+<td>不可用</td>
+<td>~50 秒</td>
 </tr>
 <tr>
-<td><strong>Maven HTTP 被拦截</strong></td>
-<td><code>Blocked mirror for repositories</code></td>
-<td>settings.xml 改用 HTTPS 镜像</td>
+<td>30 万条</td>
+<td>不可用</td>
+<td>2 分 30 秒</td>
 </tr>
 <tr>
-<td><strong>Yum 源失效</strong></td>
-<td>CentOS 7 EOL，mirrorlist 不可用</td>
-<td><code>--disablerepo=centos-sclo*</code> 或手动下载 RPM</td>
+<td>内存占用（任意量级）</td>
+<td>线性增长至 500MB+</td>
+<td>控制在百兆以内，不随数据量增长</td>
 </tr>
 <tr>
-<td><strong>Maven 太老</strong></td>
-<td>yum 只能装 3.0.5</td>
-<td>从 archive.apache.org 下载 3.8.6</td>
+<td>高峰期对业务影响</td>
+<td>导出拖垮机器</td>
+<td>线程池隔离，零影响</td>
 </tr>
 <tr>
-<td><strong>SSH Host Key</strong></td>
-<td>Jenkins 用户无 known_hosts</td>
-<td>为 <code>/var/lib/jenkins/.ssh</code> 单独配置</td>
-</tr>
-<tr>
-<td><strong>deleteDir 权限</strong></td>
-<td>SVN 文件只读导致清理失败</td>
-<td>去掉 Clean 阶段，用 UpdateUpdater</td>
-</tr>
-<tr>
-<td><strong>Spring Profile</strong></td>
-<td>误用 <code>-Denv=test</code> 而非 Spring 标准</td>
-<td>改为 <code>-Dspring.profiles.active=test</code></td>
+<td>用户体验</td>
+<td>白屏等待 → 504</td>
+<td>提交 → 进度条 → 下载</td>
 </tr>
 </tbody></table>
-<hr>
-<h2 id="八、最终效果">八、最终效果</h2>
-<p>现在部署只需要两步：</p>
-<ol>
-<li>本地 <code>svn commit</code> 提交代码</li>
-<li>打开 Jenkins → Build Now</li>
-</ol>
-<p>2~3 分钟后，175 上的应用自动更新完毕。整个过程：</p>
-<ul>
-<li>✅ SVN 自动拉取最新代码</li>
-<li>✅ Maven 自动编译打包（JDK 8 环境）</li>
-<li>✅ SCP 自动传送到测试服务器</li>
-<li>✅ 自动停止旧进程</li>
-<li>✅ 自动备份旧 JAR</li>
-<li>✅ 自动启动新进程</li>
-<li>✅ 自动健康检查验证</li>
-</ul>
-<p>出问题直接看日志：<code>tail -f /data/auctionNew/logs/info.log</code></p>
-<hr>
-<h2 id="九、后续优化方向">九、后续优化方向</h2>
-<ul>
-<li>加入 Spring Boot Actuator 实现更精准的健康检查（<code>/actuator/health</code>）</li>
-<li>配置 SVN Webhook 或 Poll SCM 实现提交即触发</li>
-<li>多版本备份保留（目前只保留一份）</li>
-<li>健康检查失败自动回滚到上一版本</li>
-<li>生产环境部署只需复制一份 Pipeline，改 IP 和 Profile 即可</li>
-</ul>
+<h2 id="七、常见问题">七、常见问题</h2>
+<p><strong>Q：为什么线程池而不用 MQ？</strong></p>
+<p>导出是低频操作（财务每月几次），2 分钟的线程生命周期完全够用。MQ 引入中间件增加运维成本，导出失败用户重试一次即可——它不是支付，丢了可以重来。真到日导出请求 100+ 次再切 MQ，当前 <code>exportExecutor.execute()</code> 换成 <code>rocketMQTemplate.send()</code> 即可，切换成本极低。</p>
+<p><strong>Q：30 万条 2 分钟能更快吗？</strong></p>
+<p>瓶颈在数据库网络 IO（Cursor 逐条拉取受限于 MySQL 传输速度），不在 Java 侧。可以按月分片多线程并行查询写入不同 Sheet，但会引入连接池竞争。当前量级没有优化必要。</p>
+<p><strong>Q：服务重启任务丢了怎么办？</strong></p>
+<p>导出是幂等操作——用户重新点一次即可。Redis 中 taskId 过期（30 分钟 TTL）则前端轮询返回&quot;任务不存在&quot;，提示重新提交。关键设计原则：导出不是支付，不需要 100% 可靠性。</p>
 </div>
         </article>
       </div>

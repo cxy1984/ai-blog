@@ -1,0 +1,939 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">30 万条对账报表导出：从 OOM 崩溃到 2 分钟稳定完成</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/7/29</div>
+          <div class="post-category">2026-07</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><blockquote>
+<p>日期：2026-10-08</p>
+</blockquote>
+<h2 id="问题背景">问题背景</h2>
+<p>财务每月需要从对账系统导出 6 类报表——平台服务费、商家服务费、平台优惠券、商家优惠券、物流收款、分润汇总。单月数据量 15-30 万条。</p>
+<p>原来的导出接口是全量查询 → 全量转换 → 一次性写 Excel：</p>
+<pre><code class="language-java">List&lt;Entity&gt; list = mapper.selectList(wrapper);      // 全量加载
+List&lt;ExportVO&gt; voList = new ArrayList&lt;&gt;();
+for (Entity e : list) { voList.add(convert(e)); }     // 全量转换
+EasyExcel.write(os, ExportVO.class).sheet(&quot;报表&quot;).doWrite(voList); // 一次性写入
+</code></pre>
+<p>3 万条触发 OutOfMemoryError，服务重启；即使不 OOM，同步等待 2 分钟被 Nginx 60s 超时截断，用户只能看到 504。</p>
+<h2 id="整体方案">整体方案</h2>
+<pre><code>用户点导出 → 秒返 taskId → 后台异步生成 → Redis 记录进度 → 前端轮询 → 拿到 URL 下载
+
+Controller 只负责提交任务（200ms 内完成），真正导出在独立线程池中执行：
+  ① MyBatis Cursor 流式逐条查询（不一次性加载）
+  ② 每 2000 条写一次 EasyExcel（写完即释放）
+  ③ 上传 OSS + 返回预签名 URL（30 分钟有效）
+  ④ Redis 每批更新进度（前端 3 秒轮询一次）
+</code></pre>
+<p>下面逐个技术点展开。</p>
+<h2 id="一、异步提交--线程池隔离">一、异步提交 + 线程池隔离</h2>
+<h3 id="为什么异步">为什么异步</h3>
+<p>同步模式下，用户点击导出 → Controller 线程阻塞 2 分钟等 Excel 生成完 → 才返回 response。一旦超过 Nginx 超时阈值（典型 60s），连接被 kill，用户看到 504，生成了也白生成了。</p>
+<p>异步模式下，Controller 只做&quot;接收请求 + 提交任务&quot;，200ms 内返回 taskId。真正的导出交给后台线程，用户不需要干等。</p>
+<h3 id="线程池为什么必须独立">线程池为什么必须独立</h3>
+<p>如果导出任务和业务请求共用 Tomcat 线程池——3 个人同时导出，3 个 Tomcat 线程各占一个数据库连接，一占就是 2 分钟。高峰期这 3 个线程被导出吃掉，正常下单请求可能拿不到连接直接报错。</p>
+<p><strong>导出线程池独立配置</strong>：</p>
+<pre><code class="language-java">@Bean(&quot;exportExecutor&quot;)
+public ThreadPoolTaskExecutor exportExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(2);       // 最多同时 2 个导出任务
+    executor.setMaxPoolSize(4);        // 队列满时最多再加 2 个临时线程
+    executor.setQueueCapacity(10);     // 最多排队 10 个
+    executor.setRejectedExecutionHandler(
+        new ThreadPoolExecutor.CallerRunsPolicy()
+    );
+    return executor;
+}
+</code></pre>
+<p><strong>参数为什么这样定？</strong></p>
+<p>核心决策因子是数据库连接池的容量。每个导出持有 1 个长连接（Cursor 流式查询），假设业务连接池最大 20：</p>
+<table>
+<thead>
+<tr>
+<th>core</th>
+<th>最坏情况</th>
+<th>是否安全</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2</td>
+<td>导出吃掉 2 个连接，业务剩 18 个</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>10</td>
+<td>导出吃掉 10 个连接，业务只剩 10 个</td>
+<td>❌ 高峰期业务可能拿不到连接</td>
+</tr>
+</tbody></table>
+<p><code>queue=10</code>：缓冲 10 个突发请求，第 11 个触发拒绝策略，返回&quot;导出排队已满，请稍后重试&quot;。</p>
+<p>核心原则：<strong>宁可拒绝导出，不能让下单因为连接池被占满而挂掉。</strong></p>
+<h3 id="controller-实现">Controller 实现</h3>
+<pre><code class="language-java">@PostMapping(&quot;/export/submit&quot;)
+public R&lt;String&gt; submit(@RequestBody ExportDTO dto) {
+    String taskId = IdUtil.fastSimpleUUID();
+    exportService.submitAsync(dto, taskId);   // 异步执行，不等结果
+    return R.ok(taskId);                       // 秒返
+}
+</code></pre>
+<h2 id="二、redis-进度追踪--前端轮询">二、Redis 进度追踪 + 前端轮询</h2>
+<p>异步之后，用户怎么知道生成完了没有？Redis 做&quot;黑板&quot;——后端线程写进度，前端定时来读。</p>
+<h3 id="redis-数据结构">Redis 数据结构</h3>
+<pre><code>Key:   export:task:{taskId}
+Value: { &quot;status&quot;: &quot;RUNNING&quot;, &quot;total&quot;: 300000, &quot;processed&quot;: 120000, &quot;percent&quot;: 40, &quot;url&quot;: null }
+TTL:   30 分钟（过期自动清理）
+</code></pre>
+<h3 id="后端每批更新">后端每批更新</h3>
+<pre><code class="language-java">// 每写完 2000 条，更新一次 Redis 进度
+if (batch.size() &gt;= 2000) {
+    writer.write(batch, sheet);
+    batch.clear();
+    redis.set(&quot;export:task:&quot; + taskId, toJson(RUNNING, total, processed), 30, MINUTES);
+}
+
+// 全部完成
+String url = ossClient.uploadAndSign(ossKey, tempFile);
+redis.set(&quot;export:task:&quot; + taskId, toJson(DONE, url), 30, MINUTES);
+
+// 异常失败
+redis.set(&quot;export:task:&quot; + taskId, toJson(FAILED, errorMsg), 30, MINUTES);
+</code></pre>
+<h3 id="前端-3-秒轮询">前端 3 秒轮询</h3>
+<pre><code class="language-javascript">const timer = setInterval(async () =&gt; {
+    const { data } = await fetch(`/export/status/${taskId}`).then(r =&gt; r.json());
+    if (data.status === &#39;DONE&#39;) {
+        clearInterval(timer);
+        window.open(data.url);
+    } else if (data.status === &#39;FAILED&#39;) {
+        clearInterval(timer);
+        alert(&#39;导出失败：&#39; + data.error);
+    }
+    // RUNNING → 更新进度条，3 秒后再查
+}, 3000);
+</code></pre>
+<p><strong>为什么轮询而不是 WebSocket？</strong> 导出是低频操作（每人每月几次），3 秒间隔开销忽略不计。WebSocket 额外引入长连接维护、心跳保活、断线重连，收益与复杂度不匹配。况且 Redis 自带 TTL 过期，30 分钟后任务状态自动清理，零维护。</p>
+<h2 id="三、mybatis-cursor-流式查询">三、MyBatis Cursor 流式查询</h2>
+<h3 id="为什么不是-selectlist">为什么不是 selectList</h3>
+<p><code>selectList</code> 一次性把 30 万条全部加载到 JVM 堆内存——30 万 × 2KB ≈ 600 MB。加上后续的 ExportVO 转换和 EasyExcel 内部缓冲，轻松突破 1 GB，OOM 是必然结果。</p>
+<h3 id="cursor-的工作原理">Cursor 的工作原理</h3>
+<pre><code class="language-java">// Mapper 返回 Cursor 而非 List
+@Select(&quot;SELECT * FROM view_platform_service_fee WHERE ... ORDER BY pay_time&quot;)
+@Options(resultSetType = ResultSetType.FORWARD_ONLY, fetchSize = Integer.MIN_VALUE)
+Cursor&lt;Entity&gt; selectByCursor(@Param(&quot;dto&quot;) ExportDTO dto);
+</code></pre>
+<p>两个注解的含义：</p>
+<table>
+<thead>
+<tr>
+<th>注解</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>resultSetType = FORWARD_ONLY</code></td>
+<td>结果集只进不退，不允许 <code>previous()</code> 跳回，MySQL 可以更高效地流式输出</td>
+</tr>
+<tr>
+<td><code>fetchSize = Integer.MIN_VALUE</code></td>
+<td>MySQL JDBC 驱动约定：逐行拉取。每次 <code>next()</code> 时从网络流中解析一行，不缓存全量</td>
+</tr>
+</tbody></table>
+<p>对比三种方式的内存行为：</p>
+<table>
+<thead>
+<tr>
+<th>方式</th>
+<th>内存中同时存在的行数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>selectList</code></td>
+<td>全部 30 万行</td>
+</tr>
+<tr>
+<td><code>fetchSize = 1000</code></td>
+<td>1000 行（一批）</td>
+</tr>
+<tr>
+<td><code>fetchSize = MIN_VALUE</code></td>
+<td>1 行（逐行）</td>
+</tr>
+</tbody></table>
+<h3 id="cursor-使用要点">Cursor 使用要点</h3>
+<p>**必须加 @Transactional(readOnly = true)**：</p>
+<pre><code class="language-java">@Transactional(readOnly = true)
+public void doExport() {
+    try (Cursor&lt;Entity&gt; cursor = mapper.selectByCursor(dto)) {
+        for (Entity e : cursor) {
+            // 逐条消费
+        }
+    }
+}
+</code></pre>
+<p>原因：MyBatis 默认每次查询后关闭 SqlSession（归还连接）。Cursor 是懒加载迭代器，<code>next()</code> 时才真正去读数据——如果 SqlSession 已关闭，连接已还池，<code>next()</code> 就直接报 <code>Cursor is closed</code>。<code>@Transactional</code> 强制连接在方法执行期间保持打开，<code>readOnly = true</code> 告诉 MySQL 不做写操作，省去不必要的行锁和 undo log。</p>
+<p><strong>必须用 try-with-resources</strong>：确保 Cursor 正常关闭，连接释放回池。</p>
+<p><strong>不能跨线程使用</strong>：Cursor 绑定了创建它的数据库连接，传递给另一个线程消费会导致连接状态混乱。</p>
+<h2 id="四、easyexcel-分批写入">四、EasyExcel 分批写入</h2>
+<p>EasyExcel 支持 <code>ExcelWriter</code> 的流式写入模式——创建一次 writer，多次调用 <code>write()</code>，最后关闭时统一 flush：</p>
+<pre><code class="language-java">try (Cursor&lt;Entity&gt; cursor = mapper.selectByCursor(dto);
+     ExcelWriter writer = EasyExcel.write(tempFile, ExportVO.class).build()) {
+
+    WriteSheet sheet = EasyExcel.writerSheet(&quot;平台服务费&quot;).build();
+    List&lt;ExportVO&gt; batch = new ArrayList&lt;&gt;(2000);
+
+    for (Entity entity : cursor) {
+        batch.add(convert(entity));
+        if (batch.size() &gt;= 2000) {
+            writer.write(batch, sheet);   // 写一批
+            batch.clear();                 // 释放引用，GC 回收
+        }
+    }
+    if (!batch.isEmpty()) {
+        writer.write(batch, sheet);       // 写最后不足 2000 条的一批
+    }
+    // try-with-resources 自动调用 writer.close()，刷盘
+}
+</code></pre>
+<p><strong>2000 条一批怎么定？</strong></p>
+<ul>
+<li>太小（如 100 条）：EasyExcel 内部 flush 和 IO 开销增大</li>
+<li>太大（如 20000 条）：每批 List 内存变大，写入失败损失也大</li>
+<li>2000 条 × 单 ExportVO 约 1 KB ≈ 2 MB 一批，内存友好，flush 频率合理</li>
+</ul>
+<p><strong>为什么是 EasyExcel？</strong></p>
+<p>EasyExcel 本质是 Apache POI <code>SXSSFWorkbook</code> 的封装，但它做了几件关键优化：注解驱动避免手写 Cell 操作、共享字符串表复用、更激进的 flush 策略。在国内 Java 生态中已是事实标准（阿里出品，GitHub 30k+ star），百万行以内是最佳选择。</p>
+<h2 id="五、oss-落盘--预签名-url">五、OSS 落盘 + 预签名 URL</h2>
+<p>导出的最终交付物是一个能下载的 Excel 文件。为什么不直接写 <code>HttpServletResponse.getOutputStream()</code>？</p>
+<p><strong>因为异步模型下，Response 已经不可用了。</strong> Controller 秒返 taskId 后 HTTP 连接关闭，OutputStream 没了，文件必须落地到其他地方。</p>
+<p>OSS 方案的优势：</p>
+<pre><code>原来：生成在内存 → 写 Response → 用户下载
+      → 写一半浏览器关闭 → 文件丢失，前功尽弃
+
+现在：生成 → 写本地临时文件 → 上传 OSS → 返回预签名 URL
+      → 下载中断？OSS 上的文件还在，再下一次
+      → 误关弹窗？URL 30 分钟内可重复下载
+      → 转发给同事？发 URL 就行
+</code></pre>
+<p>预签名 URL 的本质：给 OSS 私有 Bucket 的文件开一张&quot;30 分钟内有效&quot;的临时通行证，前端拿到后直接 <code>&lt;a href&gt;</code> 下载，不经过后端，流量走 OSS 带宽。</p>
+<pre><code class="language-java">// 上传
+String ossKey = &quot;export/&quot; + DateUtil.today() + &quot;/&quot; + taskId + &quot;_&quot; + fileName;
+ossClient.upload(ossKey, tempFile);
+
+// 生成 30 分钟有效的下载链接
+String signedUrl = ossClient.generatePresignedUrl(ossKey, 30, TimeUnit.MINUTES);
+// → &quot;https://bucket.oss-cn-hangzhou.aliyuncs.com/export/...?Expires=...&amp;Signature=...&quot;
+</code></pre>
+<h2 id="六、效果">六、效果</h2>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>优化前</th>
+<th>优化后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3 万条</td>
+<td>OOM → 服务重启</td>
+<td>8 秒</td>
+</tr>
+<tr>
+<td>15 万条</td>
+<td>不可用</td>
+<td>~50 秒</td>
+</tr>
+<tr>
+<td>30 万条</td>
+<td>不可用</td>
+<td>2 分 30 秒</td>
+</tr>
+<tr>
+<td>内存占用（任意量级）</td>
+<td>线性增长至 500MB+</td>
+<td>控制在百兆以内，不随数据量增长</td>
+</tr>
+<tr>
+<td>高峰期对业务影响</td>
+<td>导出拖垮机器</td>
+<td>线程池隔离，零影响</td>
+</tr>
+<tr>
+<td>用户体验</td>
+<td>白屏等待 → 504</td>
+<td>提交 → 进度条 → 下载</td>
+</tr>
+</tbody></table>
+<h2 id="七、常见问题">七、常见问题</h2>
+<p><strong>Q：为什么线程池而不用 MQ？</strong></p>
+<p>导出是低频操作（财务每月几次），2 分钟的线程生命周期完全够用。MQ 引入中间件增加运维成本，导出失败用户重试一次即可——它不是支付，丢了可以重来。真到日导出请求 100+ 次再切 MQ，当前 <code>exportExecutor.execute()</code> 换成 <code>rocketMQTemplate.send()</code> 即可，切换成本极低。</p>
+<p><strong>Q：30 万条 2 分钟能更快吗？</strong></p>
+<p>瓶颈在数据库网络 IO（Cursor 逐条拉取受限于 MySQL 传输速度），不在 Java 侧。可以按月分片多线程并行查询写入不同 Sheet，但会引入连接池竞争。当前量级没有优化必要。</p>
+<p><strong>Q：服务重启任务丢了怎么办？</strong></p>
+<p>导出是幂等操作——用户重新点一次即可。Redis 中 taskId 过期（30 分钟 TTL）则前端轮询返回&quot;任务不存在&quot;，提示重新提交。关键设计原则：导出不是支付，不需要 100% 可靠性。</p>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>

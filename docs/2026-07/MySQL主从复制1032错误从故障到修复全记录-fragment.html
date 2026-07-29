@@ -359,6 +359,9 @@
 <p>标签：MySQL, 主从复制, 1032, HA_ERR_KEY_NOT_FOUND, Percona Toolkit</p>
 </blockquote>
 <hr>
+<blockquote>
+<p>日期：2026-04-10</p>
+</blockquote>
 <h2 id="一、前言">一、前言</h2>
 <p>MySQL 主从复制是保证高可用的基石，但也是最容易出问题的环节之一。<strong>Error 1032（HA_ERR_KEY_NOT_FOUND）</strong>——&quot;从库找不到要更新的行&quot;——是 ROW 格式复制下最常见的错误之一。</p>
 <p>本文记录了一次真实的故障排查与修复过程：从发现复制中断，到分析根因，再到最终修复，以及后续的预防措施。希望能给遇到类似问题的同行一些参考。</p>

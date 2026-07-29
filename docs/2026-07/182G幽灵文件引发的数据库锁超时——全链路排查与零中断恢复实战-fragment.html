@@ -359,6 +359,9 @@
 <p><strong>一句话梗概：</strong> MySQL 报 <code>Lock wait timeout</code>，根因却是 182G 已删除的日志文件被进程&quot;卡住&quot;未释放，导致磁盘写满、binlog 阻塞、事务全部排队。本文完整复盘从数据库报错→系统层定位→零中断恢复的全过程，并深入拆解每一个技术决策。</p>
 </blockquote>
 <hr>
+<blockquote>
+<p>日期：2026-01-15</p>
+</blockquote>
 <h2 id="一、现象：一条-ddl-引发的血案">一、现象：一条 DDL 引发的血案</h2>
 <p>测试环境，同事在修改配置表 <code>configure</code> 时，突然抛出异常：</p>
 <pre><code>Error 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
