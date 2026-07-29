@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/ai-blog/favicon.svg?v=3">
+    <title>182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战
+
+一句话梗概： MySQL 报 Lock wait timeout，根因却是 182G 已删除的日志文件被进程&quot;卡住&quot;未释放，导致磁盘写满、binlog 阻塞、事务全部排队。本文完整复盘从数据库报错→系统层定位→零中断恢复的全过..." />
+    <meta name="keywords" content="182G, 幽灵文件引发的数据库锁超时, 全链路排查与零中断恢复实战" />
+    <meta name="author" content="AI 个人笔记" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战" />
+    <meta property="og:description" content="182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战
+
+一句话梗概： MySQL 报 Lock wait timeout，根因却是 182G 已删除的日志文件被进程&quot;卡住&quot;未释放，导致磁盘写满、binlog 阻塞、事务全部排队。本文完整复盘从数据库报错→系统层定位→零中断恢复的全过..." />
+    <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/182G幽灵文件引发的数据库锁超时——全链路排查与零中断恢复实战.html" />
+    <meta property="og:site_name" content="AI 个人笔记" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战" />
+    <meta property="twitter:description" content="182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战
+
+一句话梗概： MySQL 报 Lock wait timeout，根因却是 182G 已删除的日志文件被进程&quot;卡住&quot;未释放，导致磁盘写满、binlog 阻塞、事务全部排队。本文完整复盘从数据库报错→系统层定位→零中断恢复的全过..." />
+    <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/182G幽灵文件引发的数据库锁超时——全链路排查与零中断恢复实战.html" />
+
+    <!-- Favicon -->
+
+    <style>
+      /* Google Fonts for better typography */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #f8f9fa;
+        --text-color: #34495e;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --hover-color: #f8f9fa;
+      }
+
+      :root.dark-mode {
+        --primary-color: #ecf0f1;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --card-bg: #2d2d2d;
+        --hover-color: #3a3a3a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", "Noto Sans SC", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      .header {
+        /* display: flex; */
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #24292e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .github-link:hover {
+        background: #000;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .theme-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: #ce3321;
+        transition: transform 0.3s ease;
+      }
+
+      .theme-toggle:hover svg {
+        transform: rotate(20deg);
+      }
+
+      :root.dark-mode .theme-toggle {
+        background: rgba(45, 45, 45, 0.95);
+        border-color: rgba(200, 200, 200, 0.3);
+      }
+
+      :root.dark-mode .theme-toggle svg {
+        color: #ffc107;
+      }
+
+      :root.dark-mode .theme-toggle:hover {
+        background: rgba(60, 60, 60, 1);
+      }
+
+      .main-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+      }
+
+      .post-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-title {
+        color: var(--primary-color);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+      }
+
+      :root.dark-mode .post-meta {
+        color: #a0a0a0;
+      }
+
+      .post-date {
+        background-color: #e3f2fd;
+        color: var(--secondary-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-date {
+        background-color: rgba(52, 152, 219, 0.2);
+        color: #64b5f6;
+      }
+
+      .post-category {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-category {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #81c784;
+      }
+
+      .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .post-content h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin: 35px 0 25px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      /* Table of Contents */
+      .toc-container {
+        width: 300px;
+        flex-shrink: 0;
+      }
+
+      .toc {
+        position: sticky;
+        top: 135px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .toc h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc ul ul {
+        padding-left: 20px;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+
+      .toc a:hover {
+        color: var(--secondary-color);
+      }
+
+      .toc a.active {
+        color: var(--secondary-color);
+        font-weight: 500;
+      }
+
+      .post-content h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content h3 {
+        color: #2980b9;
+        font-size: 1.3rem;
+        margin: 25px 0 15px 0;
+      }
+
+      .post-content p {
+        margin-bottom: 18px;
+      }
+
+      .post-content ul,
+      .post-content ol {
+        margin: 20px 0;
+        padding-left: 35px;
+      }
+
+      .post-content li {
+        margin-bottom: 10px;
+      }
+
+      .post-content code {
+        background-color: #e8eaed;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        color: #c0392b;
+        font-size: 0.9em;
+      }
+
+      :root.dark-mode .post-content code {
+        background-color: #e8eaed;
+        color: #ff7043;
+      }
+
+      .post-content pre {
+        background-color: #f6f8fa;
+        color: #24292e;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 25px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        border: 1px solid #e1e4e8;
+      }
+
+      :root.dark-mode .post-content pre {
+        background-color: #1e1e1e;
+        color: #f8f8f2;
+        border-color: #333333;
+      }
+
+      :root.dark-mode .post-content pre code {
+        color: #f8f8f2;
+        background-color: transparent;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f2020;
+        border: 1px solid #1f2020;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .copy-button:hover {
+        background: #4caf50;
+        border-color: #4caf50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .copy-button.copied {
+        background-color: #27ae60;
+      }
+
+      .post-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+      }
+
+      .post-content blockquote {
+        background-color: #eaf2f8;
+        border-left: 5px solid var(--secondary-color);
+        padding: 20px;
+        margin: 25px 0;
+        border-radius: 0 5px 5px 0;
+      }
+
+      :root.dark-mode .post-content blockquote {
+        background-color: rgba(52, 152, 219, 0.15);
+        color: #b3e5fc;
+      }
+
+      .post-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.95rem;
+        text-align: left;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        table-layout: auto; /* 让列宽根据内容自动调整 */
+      }
+
+      .post-content th,
+      .post-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        word-wrap: break-word; /* 确保长内容可以换行 */
+      }
+
+      .post-content th {
+        background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .post-content tbody tr {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      :root.dark-mode .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      :root.dark-mode .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      :root.dark-mode .post-content th,
+      :root.dark-mode .post-content td {
+        border: 1px solid var(--border-color);
+      }
+
+      .post-content a {
+        color: var(--secondary-color);
+        text-decoration: none;
+      }
+
+      .post-content a:hover {
+        text-decoration: underline;
+      }
+
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 25px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      :root.dark-mode .warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffd54f;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 40px;
+      }
+
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--secondary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+      }
+
+      /* Mermaid 图表样式 */
+      .mermaid {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      :root.dark-mode .mermaid {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post-title {
+          font-size: 1.6rem;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-content {
+          font-size: 1rem;
+        }
+
+        .post-content h1 {
+          font-size: 1.5rem;
+        }
+
+        .post-content h2 {
+          font-size: 1.3rem;
+        }
+
+        .post-content h3 {
+          font-size: 1.1rem;
+        }
+
+        .toc-container {
+          display: none;
+        }
+      }
+    </style>
+    <!-- 引入本地 Mermaid 库 -->
+    <script src="../../js/mermaid.min.js"></script>
+    <script>
+      // 初始化 Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        // 可以根据需要添加更多配置选项
+        securityLevel: "loose",
+      });
+
+      // 处理 Pandoc 生成的 Mermaid 代码块
+      // Pandoc 将 Mermaid 代码块转换为 <pre class="mermaid"><code>... 格式
+      // 我们需要将其转换为 <div class="mermaid">... 格式以便 Mermaid 渲染
+      document.addEventListener("DOMContentLoaded", function () {
+        const mermaidBlocks = document.querySelectorAll("pre.mermaid code");
+        mermaidBlocks.forEach(function (codeElement) {
+          // 创建新的 div 元素
+          const mermaidDiv = document.createElement("div");
+          mermaidDiv.className = "mermaid";
+          // 将代码内容移到 div 中
+          mermaidDiv.textContent = codeElement.textContent;
+          // 替换原来的 pre 元素
+          codeElement.parentNode.parentNode.replaceChild(
+            mermaidDiv,
+            codeElement.parentNode
+          );
+        });
+
+        // 重新启动 Mermaid 渲染
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+      });
+
+      // 为代码块添加复制按钮
+      function addCopyButtons() {
+        // 处理 Pandoc 生成的代码块结构 (<div class="sourceCode"><pre><code>)
+        const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+        sourceCodeBlocks.forEach(function (block) {
+          // 检查是否已经有复制按钮
+          if (block.querySelector(".copy-button")) return;
+
+          // 获取 pre 元素
+          const preElement = block.querySelector("pre");
+          if (!preElement) return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = preElement.querySelector("code");
+            const text = code ? code.innerText : preElement.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到 sourceCode div 中
+          block.appendChild(button);
+        });
+
+        // 处理普通的 pre 代码块 (非 Pandoc 生成的)
+        // 先获取所有非 mermaid 的 pre 元素
+        const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+        allPreBlocks.forEach(function (block) {
+          // 检查是否已经在 sourceCode div 中（Pandoc 生成的）或者已经有复制按钮
+          if (
+            block.closest(".sourceCode") ||
+            block.querySelector(".copy-button")
+          )
+            return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = block.querySelector("code");
+            const text = code ? code.innerText : block.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到代码块
+          block.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <article class="post">
+          <header class="post-header">
+            <h1 class="post-title">182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战</h1>
+            <div class="post-meta">
+              <div class="post-date">2026/7/29</div>
+              <div class="post-category">2026-07</div>
+            </div>
+          </header>
+          <div class="warning">
+            ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+          </div>
+          <div class="post-content" id="post-content"><h1 id="182g-幽灵文件引发的数据库锁超时--全链路排查与零中断恢复实战">182G 幽灵文件引发的数据库锁超时 —— 全链路排查与零中断恢复实战</h1>
+<blockquote>
+<p><strong>一句话梗概：</strong> MySQL 报 <code>Lock wait timeout</code>，根因却是 182G 已删除的日志文件被进程&quot;卡住&quot;未释放，导致磁盘写满、binlog 阻塞、事务全部排队。本文完整复盘从数据库报错→系统层定位→零中断恢复的全过程，并深入拆解每一个技术决策。</p>
+</blockquote>
+<hr>
+<h2 id="一、现象：一条-ddl-引发的血案">一、现象：一条 DDL 引发的血案</h2>
+<p>测试环境，同事在修改配置表 <code>configure</code> 时，突然抛出异常：</p>
+<pre><code>Error 1205 (HY000): Lock wait timeout exceeded; try restarting transaction
+</code></pre>
+<p><strong>关键区分：</strong> 这不是 <code>Deadlock found</code>（死锁），而是 <code>Lock wait timeout</code>（锁等待超时）。说明有事务持有了锁一直不释放，后续事务等待超过了 <code>innodb_lock_wait_timeout</code> 默认的 50 秒阈值。</p>
+<hr>
+<h2 id="二、排查第-1-层：数据库内部探查受阻">二、排查第 1 层：数据库内部探查受阻</h2>
+<h3 id="21-show-processlist">2.1 <code>SHOW PROCESSLIST</code></h3>
+<p>查看当前连接状态，发现大量连接堆积，但**Processlist 只能看到&quot;谁在执行&quot;，看不到&quot;谁持有了锁&quot;**。更关键的是，stat 列暴露出大量 **<code>Writing to binlog</code>**——这是磁盘 I/O 卡住的信号。</p>
+<h3 id="22-show-engine-innodb-status">2.2 <code>SHOW ENGINE INNODB STATUS</code></h3>
+<p>为了看清锁的持有关系，继续执行 InnoDB 监控。重点关注 <strong>LOG</strong> 部分的三个序列号：</p>
+<pre><code>Log sequence number     12227732543514   ← 内存中已写入的 LSN
+Log flushed up to       12227732542000   ← 已刷到磁盘的 LSN
+Pages flushed up to     12227732540000   ← 脏页已刷盘的 LSN
+</code></pre>
+<blockquote>
+<p><strong>解读：</strong> <code>Log sequence number</code> 远大于 <code>Log flushed up to</code>，说明内存里的 redo log 积压严重，刷盘线程跟不上。<code>Pages flushed up to</code> 更是大幅落后，磁盘显然没有正常写入。</p>
+</blockquote>
+<p><strong>至此，数据库层面的排查给出两个关键暗示：</strong></p>
+<ol>
+<li>有大量事务在等待 binlog 写入</li>
+<li>InnoDB 的 redo log 也无法正常刷盘</li>
+</ol>
+<p>两者都指向同一个方向——<strong>磁盘出了问题</strong>。</p>
+<hr>
+<h2 id="三、排查第-2-层：错误日志一击命中">三、排查第 2 层：错误日志一击命中</h2>
+<p>转向 MySQL 错误日志（MySQL 5 需到服务器本地查看），<code>tail -f mysql_error.log</code>：</p>
+<pre><code>2025-10-20T09:24:04.476735Z 8660137 [ERROR] 
+Disk is full writing &#39;./mysql-bin.000972&#39; 
+(Errcode: 15410240 - No space left on device). 
+Waiting for someone to free space...
+</code></pre>
+<blockquote>
+<p><strong>真相大白：</strong> 不是锁竞争，是 <strong>磁盘满了，binlog 写不进去</strong>。MySQL 在事务提交时必须写 binlog，写不进去事务就挂住，锁也就一直不释放，后续事务全部排队等超时。</p>
+</blockquote>
+<p>这是典型的<strong>表象与根因分离</strong>案例：业务报错是锁超时，根因是磁盘满。如果只盯着锁分析，大概率会走弯路。</p>
+<hr>
+<h2 id="四、排查第-3-层：df-与-du-的-192g-鸿沟">四、排查第 3 层：<code>df</code> 与 <code>du</code> 的 192G 鸿沟</h2>
+<h3 id="41-确认磁盘使用率">4.1 确认磁盘使用率</h3>
+<pre><code class="language-bash">df -h
+</code></pre>
+<p><code>/Z_Datas</code> 分区 300G，利用率 **100%**，已用 298G。</p>
+<h3 id="42-逐层统计却对不上">4.2 逐层统计却对不上</h3>
+<pre><code class="language-bash">du -h --max-depth=1 /Z_Datas
+</code></pre>
+<p>所有子目录加起来 <strong>仅 ~106G</strong>。已用 298G 却只找到 106G，<strong>差值高达 192G</strong>。</p>
+<h3 id="43-三种可能性排查">4.3 三种可能性排查</h3>
+<table>
+<thead>
+<tr>
+<th>可能性</th>
+<th>分析</th>
+<th>结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>隐藏文件</td>
+<td><code>du</code> 默认可见 <code>.</code> 文件，不可能有 192G 这么大</td>
+<td>❌ 排除</td>
+</tr>
+<tr>
+<td>独立挂载点</td>
+<td>确认所有子目录在同一分区</td>
+<td>❌ 排除</td>
+</tr>
+<tr>
+<td><strong>已删除但仍被进程占用的文件</strong></td>
+<td><code>rm</code> 只删除目录项，若进程仍持有 fd，内核不释放 inode</td>
+<td>✅ <strong>定位</strong></td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>黄金信号：</strong> <code>df</code>（文件系统级）和 <code>du</code>（目录遍历级）的数值差异，是诊断&quot;幽灵文件&quot;的经典标志。</p>
+</blockquote>
+<hr>
+<h2 id="五、排查第-4-层：lsof-捕获真凶">五、排查第 4 层：<code>lsof</code> 捕获真凶</h2>
+<pre><code class="language-bash">lsof | grep deleted | grep /Z_Datas
+</code></pre>
+<p>输出直击要害：</p>
+<pre><code>/Z_Datas/pqcModel/logs/logs.txt (deleted)   182.5G   PID 4624
+/Z_Datas/dpxz/logs.txt (deleted)             23.7G   PID 4990
+</code></pre>
+<p><strong>PID 4624</strong> 持有已被删除的 <code>logs.txt</code>，<strong>182.5 GB</strong> 空间就这么被&quot;卡住&quot;了。进程 4990 类似，23.7G。</p>
+<h3 id="场景还原">场景还原</h3>
+<p>服务启动时将 stdout/stderr 重定向到 <code>/Z_Datas/pqcModel/logs/logs.txt</code>。后来运维做日志清理，执行了 <code>rm</code>，但<strong>服务没有重启，也没有收到信号重新打开日志文件</strong>。进程继续往原文件描述符写入，数据在 inode 层面不断累积，但目录项已被删除，文件在文件系统上&quot;不可见&quot;。</p>
+<h3 id="完整根因链">完整根因链</h3>
+<pre><code>服务日志未正确轮转 
+  → 日志文件被 rm 但进程未释放 fd 
+    → 182G 空间泄漏 
+      → /Z_Datas 分区写满 
+        → MySQL binlog 无法写入 
+          → 事务提交卡住 
+            → 锁无法释放 
+              → 其他事务 Lock wait timeout → Error 1205
+</code></pre>
+<hr>
+<h2 id="六、解决方案：三选一的工程决策">六、解决方案：三选一的工程决策</h2>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>操作</th>
+<th>优点</th>
+<th>风险</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A. 重启服务</td>
+<td><code>systemctl restart &lt;service&gt;</code></td>
+<td>简单直接，fd 关闭即释放</td>
+<td>未知服务用途，重启可能影响其他同事</td>
+</tr>
+<tr>
+<td>B. <code>kill -HUP</code></td>
+<td>发送 SIGHUP 信号</td>
+<td>优雅重载日志</td>
+<td>不确定服务是否实现了信号处理逻辑</td>
+</tr>
+<tr>
+<td>C. <strong>清空 fd 内容</strong></td>
+<td>操作 procfs 直接截断文件</td>
+<td><strong>零中断、低侵入、可逆</strong></td>
+<td>需要足够权限</td>
+</tr>
+</tbody></table>
+<p><strong>决策：</strong> 测试环境也要有生产意识——<strong>选择 C，不中断服务的前提下释放空间。</strong></p>
+<hr>
+<h2 id="七、执行攻坚：权限问题的巧妙绕过">七、执行攻坚：权限问题的巧妙绕过</h2>
+<h3 id="首次尝试：重定向失败">首次尝试：重定向失败</h3>
+<pre><code class="language-bash">&gt; /proc/4624/fd/1    # 清空 stdout
+&gt; /proc/4624/fd/2    # 清空 stderr
+# Permission denied
+</code></pre>
+<p><strong>原因：</strong> <code>/proc/PID/fd/N</code> 是一个软链接，指向已删除文件的 inode。<code>&gt;</code> 重定向会以当前用户身份去打开底层 inode，如果进程 4624 以其他用户运行，权限检查就会拒绝。</p>
+<h3 id="二次尝试：dd-命令成功">二次尝试：<code>dd</code> 命令成功</h3>
+<pre><code class="language-bash">dd if=/dev/null of=/proc/4624/fd/1
+</code></pre>
+<p>输出：</p>
+<pre><code>0+0 records in
+0+0 records out
+0 bytes (0 B) copied
+</code></pre>
+<h3 id="dd-为什么能绕过权限？"><code>dd</code> 为什么能绕过权限？</h3>
+<p>关键在于 <strong>procfs 的特殊机制</strong>：<code>/proc/PID/fd/N</code> 路径在 procfs 中允许通过进程的 fd 表直接写入，而不需要重新打开底层文件。<code>dd</code> 直接操作这个 procfs 入口，绕过了传统文件权限的层层检查。<code>/dev/null</code> 提供 0 字节输入，写入 fd 1 的效果等同于<strong>将文件内容截断到 0</strong>。</p>
+<h3 id="操作完成后立即验证">操作完成后立即验证</h3>
+<pre><code class="language-bash"># 对 PID 4990 重复操作，释放 23.7G
+dd if=/dev/null of=/proc/4990/fd/1
+
+# 验证磁盘
+df -h                    # /Z_Datas 从 100% 降到正常
+# 验证 MySQL
+# 同事重新执行操作，Error 1205 消失，事务正常提交
+</code></pre>
+<hr>
+<h2 id="八、技术深度：为什么-rm-不等于真正的删除？">八、技术深度：为什么 <code>rm</code> 不等于真正的删除？</h2>
+<p>这是理解本次事故的关键知识点：</p>
+<pre><code>文件在磁盘上的生命周期 = 目录项存在 &amp;&amp; link count &gt; 0 &amp;&amp; 无进程持有 fd
+                                   ↓
+                  rm 只移除目录项，link count 减 1
+                                   ↓
+                link count &gt; 0 → 文件仍然存在（硬链接）
+                link count = 0 &amp;&amp; 仍有进程持有 fd → inode 和数据块保留
+                link count = 0 &amp;&amp; 无进程持有 fd → 真正释放
+</code></pre>
+<blockquote>
+<p><strong>核心教训：</strong> <code>rm</code> 只是 <code>unlink</code>，真正的文件释放需要<strong>链接计数归零且没有进程打开文件描述符</strong>。容器化环境、日志服务中&quot;边删边写&quot;的场景极为常见。</p>
+</blockquote>
+<hr>
+<h2 id="九、事后复盘与工程启示">九、事后复盘与工程启示</h2>
+<h3 id="91-全栈思维">9.1 全栈思维</h3>
+<p>数据库报错，根因可能在操作系统层面。<code>SHOW ENGINE INNODB STATUS</code> 权限不足反而&quot;逼&quot;我从系统日志切入，结果更快定位了问题。<strong>技术栈的每一层都不是孤岛。</strong></p>
+<h3 id="92-排查方法论">9.2 排查方法论</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>工具/命令</th>
+<th>目标</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>数据库连接状态</td>
+<td><code>SHOW PROCESSLIST</code></td>
+<td>发现 <code>Writing to binlog</code> 异常</td>
+</tr>
+<tr>
+<td>InnoDB 引擎状态</td>
+<td><code>SHOW ENGINE INNODB STATUS</code></td>
+<td>发现 redo log 刷盘阻塞</td>
+</tr>
+<tr>
+<td>MySQL 错误日志</td>
+<td><code>tail -f mysql_error.log</code></td>
+<td>直击 <code>Disk is full</code> 根因</td>
+</tr>
+<tr>
+<td>磁盘使用率</td>
+<td><code>df -h</code></td>
+<td>确认分区 100%</td>
+</tr>
+<tr>
+<td>目录空间统计</td>
+<td><code>du -h --max-depth=1</code></td>
+<td>发现 192G 差额</td>
+</tr>
+<tr>
+<td>已删除文件 fd</td>
+<td><code>lsof | grep deleted</code></td>
+<td>定位幽灵进程与文件</td>
+</tr>
+</tbody></table>
+<h3 id="93-工程决策原则">9.3 工程决策原则</h3>
+<p><strong>低侵入、可逆的操作优先</strong> —— 在信息不完整时，不贸然重启未知服务，而选择 <code>dd</code> 清空 fd 这种零中断方式。</p>
+<h3 id="94-推动规范落地">9.4 推动规范落地</h3>
+<p>排查结束后，推动团队落实了以下措施：</p>
+<ol>
+<li><strong>日志轮转规范：</strong> 使用 <code>logrotate</code> 的 <code>copytruncate</code> 模式，或确保服务支持 <code>kill -HUP</code> 重载日志</li>
+<li><strong>磁盘监控告警：</strong> 80% 阈值预警，杜绝等 100% 才被动处理</li>
+<li><strong>应用层日志库热切换：</strong> Python 的 <code>WatchedFileHandler</code>、Java 的 <code>logback</code> 热配置等</li>
+</ol>
+<hr>
+<h2 id="十、总结">十、总结</h2>
+<pre><code>报错 Error 1205 (Lock wait timeout)
+  → 排查连接发现 Writing to binlog
+    → InnoDB 状态显示 redo log 刷盘阻塞
+      → 错误日志确认 Disk is full
+        → df/du 差值发现 192G 空间不符
+          → lsof 定位 182G 已删除文件仍被进程占用
+            → dd 清空 fd 零中断释放
+              → MySQL 自动恢复
+</code></pre>
+<p>本次故障排查的双重收获：</p>
+<ul>
+<li><strong>技术上：</strong> 深刻理解了 Linux 文件描述符机制、MySQL 事务与 binlog 的依赖关系，以及 <code>df/du</code> 差异作为诊断黄金信号的实战价值</li>
+<li><strong>工程上：</strong> 验证了&quot;从现象出发、逐层向下&quot;的排查方法论，以及&quot;零中断优先&quot;的操作原则</li>
+</ul>
+<p><strong>所有看似神秘的线上故障，背后都有一个清晰的因果链。找到它，就解决问题的一半。</strong></p>
+</div>
+        </article>
+      </div>
+
+      <div class="toc-container">
+        <nav class="toc" id="table-of-contents">
+          <h2>目录</h2>
+          <div id="toc-content"></div>
+        </nav>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="切换暗色模式">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+      // Dark mode toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const html = document.documentElement;
+
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem("theme-mode");
+      if (savedTheme === "dark") {
+        html.classList.add("dark-mode");
+      }
+
+      // Theme toggle click handler
+      themeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark-mode");
+        const isDarkMode = html.classList.contains("dark-mode");
+        localStorage.setItem("theme-mode", isDarkMode ? "dark" : "light");
+        console.log("主题切换为:", isDarkMode ? "暗色模式" : "亮色模式");
+      });
+
+      // Generate Table of Contents
+      function generateTOC() {
+        const tocContainer = document.getElementById("toc-content");
+        const content = document.querySelector(".post-content");
+        const headers = content.querySelectorAll("h1, h2, h3");
+
+        if (headers.length === 0) {
+          tocContainer.innerHTML = "<p>暂无目录</p>";
+          return;
+        }
+
+        const toc = document.createElement("ul");
+
+        headers.forEach((header, index) => {
+          // Add an id to the header if it doesn't have one
+          if (!header.id) {
+            header.id = "heading-" + index;
+          }
+
+          const li = document.createElement("li");
+          li.className = "toc-item";
+
+          const link = document.createElement("a");
+          link.href = "#" + header.id;
+          link.textContent = header.textContent;
+          link.className = "toc-link";
+
+          // Set indentation based on header level
+          const level = parseInt(header.tagName.charAt(1)) - 1;
+          li.style.marginLeft = level * 20 + "px";
+
+          li.appendChild(link);
+          toc.appendChild(li);
+        });
+
+        tocContainer.appendChild(toc);
+      }
+
+      // Adjust TOC height to match content
+      function adjustTOCHeight() {
+        const toc = document.getElementById("table-of-contents");
+        const post = document.querySelector(".post");
+
+        if (toc && post) {
+          // Get the height of the post area
+          const postHeight = post.offsetHeight;
+
+          // Set the max-height of the TOC to match the post height
+          // Leave some space for top margin and padding
+          toc.style.maxHeight =
+            Math.min(postHeight - 30, window.innerHeight * 0.8) + "px";
+        }
+      }
+
+      // Back to top button
+      const backToTopButton = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add("visible");
+        } else {
+          backToTopButton.classList.remove("visible");
+        }
+      });
+
+      backToTopButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Initialize TOC when page loads and adjust height
+      document.addEventListener("DOMContentLoaded", function () {
+        generateTOC();
+        adjustTOCHeight();
+
+        // Adjust height on window resize
+        window.addEventListener("resize", adjustTOCHeight);
+      });
+
+      // 页面加载完成后添加复制按钮
+      window.addEventListener("load", function () {
+        addCopyButtons();
+      });
+
+      // 监听可能的动态内容加载
+      const observer = new MutationObserver(function (mutations) {
+        let shouldAddButtons = false;
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              // 检查添加的节点是否是代码块或包含代码块
+              if (
+                (node.classList && node.classList.contains("sourceCode")) ||
+                (node.tagName === "PRE" &&
+                  !node.classList.contains("mermaid")) ||
+                node.querySelector(".sourceCode, pre:not(.mermaid)")
+              ) {
+                shouldAddButtons = true;
+              }
+            }
+          });
+        });
+        if (shouldAddButtons) {
+          // 延迟执行以确保DOM完全更新
+          setTimeout(addCopyButtons, 100);
+        }
+      });
+
+      // 开始监听DOM变化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      console.log("页面加载完成，AI 技术笔记已就绪");
+    </script>
+  </body>
+</html>

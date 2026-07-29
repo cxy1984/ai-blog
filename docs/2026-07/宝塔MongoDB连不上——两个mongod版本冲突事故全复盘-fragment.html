@@ -1,0 +1,890 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/7/29</div>
+          <div class="post-category">2026-07</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><blockquote>
+<p><strong>一句话梗概：</strong> 宝塔的 MongoDB 突然宕机，手动启动时报 <code>exit code 14</code>，折腾半天发现系统里藏着两个不同版本的 mongod 二进制——宝塔 v3.6 的数据文件被手误用系统 v6.0 去启动，版本不兼容直接 abort。本文还原完整排查链路、误解与弯路、以及治本方案。</p>
+</blockquote>
+<hr>
+<h2 id="一、现象">一、现象</h2>
+<p>早上到公司，收到告警：服务器上宝塔面板的 MongoDB 起不来了，业务全部连不上数据库。</p>
+<hr>
+<h2 id="二、排查过程（按时间线）">二、排查过程（按时间线）</h2>
+<h3 id="1️⃣-检查配置文件">1️⃣ 检查配置文件</h3>
+<p>路径：<code>/www/server/mongodb/config.conf</code></p>
+<p>配置看起来一切正常：</p>
+<ul>
+<li>端口：<code>2708</code></li>
+<li>bindIp：<code>0.0.0.0</code></li>
+<li>认证：开启</li>
+<li>数据目录：<code>/data/mongodb/data</code></li>
+<li>日志路径：<code>/data/mongodb/log/config.log</code></li>
+</ul>
+<h3 id="2️⃣-首次启动--神秘退出码-14">2️⃣ 首次启动 —— 神秘退出码 14</h3>
+<pre><code class="language-bash">/usr/bin/mongod -f /www/server/mongodb/config.conf
+# ERROR: child process failed, exited with 14
+</code></pre>
+<p>退出码 14，但<strong>终端没有打印任何具体错误信息</strong>。排查在此陷入第一个迷雾。</p>
+<h3 id="3️⃣-错误方向：怀疑-lock-文件">3️⃣ 错误方向：怀疑 lock 文件</h3>
+<p>按常见经验，先清理可能残留的锁文件：</p>
+<pre><code class="language-bash">rm -f /data/mongodb/data/mongod.lock
+</code></pre>
+<p>再次启动，<strong>依然退出码 14</strong>。说明根因不是锁文件——方向错了。</p>
+<h3 id="4️⃣-想前台启动看报错，反而更绕">4️⃣ 想前台启动看报错，反而更绕</h3>
+<p>尝试 <code>--no-fork</code> 前台运行，结果新版 mongod 已移除该选项。于是改配置去掉 <code>fork: true</code>，但启动后&quot;看起来没报错就退出了&quot;——</p>
+<blockquote>
+<p><strong>误区：</strong> 日志配置为写文件模式，错误信息全部输出到了日志文件而非终端。改配置去 fork 的方式不仅没解决&quot;看不到错误&quot;的问题，还引入了配置文件被改动的风险。</p>
+</blockquote>
+<h3 id="5️⃣-🔑-关键一步：看日志文件">5️⃣ 🔑 关键一步：看日志文件</h3>
+<pre><code class="language-bash">tail /data/mongodb/log/config.log
+</code></pre>
+<p>终于看到致命错误：</p>
+<pre><code>This version of MongoDB is too recent to start up on the existing data files.
+Try MongoDB 4.2 or earlier.
+</code></pre>
+<blockquote>
+<p>翻译：<strong>当前 mongod 版本太新，读不了现有数据文件。数据是用老版本写的。</strong></p>
+</blockquote>
+<h3 id="6️⃣-核心疑问">6️⃣ 核心疑问</h3>
+<p>&quot;没人更新过 MongoDB，怎么会版本不兼容？&quot;</p>
+<h3 id="7️⃣-💡-破局点：到底用的是哪个-mongod？">7️⃣ 💡 破局点：到底用的是哪个 mongod？</h3>
+<p>分别检查两个 mongod 的版本：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>版本</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/www/server/mongodb/bin/mongod --version</code></td>
+<td><strong>v3.6.2</strong></td>
+<td>宝塔自带，数据由它写入</td>
+</tr>
+<tr>
+<td><code>/usr/bin/mongod --version</code></td>
+<td><strong>v6.0.12</strong></td>
+<td>系统其他来源（yum/手动安装）</td>
+</tr>
+</tbody></table>
+<p><strong>真相大白：</strong> 今天手动启动时一直用的是 <code>/usr/bin/mongod</code>（v6.0），但数据是宝塔 v3.6.2 写入的。大版本跨越（3.6 → 6.0），MongoDB 的向前兼容保护机制直接 abort，抛出退出码 14。</p>
+<p><strong>不是有人升级了 MongoDB，是排查时用错了二进制。</strong></p>
+<hr>
+<h2 id="三、根因总结">三、根因总结</h2>
+<pre><code>系统存在两个 mongod 二进制
+  → 排障时误用 /usr/bin/mongod (v6.0) 启动
+    → 6.0 读取 3.6 的数据文件，版本不兼容
+      → MongoDB 自我保护，abort 退出，exit code 14
+</code></pre>
+<h3 id="误解与弯路回顾">误解与弯路回顾</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>为什么无效</th>
+<th>本该怎么做</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>只查配置文件</td>
+<td>配置无问题，排障方向偏离</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>exit code 14</code> 屏幕无详情</td>
+<td>错误写到了日志文件，而非 stderr</td>
+<td><strong>第一时间 tail 日志文件</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>删 <code>mongod.lock</code></td>
+<td>根因不是非正常关闭，删除无效</td>
+<td>区分&quot;打不开&quot;和&quot;启动后崩溃&quot;</td>
+</tr>
+<tr>
+<td>4</td>
+<td>改配置去 fork</td>
+<td>日志仍写文件，终端还是看不到报错</td>
+<td><strong>查看日志文件，检查 mongod 路径</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>查两个 mongod 版本</td>
+<td>—</td>
+<td>✅ <strong>真正的破局点</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、解决方案">四、解决方案</h2>
+<p>用与数据匹配的宝塔二进制启动：</p>
+<pre><code class="language-bash">/www/server/mongodb/bin/mongod -f /www/server/mongodb/config.conf
+</code></pre>
+<p>验证监听状态：</p>
+<pre><code class="language-bash">ss -tnlp | grep 2708
+</code></pre>
+<p><strong>服务恢复，数据完好无损，无需迁移、无需降级、无需丢数据。</strong> 整个过程 0 数据损失。</p>
+<hr>
+<h2 id="五、技术深度：为什么大版本不兼容？">五、技术深度：为什么大版本不兼容？</h2>
+<p>MongoDB 的数据文件格式（WireTiger 存储引擎）在不同大版本间<strong>并非向前兼容</strong>。MongoDB 的设计哲学是：</p>
+<ol>
+<li>新版本可以读<strong>同级或上一级</strong>版本的数据（例如 6.0 可读 5.0 的数据）</li>
+<li>跨大版本（如 3.6 → 6.0）则直接拒绝启动</li>
+<li>升级必须<strong>逐级进行</strong>：3.6 → 4.0 → 4.2 → 4.4 → 5.0 → 6.0，每级启动后执行 <code>setFeatureCompatibilityVersion</code></li>
+</ol>
+<p>保护机制的数据：</p>
+<pre><code class="language-bash"># 升级到新版本后，必须显式设置特性兼容版本
+db.adminCommand({ setFeatureCompatibilityVersion: &quot;新版本&quot; })
+# 例如从 4.0 升到 4.2 后：
+db.adminCommand({ setFeatureCompatibilityVersion: &quot;4.2&quot; })
+</code></pre>
+<blockquote>
+<p><strong>核心教训：</strong> MongoDB 的启动保护机制（版本不兼容直接 abort）是为了防止数据损坏，不是 bug，是 <strong>feature</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="六、后续建议与规范">六、后续建议与规范</h2>
+<h3 id="61-固定启动入口">6.1 固定启动入口</h3>
+<p>只用宝塔的启动方式，杜绝混用：</p>
+<pre><code class="language-bash"># ✅ 正确
+/etc/init.d/mongodb start
+/www/server/mongodb/bin/mongod -f /www/server/mongodb/config.conf
+
+# ❌ 避免
+/usr/bin/mongod -f /www/server/mongodb/config.conf
+</code></pre>
+<h3 id="62-清理冗余二进制">6.2 清理冗余二进制</h3>
+<p>移除或重命名多余的 mongod，从根源上消除混淆：</p>
+<pre><code class="language-bash">mv /usr/bin/mongod /usr/bin/mongod.6.0.bak
+# 先确认没有其他服务依赖 /usr/bin/mongod
+</code></pre>
+<h3 id="63-查清-mongodb-宕机的真正原因">6.3 查清 MongoDB 宕机的真正原因</h3>
+<pre><code class="language-bash"># 检查系统重启记录
+uptime; last reboot | head
+
+# 检查磁盘
+df -h
+
+# 检查 OOM killer 记录
+dmesg | grep -i &quot;killed process&quot;
+
+# 检查 MongoDB 自身日志中的异常信号
+tail -100 /data/mongodb/log/config.log | grep -E &quot;F|E|signal|shutting&quot;
+</code></pre>
+<p>常见原因：</p>
+<ul>
+<li><strong>机器重启后未自启</strong>（最频繁）</li>
+<li><strong>OOM killer 杀掉了 mongod 进程</strong></li>
+<li><strong>磁盘满导致无法写入日志</strong>（触发了本故障的&quot;兄弟&quot;场景）</li>
+</ul>
+<h3 id="64-设置开机自启">6.4 设置开机自启</h3>
+<pre><code class="language-bash">chkconfig --add mongodb
+chkconfig mongodb on
+</code></pre>
+<p>或直接在宝塔面板中勾选开机自启。</p>
+<h3 id="65-版本升级路线图">6.5 版本升级路线图</h3>
+<p>MongoDB 3.6 已于 2021 年 EOL（停止维护），建议按规范阶梯升级：</p>
+<pre><code>3.6  →  4.0  →  4.2  →  4.4  →  5.0  →  6.0  →  7.0
+ ↑       ↑       ↑       ↑       ↑       ↑
+ 每步: 启动 → setFeatureCompatibilityVersion → 重启 → 下一步
+</code></pre>
+<blockquote>
+<p>⚠️ 不要跳版本，否则会再次触发与本事故相同的版本不兼容 abort。</p>
+</blockquote>
+<hr>
+<h2 id="七、事故启示">七、事故启示</h2>
+<h3 id="71-排查第一原则：先确认用的是哪个">7.1 排查第一原则：先确认&quot;用的是哪个&quot;</h3>
+<p>当服务器上存在多个同类型工具的不同版本时，第一件事就是确认<strong>当前真正在调用的二进制是哪个</strong>。<code>which</code>、<code>type</code>、<code>--version</code> 应该成为肌肉记忆。</p>
+<h3 id="72-日志文件--终端输出">7.2 日志文件 &gt; 终端输出</h3>
+<p>把日志写入文件是生产环境的常见配置。当终端没有报错信息时，<strong>第一时间看日志文件</strong>，而不是费劲去改配置让终端显示。</p>
+<h3 id="73-三位一体验证">7.3 三位一体验证</h3>
+<p>对于数据库类服务，出现异常时应同时检查：</p>
+<pre><code>服务进程状态（ps / systemctl）
+  → 使用的二进制路径（which / ls -l /proc/PID/exe）
+    → 对应的数据文件版本（与二进制是否匹配）
+</code></pre>
+<p>这三者缺一不可。本次事故正是<strong>遗漏了第二步</strong>——用了错误的二进制路径。</p>
+<hr>
+<h2 id="八、总结">八、总结</h2>
+<pre><code>MongoDB 宕机
+  → exit code 14，终端无详细信息
+    → 删 lock 无效（方向错误）
+      → 改配置去 fork 仍看不到错误（又绕一圈）
+        → tail 日志文件找到版本不兼容报错 ✅
+          → 发现两个 mongod 二进制（3.6 vs 6.0）
+            → 用宝塔自带的 v3.6 启动
+              → 服务恢复，零数据损失
+</code></pre>
+<p><strong>故障本身不可怕，可怕的是排查时引入新的变量。</strong> 本次事故中，MongoDB 原本只是宕机待重启，但排障时误用高版本 mongod 让问题看起来更复杂了。</p>
+<p><strong>排查的每一步，都应该问自己：</strong> <em>&quot;我现在操作的是正确的东西吗？&quot;</em></p>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>

@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/ai-blog/favicon.svg?v=3">
+    <title>从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+写在前面
+我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
+
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
+    <meta name="keywords" content="从零搭建, Jenkins, CI, CD, 流水线, 一个, Spring, Boot, 项目的自动化部署实战" />
+    <meta name="author" content="AI 个人笔记" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
+    <meta property="og:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+写在前面
+我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
+
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
+    <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/Jenkins自动化部署实战-从零搭建CI_CD流水线.html" />
+    <meta property="og:site_name" content="AI 个人笔记" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战" />
+    <meta property="twitter:description" content="从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战
+写在前面
+我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：
+
+本地 Windows 上 mvn package → 手动 SCP 上传到服务器 → SSH 登录 → ki..." />
+    <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/Jenkins自动化部署实战-从零搭建CI_CD流水线.html" />
+
+    <!-- Favicon -->
+
+    <style>
+      /* Google Fonts for better typography */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #f8f9fa;
+        --text-color: #34495e;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --hover-color: #f8f9fa;
+      }
+
+      :root.dark-mode {
+        --primary-color: #ecf0f1;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --card-bg: #2d2d2d;
+        --hover-color: #3a3a3a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", "Noto Sans SC", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      .header {
+        /* display: flex; */
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #24292e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .github-link:hover {
+        background: #000;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .theme-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: #ce3321;
+        transition: transform 0.3s ease;
+      }
+
+      .theme-toggle:hover svg {
+        transform: rotate(20deg);
+      }
+
+      :root.dark-mode .theme-toggle {
+        background: rgba(45, 45, 45, 0.95);
+        border-color: rgba(200, 200, 200, 0.3);
+      }
+
+      :root.dark-mode .theme-toggle svg {
+        color: #ffc107;
+      }
+
+      :root.dark-mode .theme-toggle:hover {
+        background: rgba(60, 60, 60, 1);
+      }
+
+      .main-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+      }
+
+      .post-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-title {
+        color: var(--primary-color);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+      }
+
+      :root.dark-mode .post-meta {
+        color: #a0a0a0;
+      }
+
+      .post-date {
+        background-color: #e3f2fd;
+        color: var(--secondary-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-date {
+        background-color: rgba(52, 152, 219, 0.2);
+        color: #64b5f6;
+      }
+
+      .post-category {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-category {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #81c784;
+      }
+
+      .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .post-content h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin: 35px 0 25px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      /* Table of Contents */
+      .toc-container {
+        width: 300px;
+        flex-shrink: 0;
+      }
+
+      .toc {
+        position: sticky;
+        top: 135px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .toc h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc ul ul {
+        padding-left: 20px;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+
+      .toc a:hover {
+        color: var(--secondary-color);
+      }
+
+      .toc a.active {
+        color: var(--secondary-color);
+        font-weight: 500;
+      }
+
+      .post-content h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content h3 {
+        color: #2980b9;
+        font-size: 1.3rem;
+        margin: 25px 0 15px 0;
+      }
+
+      .post-content p {
+        margin-bottom: 18px;
+      }
+
+      .post-content ul,
+      .post-content ol {
+        margin: 20px 0;
+        padding-left: 35px;
+      }
+
+      .post-content li {
+        margin-bottom: 10px;
+      }
+
+      .post-content code {
+        background-color: #e8eaed;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        color: #c0392b;
+        font-size: 0.9em;
+      }
+
+      :root.dark-mode .post-content code {
+        background-color: #e8eaed;
+        color: #ff7043;
+      }
+
+      .post-content pre {
+        background-color: #f6f8fa;
+        color: #24292e;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 25px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        border: 1px solid #e1e4e8;
+      }
+
+      :root.dark-mode .post-content pre {
+        background-color: #1e1e1e;
+        color: #f8f8f2;
+        border-color: #333333;
+      }
+
+      :root.dark-mode .post-content pre code {
+        color: #f8f8f2;
+        background-color: transparent;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f2020;
+        border: 1px solid #1f2020;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .copy-button:hover {
+        background: #4caf50;
+        border-color: #4caf50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .copy-button.copied {
+        background-color: #27ae60;
+      }
+
+      .post-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+      }
+
+      .post-content blockquote {
+        background-color: #eaf2f8;
+        border-left: 5px solid var(--secondary-color);
+        padding: 20px;
+        margin: 25px 0;
+        border-radius: 0 5px 5px 0;
+      }
+
+      :root.dark-mode .post-content blockquote {
+        background-color: rgba(52, 152, 219, 0.15);
+        color: #b3e5fc;
+      }
+
+      .post-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.95rem;
+        text-align: left;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        table-layout: auto; /* 让列宽根据内容自动调整 */
+      }
+
+      .post-content th,
+      .post-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        word-wrap: break-word; /* 确保长内容可以换行 */
+      }
+
+      .post-content th {
+        background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .post-content tbody tr {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      :root.dark-mode .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      :root.dark-mode .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      :root.dark-mode .post-content th,
+      :root.dark-mode .post-content td {
+        border: 1px solid var(--border-color);
+      }
+
+      .post-content a {
+        color: var(--secondary-color);
+        text-decoration: none;
+      }
+
+      .post-content a:hover {
+        text-decoration: underline;
+      }
+
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 25px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      :root.dark-mode .warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffd54f;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 40px;
+      }
+
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--secondary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+      }
+
+      /* Mermaid 图表样式 */
+      .mermaid {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      :root.dark-mode .mermaid {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post-title {
+          font-size: 1.6rem;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-content {
+          font-size: 1rem;
+        }
+
+        .post-content h1 {
+          font-size: 1.5rem;
+        }
+
+        .post-content h2 {
+          font-size: 1.3rem;
+        }
+
+        .post-content h3 {
+          font-size: 1.1rem;
+        }
+
+        .toc-container {
+          display: none;
+        }
+      }
+    </style>
+    <!-- 引入本地 Mermaid 库 -->
+    <script src="../../js/mermaid.min.js"></script>
+    <script>
+      // 初始化 Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        // 可以根据需要添加更多配置选项
+        securityLevel: "loose",
+      });
+
+      // 处理 Pandoc 生成的 Mermaid 代码块
+      // Pandoc 将 Mermaid 代码块转换为 <pre class="mermaid"><code>... 格式
+      // 我们需要将其转换为 <div class="mermaid">... 格式以便 Mermaid 渲染
+      document.addEventListener("DOMContentLoaded", function () {
+        const mermaidBlocks = document.querySelectorAll("pre.mermaid code");
+        mermaidBlocks.forEach(function (codeElement) {
+          // 创建新的 div 元素
+          const mermaidDiv = document.createElement("div");
+          mermaidDiv.className = "mermaid";
+          // 将代码内容移到 div 中
+          mermaidDiv.textContent = codeElement.textContent;
+          // 替换原来的 pre 元素
+          codeElement.parentNode.parentNode.replaceChild(
+            mermaidDiv,
+            codeElement.parentNode
+          );
+        });
+
+        // 重新启动 Mermaid 渲染
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+      });
+
+      // 为代码块添加复制按钮
+      function addCopyButtons() {
+        // 处理 Pandoc 生成的代码块结构 (<div class="sourceCode"><pre><code>)
+        const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+        sourceCodeBlocks.forEach(function (block) {
+          // 检查是否已经有复制按钮
+          if (block.querySelector(".copy-button")) return;
+
+          // 获取 pre 元素
+          const preElement = block.querySelector("pre");
+          if (!preElement) return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = preElement.querySelector("code");
+            const text = code ? code.innerText : preElement.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到 sourceCode div 中
+          block.appendChild(button);
+        });
+
+        // 处理普通的 pre 代码块 (非 Pandoc 生成的)
+        // 先获取所有非 mermaid 的 pre 元素
+        const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+        allPreBlocks.forEach(function (block) {
+          // 检查是否已经在 sourceCode div 中（Pandoc 生成的）或者已经有复制按钮
+          if (
+            block.closest(".sourceCode") ||
+            block.querySelector(".copy-button")
+          )
+            return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = block.querySelector("code");
+            const text = code ? code.innerText : block.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到代码块
+          block.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <article class="post">
+          <header class="post-header">
+            <h1 class="post-title">从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</h1>
+            <div class="post-meta">
+              <div class="post-date">2026/7/29</div>
+              <div class="post-category">2026-07</div>
+            </div>
+          </header>
+          <div class="warning">
+            ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+          </div>
+          <div class="post-content" id="post-content"><h1 id="从零搭建-jenkins-cicd-流水线：一个-spring-boot-项目的自动化部署实战">从零搭建 Jenkins CI/CD 流水线：一个 Spring Boot 项目的自动化部署实战</h1>
+<h2 id="写在前面">写在前面</h2>
+<p>我手上有一个 Spring Boot 项目（代号 auctionNew），之前每次上线流程是这样的：</p>
+<blockquote>
+<p>本地 Windows 上 <code>mvn package</code> → 手动 SCP 上传到服务器 → SSH 登录 → <code>kill</code> 旧进程 → <code>nohup</code> 启动新进程 → 刷新浏览器看有没有起来</p>
+</blockquote>
+<p>三个环境（dev / test / pro）、多台机器来回切换，漏一步就要排查半天。痛定思痛，决定用 Jenkins 把这一套流程全自动化。</p>
+<p>这篇文章完整记录了从零搭建到跑通 CI/CD 的全过程，包括踩过的坑和解决方案。</p>
+<hr>
+<h2 id="一、环境情况">一、环境情况</h2>
+<p>项目技术栈：Spring Boot 2.6.4 + MyBatis Plus + JDK 8 + Maven，代码托管在 SVN。</p>
+<p>服务器有三台：</p>
+<table>
+<thead>
+<tr>
+<th>机器</th>
+<th>IP</th>
+<th>角色</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SVN 服务器</td>
+<td>xxx.xxx.xxx.18（内网）/ xxx.xxx.xxx.118（公网）</td>
+<td>代码仓库（VisualSVN）</td>
+</tr>
+<tr>
+<td>Jenkins 服务器</td>
+<td>xxx.xxx.xxx.197</td>
+<td>构建调度（CentOS 7）</td>
+</tr>
+<tr>
+<td>测试服务器</td>
+<td>xxx.xxx.xxx.175</td>
+<td>应用运行（CentOS 7）</td>
+</tr>
+</tbody></table>
+<p>目标流水线：</p>
+<pre><code>SVN 拉代码 → Maven 编译 → 发送 JAR 到 175 → 停旧进程 → 备份 → 启动 → 健康检查
+</code></pre>
+<hr>
+<h2 id="二、jenkins-环境准备（197-服务器）">二、Jenkins 环境准备（197 服务器）</h2>
+<h3 id="21-安装-maven">2.1 安装 Maven</h3>
+<p>CentOS 7 已经 EOL，<code>yum install maven</code> 只能装到 3.0.5（2011 年版本），Spring Boot 项目完全跑不动。</p>
+<p>直接到 Apache 归档站下载 3.8.6：</p>
+<pre><code class="language-bash">cd /usr/local
+wget https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+tar -zxvf apache-maven-3.8.6-bin.tar.gz
+ln -sf /usr/local/apache-maven-3.8.6/bin/mvn /usr/local/bin/mvn
+</code></pre>
+<blockquote>
+<p>中间试了清华镜像、阿里云镜像、Apache 官方源，要么 403 要么 404，最后 <code>archive.apache.org</code> 成功了，虽然慢（15KB/s，下了 9 分钟），但好歹能用。</p>
+</blockquote>
+<h3 id="22-配置-maven-镜像">2.2 配置 Maven 镜像</h3>
+<p>Maven 3.8+ 默认禁止 HTTP 仓库，项目里引用的阿里云镜像恰恰是 HTTP 的，编译直接报错：</p>
+<pre><code>Blocked mirror for repositories: [central (http://maven.aliyun.com/...)]
+</code></pre>
+<p>在 <code>/usr/local/apache-maven-3.8.6/conf/settings.xml</code> 配一个 HTTPS 镜像解决：</p>
+<pre><code class="language-xml">&lt;mirrors&gt;
+    &lt;mirror&gt;
+        &lt;id&gt;aliyun&lt;/id&gt;
+        &lt;mirrorOf&gt;central&lt;/mirrorOf&gt;
+        &lt;url&gt;https://maven.aliyun.com/repository/public&lt;/url&gt;
+    &lt;/mirror&gt;
+&lt;/mirrors&gt;
+</code></pre>
+<h3 id="23-jdk-双版本共存">2.3 JDK 双版本共存</h3>
+<p>Jenkins 本身需要 JDK 11+（系统装的 Amazon Corretto 21），但项目是用 JDK 8 开发的。</p>
+<p>试着用 JDK 21 编译，报了经典错误：</p>
+<pre><code>Fatal error compiling: java.lang.NoSuchFieldError: 
+Class com.sun.tools.javac.tree.JCTree$JCImport does not have member field &#39;qualid&#39;
+</code></pre>
+<p><code>maven-compiler-plugin:3.8.1</code> 不兼容 JDK 21。解决方案是保留 JDK 21 给 Jenkins 用，额外装 JDK 8 给 Maven 编译用：</p>
+<pre><code class="language-bash"># 安装 JDK 8（Amazon Corretto）
+wget https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+rpm -ivh amazon-corretto-8-x64-linux-jdk.rpm
+
+# 结果：/usr/lib/jvm/java-1.8.0-amazon-corretto
+</code></pre>
+<p>Pipeline 里编译前切一下环境变量：</p>
+<pre><code class="language-groovy">sh &quot;export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto &amp;&amp; mvn clean package&quot;
+</code></pre>
+<p>Jenkins 继续用 JDK 21，Maven 用 JDK 8，互不影响。</p>
+<hr>
+<h2 id="三、svn-连接问题花最多时间的坑">三、SVN 连接问题——花最多时间的坑</h2>
+<h3 id="31-问题现象">3.1 问题现象</h3>
+<p>SVN 公网地址是 <code>https://xxx.xxx.xxx.118/svn/DOC/SOURCE/Java/auctionNew</code>，在本地 Windows 上完全正常。</p>
+<p>但在同机房的 Jenkins 服务器（197）上，无论是命令行 <code>svn</code> 还是 Jenkins 内置的 SVNKit，都报：</p>
+<pre><code>svn: E175002: OPTIONS request failed on &#39;/svn/DOC/SOURCE/Java/auctionNew&#39;
+400 Bad Request
+</code></pre>
+<h3 id="32-排查过程">3.2 排查过程</h3>
+<pre><code>ping xxx.xxx.xxx.118       ✅ 通（延迟 0.3ms，同机房）
+443 端口                   ✅ 通
+curl https://xxx.xxx.xxx.118/svn/DOC/   ❌ 301 无 Location 头
+curl https://xxx.xxx.xxx.118/svn/DOC/SOURCE/...  ❌ Empty reply from server
+</code></pre>
+<p>从响应头发现 <code>Server: AR</code>——这是<strong>华为 AR 路由器</strong>在中间。SVN 的真实服务器躲在华为 AR 后面，AR 对外做 SSL 终结和反向代理。</p>
+<h3 id="33-根因：nat-hairpin（回环问题）">3.3 根因：NAT Hairpin（回环问题）</h3>
+<p>网络拓扑大概是这样的：</p>
+<pre><code>外网用户（你本地 Windows）
+   │
+   ▼
+xxx.xxx.xxx.118（华为 AR 公网 IP）
+   │  NAT 转发
+   ▼
+xxx.xxx.xxx.18（SVN 真实内网 IP）      ← 正常工作
+
+
+内网机器（Jenkins 197）
+   │
+   ▼
+xxx.xxx.xxx.118（华为 AR 公网 IP）
+   │  ⚠️ 路由器不知道怎么把从内网来的请求&quot;折回&quot;内网
+   ▼
+400 Bad Request / 301 无 Location
+</code></pre>
+<p>这就是经典的 <strong>NAT Hairpin（也叫 NAT Loopback）</strong>——从内网访问网关的公网 IP，路由器无法正确处理。</p>
+<h3 id="34-解决">3.4 解决</h3>
+<p>直接用 SVN 的内网 IP <code>xxx.xxx.xxx.18</code>，绕过华为 AR：</p>
+<pre><code>旧：https://xxx.xxx.xxx.118/svn/DOC/SOURCE/Java/auctionNew  ❌
+新：https://xxx.xxx.xxx.18/svn/DOC/SOURCE/Java/auctionNew    ✅
+</code></pre>
+<p>直连 VisualSVN Server，Host key 提示接受一下，认证通过，一切正常。</p>
+<hr>
+<h2 id="四、ssh-免密配置">四、SSH 免密配置</h2>
+<p>Jenkins 需要 SSH 到 175 执行部署命令。175 的 SSH 端口是 <strong>65522</strong>（非默认 22）。</p>
+<p>坑：Jenkins 服务以 <code>jenkins</code> 用户运行，而平时手动操作的密钥配在了 <code>root</code> 用户下。</p>
+<pre><code class="language-bash"># 为 jenkins 用户生成密钥
+su - jenkins -s /bin/bash -c &quot;ssh-keygen -t rsa -b 2048 -N &#39;&#39; -f /var/lib/jenkins/.ssh/id_rsa&quot;
+
+# 复制公钥到 175
+cat /var/lib/jenkins/.ssh/id_rsa.pub | ssh -p 65522 root@xxx.xxx.xxx.175 \
+  &quot;mkdir -p ~/.ssh &amp;&amp; cat &gt;&gt; ~/.ssh/authorized_keys&quot;
+
+# 验证免密登录
+su - jenkins -s /bin/bash -c &quot;ssh -p 65522 root@xxx.xxx.xxx.175 hostname&quot;
+</code></pre>
+<hr>
+<h2 id="五、pipeline-脚本">五、Pipeline 脚本</h2>
+<p>最终可用的 Jenkinsfile：</p>
+<pre><code class="language-groovy">pipeline {
+    agent any
+
+    environment {
+        SVN_URL = &quot;https://xxx.xxx.xxx.18/svn/DOC/SOURCE/Java/auctionNew&quot;
+        MAVEN_HOME = &quot;/usr/local/apache-maven-3.8.6&quot;
+        JAVA_HOME = &quot;/usr/lib/jvm/java-1.8.0-amazon-corretto&quot;
+        REMOTE_USER = &quot;root&quot;
+        APP_PORT = &quot;9099&quot;
+        SSH_PORT = &quot;65522&quot;
+        REMOTE_HOST = &quot;xxx.xxx.xxx.175&quot;
+        REMOTE_DIR = &quot;/data/workspace/auctionNew&quot;
+        PROJECT_DIR = &quot;auctionNew&quot;
+    }
+
+    stages {
+
+        // 1. 拉取代码
+        stage(&quot;SVN Checkout&quot;) {
+            steps {
+                checkout([$class: &#39;SubversionSCM&#39;,
+                    locations: [[credentialsId: &#39;svn-account&#39;, depthOption: &#39;INFINITY&#39;,
+                        ignoreExternalsOption: true, remote: &quot;${SVN_URL}&quot;]],
+                    workspaceUpdater: [$class: &#39;UpdateUpdater&#39;]])
+            }
+        }
+
+        // 2. 编译
+        stage(&quot;Maven Build&quot;) {
+            steps {
+                sh &quot;&quot;&quot;
+                    export JAVA_HOME=${JAVA_HOME}
+                    export PATH=\$JAVA_HOME/bin:\$PATH
+                    cd \$WORKSPACE/${PROJECT_DIR}
+                    ${MAVEN_HOME}/bin/mvn clean package -Dmaven.test.skip=true
+                &quot;&quot;&quot;
+            }
+        }
+
+        // 3. 部署
+        stage(&quot;Deploy&quot;) {
+            steps {
+                // 发送 JAR
+                sh &quot;ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} &#39;mkdir -p ${REMOTE_DIR}&#39;&quot;
+                sh &quot;scp -P ${SSH_PORT} -o StrictHostKeyChecking=no \$WORKSPACE/${PROJECT_DIR}/target/auctionNew.jar ${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/&quot;
+                
+                // 在 175 上：停服 → 备份 → 启动
+                sh &quot;&quot;&quot;
+                    ssh -p ${SSH_PORT} -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} &#39;
+                        port=${APP_PORT}
+                        job=auctionNew
+
+                        # 停止旧进程
+                        pid=\$(netstat -tlnp 2&gt;/dev/null | grep \${port} | awk &quot;{print \\\$7}&quot; | awk -F/ &quot;{print \\\$1}&quot;)
+                        [ -n &quot;\$pid&quot; ] &amp;&amp; kill -9 \$pid &amp;&amp; sleep 2
+
+                        # 备份 &amp; 替换
+                        mkdir -p /data/\${job}/jar /data/\${job}/logs
+                        [ -f /data/\${job}/jar/\${job}.jar ] &amp;&amp; mv /data/\${job}/jar/\${job}.jar /data/\${job}/jar/\${job}-\$(date &quot;+%Y%m%d%H%M%S&quot;).jar
+                        cp ${REMOTE_DIR}/\${job}.jar /data/\${job}/jar/\${job}.jar
+                        chmod 755 /data/\${job}/jar/\${job}.jar
+
+                        # 启动
+                        nohup /usr/bin/java -server \\
+                            -Xms512M -Xmx512M -XX:MetaspaceSize=256M -XX:MaxMetaspaceSize=256M \\
+                            -XX:+UseG1GC -XX:+HeapDumpOnOutOfMemoryError \\
+                            -XX:HeapDumpPath=/data/\${job}/logs/dump.hprof \\
+                            -Xloggc:/data/\${job}/logs/gc.log \\
+                            -Dfile.encoding=UTF-8 -Dspring.profiles.active=test \\
+                            -jar /data/\${job}/jar/\${job}.jar --server.port=\${port} \\
+                            &gt; /data/\${job}/logs/info.log 2&gt;&amp;1 &amp;
+                        sleep 3
+                        ps -ef | grep \${job}.jar | grep -v grep &amp;&amp; echo &quot;Started OK&quot; || echo &quot;Start Failed&quot;
+                    &#39;
+                &quot;&quot;&quot;
+            }
+        }
+
+        // 4. 健康检查
+        stage(&quot;Health Check&quot;) {
+            steps {
+                script {
+                    for (int i = 0; i &lt; 30; i++) {
+                        sleep 2
+                        def code = sh(returnStdout: true,
+                            script: &quot;curl -s -o /dev/null -w &#39;%{http_code}&#39; http://${REMOTE_HOST}:${APP_PORT}&quot;).trim()
+                        if (code == &quot;200&quot; || code == &quot;404&quot; || code == &quot;302&quot;) {
+                            echo &quot;Application is UP (HTTP ${code})&quot;
+                            return
+                        }
+                    }
+                    error &quot;Health check failed after 60 seconds&quot;
+                }
+            }
+        }
+    }
+}
+</code></pre>
+<hr>
+<h2 id="六、文件流转全景">六、文件流转全景</h2>
+<p>整个部署过程中，文件经历了以下流转：</p>
+<pre><code>SVN 仓库（xxx.xxx.xxx.18）
+     │  checkout（Jenkins SubversionSCM）
+     ▼
+197：/var/lib/jenkins/workspace/auctionNew-test/auctionNew/
+     │  Maven compile + package
+     ▼
+197：/var/lib/.../target/auctionNew.jar
+     │  scp（端口 65522）
+     ▼
+175：/data/workspace/auctionNew/auctionNew.jar         ← 中转站
+     │  cp
+     ▼
+175：/data/auctionNew/jar/auctionNew.jar               ← 运行位置
+     │  nohup java -jar
+     ▼
+175：日志 → /data/auctionNew/logs/{info.log, gc.log}
+</code></pre>
+<p>175 上最终的文件布局：</p>
+<pre><code>/data/
+├── workspace/auctionNew/       ← 中转（每次 scp 覆盖）
+│   └── auctionNew.jar
+└── auctionNew/                 ← 运行目录
+    ├── jar/
+    │   ├── auctionNew.jar          ← 当前运行
+    │   └── auctionNew-YYYYMMDDHHmmss.jar  ← 上一次备份
+    └── logs/
+        ├── info.log               ← 应用日志
+        └── gc.log                 ← GC 日志
+</code></pre>
+<hr>
+<h2 id="七、踩坑总结">七、踩坑总结</h2>
+<table>
+<thead>
+<tr>
+<th>坑</th>
+<th>现象</th>
+<th>解决方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>NAT Hairpin</strong></td>
+<td>内网访问公网 SVN 返回 400</td>
+<td>改用内网 IP 直连</td>
+</tr>
+<tr>
+<td><strong>JDK 版本不兼容</strong></td>
+<td><code>NoSuchFieldError: JCImport.qualid</code></td>
+<td>装 JDK 8，编译时切换 JAVA_HOME</td>
+</tr>
+<tr>
+<td><strong>Maven HTTP 被拦截</strong></td>
+<td><code>Blocked mirror for repositories</code></td>
+<td>settings.xml 改用 HTTPS 镜像</td>
+</tr>
+<tr>
+<td><strong>Yum 源失效</strong></td>
+<td>CentOS 7 EOL，mirrorlist 不可用</td>
+<td><code>--disablerepo=centos-sclo*</code> 或手动下载 RPM</td>
+</tr>
+<tr>
+<td><strong>Maven 太老</strong></td>
+<td>yum 只能装 3.0.5</td>
+<td>从 archive.apache.org 下载 3.8.6</td>
+</tr>
+<tr>
+<td><strong>SSH Host Key</strong></td>
+<td>Jenkins 用户无 known_hosts</td>
+<td>为 <code>/var/lib/jenkins/.ssh</code> 单独配置</td>
+</tr>
+<tr>
+<td><strong>deleteDir 权限</strong></td>
+<td>SVN 文件只读导致清理失败</td>
+<td>去掉 Clean 阶段，用 UpdateUpdater</td>
+</tr>
+<tr>
+<td><strong>Spring Profile</strong></td>
+<td>误用 <code>-Denv=test</code> 而非 Spring 标准</td>
+<td>改为 <code>-Dspring.profiles.active=test</code></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="八、最终效果">八、最终效果</h2>
+<p>现在部署只需要两步：</p>
+<ol>
+<li>本地 <code>svn commit</code> 提交代码</li>
+<li>打开 Jenkins → Build Now</li>
+</ol>
+<p>2~3 分钟后，175 上的应用自动更新完毕。整个过程：</p>
+<ul>
+<li>✅ SVN 自动拉取最新代码</li>
+<li>✅ Maven 自动编译打包（JDK 8 环境）</li>
+<li>✅ SCP 自动传送到测试服务器</li>
+<li>✅ 自动停止旧进程</li>
+<li>✅ 自动备份旧 JAR</li>
+<li>✅ 自动启动新进程</li>
+<li>✅ 自动健康检查验证</li>
+</ul>
+<p>出问题直接看日志：<code>tail -f /data/auctionNew/logs/info.log</code></p>
+<hr>
+<h2 id="九、后续优化方向">九、后续优化方向</h2>
+<ul>
+<li>加入 Spring Boot Actuator 实现更精准的健康检查（<code>/actuator/health</code>）</li>
+<li>配置 SVN Webhook 或 Poll SCM 实现提交即触发</li>
+<li>多版本备份保留（目前只保留一份）</li>
+<li>健康检查失败自动回滚到上一版本</li>
+<li>生产环境部署只需复制一份 Pipeline，改 IP 和 Profile 即可</li>
+</ul>
+</div>
+        </article>
+      </div>
+
+      <div class="toc-container">
+        <nav class="toc" id="table-of-contents">
+          <h2>目录</h2>
+          <div id="toc-content"></div>
+        </nav>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="切换暗色模式">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+      // Dark mode toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const html = document.documentElement;
+
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem("theme-mode");
+      if (savedTheme === "dark") {
+        html.classList.add("dark-mode");
+      }
+
+      // Theme toggle click handler
+      themeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark-mode");
+        const isDarkMode = html.classList.contains("dark-mode");
+        localStorage.setItem("theme-mode", isDarkMode ? "dark" : "light");
+        console.log("主题切换为:", isDarkMode ? "暗色模式" : "亮色模式");
+      });
+
+      // Generate Table of Contents
+      function generateTOC() {
+        const tocContainer = document.getElementById("toc-content");
+        const content = document.querySelector(".post-content");
+        const headers = content.querySelectorAll("h1, h2, h3");
+
+        if (headers.length === 0) {
+          tocContainer.innerHTML = "<p>暂无目录</p>";
+          return;
+        }
+
+        const toc = document.createElement("ul");
+
+        headers.forEach((header, index) => {
+          // Add an id to the header if it doesn't have one
+          if (!header.id) {
+            header.id = "heading-" + index;
+          }
+
+          const li = document.createElement("li");
+          li.className = "toc-item";
+
+          const link = document.createElement("a");
+          link.href = "#" + header.id;
+          link.textContent = header.textContent;
+          link.className = "toc-link";
+
+          // Set indentation based on header level
+          const level = parseInt(header.tagName.charAt(1)) - 1;
+          li.style.marginLeft = level * 20 + "px";
+
+          li.appendChild(link);
+          toc.appendChild(li);
+        });
+
+        tocContainer.appendChild(toc);
+      }
+
+      // Adjust TOC height to match content
+      function adjustTOCHeight() {
+        const toc = document.getElementById("table-of-contents");
+        const post = document.querySelector(".post");
+
+        if (toc && post) {
+          // Get the height of the post area
+          const postHeight = post.offsetHeight;
+
+          // Set the max-height of the TOC to match the post height
+          // Leave some space for top margin and padding
+          toc.style.maxHeight =
+            Math.min(postHeight - 30, window.innerHeight * 0.8) + "px";
+        }
+      }
+
+      // Back to top button
+      const backToTopButton = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add("visible");
+        } else {
+          backToTopButton.classList.remove("visible");
+        }
+      });
+
+      backToTopButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Initialize TOC when page loads and adjust height
+      document.addEventListener("DOMContentLoaded", function () {
+        generateTOC();
+        adjustTOCHeight();
+
+        // Adjust height on window resize
+        window.addEventListener("resize", adjustTOCHeight);
+      });
+
+      // 页面加载完成后添加复制按钮
+      window.addEventListener("load", function () {
+        addCopyButtons();
+      });
+
+      // 监听可能的动态内容加载
+      const observer = new MutationObserver(function (mutations) {
+        let shouldAddButtons = false;
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              // 检查添加的节点是否是代码块或包含代码块
+              if (
+                (node.classList && node.classList.contains("sourceCode")) ||
+                (node.tagName === "PRE" &&
+                  !node.classList.contains("mermaid")) ||
+                node.querySelector(".sourceCode, pre:not(.mermaid)")
+              ) {
+                shouldAddButtons = true;
+              }
+            }
+          });
+        });
+        if (shouldAddButtons) {
+          // 延迟执行以确保DOM完全更新
+          setTimeout(addCopyButtons, 100);
+        }
+      });
+
+      // 开始监听DOM变化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      console.log("页面加载完成，AI 技术笔记已就绪");
+    </script>
+  </body>
+</html>

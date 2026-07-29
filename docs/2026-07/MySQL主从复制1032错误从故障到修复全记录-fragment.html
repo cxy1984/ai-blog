@@ -1,0 +1,983 @@
+<style>
+  /* CSS Variables for fragment */
+  :root {
+    --primary-color: #2c3e50;
+    --secondary-color: #3498db;
+    --bg-color: #f8f9fa;
+    --text-color: #34495e;
+    --border-color: #e9ecef;
+    --card-bg: #ffffff;
+  }
+
+  /* TOC Sidebar Styles */
+  .article-layout {
+    display: flex;
+    max-width: 1400px;
+    margin: 0 auto;
+    gap: 30px;
+    padding: 0 20px;
+  }
+
+  .main-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .toc-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  .toc-header h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+    border-bottom: 2px solid var(--secondary-color);
+    padding-bottom: 10px;
+  }
+
+  .toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .toc-item {
+    margin-bottom: 8px;
+  }
+
+  .toc-link {
+    display: block;
+    padding: 6px 10px;
+    color: var(--text-color);
+    text-decoration: none;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    font-size: 0.95rem;
+  }
+
+  .toc-link:hover {
+    background: var(--secondary-color);
+    color: white;
+    padding-left: 15px;
+  }
+
+  .toc-link.active {
+    background: var(--secondary-color);
+    color: white;
+    font-weight: 500;
+  }
+
+  .toc-sublist {
+    list-style: none;
+    padding-left: 20px;
+    margin-top: 5px;
+  }
+
+  .toc-sublist .toc-link {
+    font-size: 0.9rem;
+    opacity: 0.9;
+  }
+
+  /* Post Styles */
+  .post {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+  }
+
+  .post-header {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-title {
+    color: var(--primary-color);
+    font-size: 2rem;
+    margin-bottom: 15px;
+  }
+
+  .post-meta {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    font-size: 0.95rem;
+    color: #6c757d;
+  }
+
+  .post-date {
+    background-color: #e3f2fd;
+    color: var(--secondary-color);
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .post-category {
+    background-color: #e8f5e9;
+    color: #4caf50;
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  .warning {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    color: #856404;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 0.9rem;
+  }
+
+  .post-content {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-color);
+  }
+
+  .post-content h1,
+  .post-content h2,
+  .post-content h3,
+  .post-content h4,
+  .post-content h5,
+  .post-content h6 {
+    color: var(--primary-color);
+    margin-top: 35px;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+
+  .post-content h2 {
+    font-size: 1.5rem;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .post-content h3 {
+    font-size: 1.3rem;
+    color: #2980b9;
+  }
+
+  .post-content p {
+    margin-bottom: 18px;
+  }
+
+  .post-content code {
+    background-color: #e8eaed;
+    padding: 3px 7px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier,
+      monospace;
+    color: #c0392b;
+    font-size: 0.9em;
+  }
+
+  .post-content pre {
+    background-color: #2d2d2d;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 25px 0;
+    font-size: 0.9em;
+    line-height: 1.5;
+    position: relative;
+  }
+
+  .post-content pre code {
+    background-color: transparent;
+    padding: 0;
+    color: inherit;
+  }
+
+  .copy-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3498db;
+    border: 1px solid #2980b9;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+  }
+
+  .copy-button:hover {
+    background: #2980b9;
+    border-color: #2471a3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .copy-button.copied {
+    background: #4caf50;
+    border-color: #4caf50;
+  }
+
+  /* Mermaid diagram styles */
+  .mermaid {
+    background-color: #f8f9fa;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 25px 0;
+    text-align: center;
+  }
+
+  /* TABLE STYLES */
+  .post-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 25px 0;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    border-radius: 8px;
+  }
+
+  .post-content table th,
+  .post-content table td {
+    padding: 12px 15px;
+    border: 1px solid var(--border-color);
+    text-align: left;
+  }
+
+  /* 确保表格头部样式正确 */
+  .post-content table thead {
+    background-color: var(--secondary-color);
+    color: white;
+  }
+
+  /* 覆盖pandoc生成的.header类样式 */
+  .post-content table tr.header {
+    background-color: var(--secondary-color) !important;
+    color: white !important;
+  }
+
+  .post-content table tr.header th {
+    color: white !important;
+  }
+
+  .post-content table tbody tr:nth-of-type(even) {
+    background-color: rgba(233, 236, 239, 0.5);
+  }
+
+  .post-content table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+  }
+
+  /* 响应式表格 */
+  @media (max-width: 768px) {
+    .post-content table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .article-layout {
+      flex-direction: column;
+    }
+
+    .toc-sidebar {
+      width: 100%;
+      position: static;
+      max-height: none;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .post {
+      padding: 20px;
+    }
+
+    .post-title {
+      font-size: 1.6rem;
+    }
+
+    .post-content {
+      font-size: 1rem;
+    }
+
+    .article-layout {
+      padding: 0 15px;
+    }
+  }
+</style>
+
+<!-- 引入本地 Mermaid 库 -->
+<script src="../../js/mermaid.min.js"></script>
+<script>
+  // 关键修复：初始化时立即禁止自动渲染
+  if (typeof mermaid !== "undefined") {
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      securityLevel: "loose",
+    });
+  }
+</script>
+
+<div class="article-layout">
+  <div class="main-content">
+    <article class="post">
+      <header class="post-header">
+        <h1 class="post-title">MySQL 主从复制 1032 错误：一次从 125 天积压到完美修复的全过程</h1>
+        <div class="post-meta">
+          <div class="post-date">2026/7/29</div>
+          <div class="post-category">2026-07</div>
+        </div>
+      </header>
+      <div class="warning">
+        ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+      </div>
+      <div class="post-content" id="post-content"><blockquote>
+<p>标签：MySQL, 主从复制, 1032, HA_ERR_KEY_NOT_FOUND, Percona Toolkit</p>
+</blockquote>
+<hr>
+<h2 id="一、前言">一、前言</h2>
+<p>MySQL 主从复制是保证高可用的基石，但也是最容易出问题的环节之一。<strong>Error 1032（HA_ERR_KEY_NOT_FOUND）</strong>——&quot;从库找不到要更新的行&quot;——是 ROW 格式复制下最常见的错误之一。</p>
+<p>本文记录了一次真实的故障排查与修复过程：从发现复制中断，到分析根因，再到最终修复，以及后续的预防措施。希望能给遇到类似问题的同行一些参考。</p>
+<hr>
+<h2 id="二、故障现象">二、故障现象</h2>
+<p>某天收到告警，从库复制中断。<code>SHOW SLAVE STATUS</code> 输出如下：</p>
+<pre><code>Slave_IO_Running: Yes
+Slave_SQL_Running: No
+Last_Error: Could not execute Update_rows event on table db_9buqi.local_goods_sku;
+            Can&#39;t find record in &#39;local_goods_sku&#39;, Error_code: 1032;
+            handler error HA_ERR_KEY_NOT_FOUND;
+            the event&#39;s master log mysql-bin.000258, end_log_pos 2232952
+</code></pre>
+<p><strong>含义</strong>：主库 binlog 中有一条 UPDATE 语句，要更新 <code>local_goods_sku</code> 表中的某行记录，但从库上找不到这行数据，SQL 线程中断。</p>
+<hr>
+<h2 id="三、问题根因分析">三、问题根因分析</h2>
+<h3 id="31-为什么会出现-1032？">3.1 为什么会出现 1032？</h3>
+<p>ROW 格式下，UPDATE 事件会记录完整的旧行数据（WHERE 条件）和新行数据（SET 部分）。从库执行时，拿着 WHERE 条件去表中定位，如果找不到匹配的行，就报 1032。</p>
+<h3 id="32-排查可能的原因">3.2 排查可能的原因</h3>
+<table>
+<thead>
+<tr>
+<th align="left">可能原因</th>
+<th align="left">排查结论</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">从库有人手动删除了数据</td>
+<td align="left">❌ 排除（从库无人操作，但未开启 <code>super_read_only</code>）</td>
+</tr>
+<tr>
+<td align="left">表没有主键导致定位失败</td>
+<td align="left">❌ 排除（<code>local_goods_sku</code> 有主键 <code>id</code>）</td>
+</tr>
+<tr>
+<td align="left">之前跳过错误留下的后遗症</td>
+<td align="left">✅ <strong>符合</strong>（之前可能已经有过 1032/1062 被跳过，累积了不一致）</td>
+</tr>
+<tr>
+<td align="left">binlog 被 PURGE 导致历史 INSERT 丢失</td>
+<td align="left">❌ 排除（<code>expire_logs_days=0</code>，binlog 永不过期）</td>
+</tr>
+<tr>
+<td align="left">从库搭建时备份不完整</td>
+<td align="left">✅ <strong>最可能的原因</strong>（备份时的数据快照落后于主库，部分行从未同步）</td>
+</tr>
+</tbody></table>
+<h3 id="33-更深层的问题">3.3 更深层的问题</h3>
+<p>连续多次 1032 出现在同一张表 <code>local_goods_sku</code> 上，说明<strong>缺失的数据不止一行</strong>。单纯跳过错误（<code>sql_slave_skip_counter = 1</code>）只能让复制暂时恢复，遇到下一行又会卡住。</p>
+<hr>
+<h2 id="四、修复过程">四、修复过程</h2>
+<h3 id="41-第一阶段：临时跳过，恢复复制">4.1 第一阶段：临时跳过，恢复复制</h3>
+<pre><code class="language-sql">STOP SLAVE;
+SET GLOBAL sql_slave_skip_counter = 1;
+START SLAVE;
+</code></pre>
+<p><strong>结果</strong>：复制短暂恢复，但很快又遇到下一个 1032，中断。</p>
+<p><strong>教训</strong>：跳过只是治标，不能治本。缺失的数据行还在，后续对该行的任何操作都会再次触发 1032。</p>
+<h3 id="42-第二阶段：安装-percona-toolkit">4.2 第二阶段：安装 Percona Toolkit</h3>
+<p>Percona Toolkit 是 MySQL 运维的瑞士军刀，包含 <code>pt-table-checksum</code>（一致性校验）和 <code>pt-table-sync</code>（差异修复）等工具。</p>
+<pre><code class="language-bash"># 安装 Percona 仓库
+yum install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+percona-release enable tools release
+
+# 安装 toolkit
+yum install -y percona-toolkit
+
+# 验证
+pt-table-checksum --version
+</code></pre>
+<blockquote>
+<p>⚠️ <strong>踩坑记录</strong>：安装过程中遇到了镜像源 404、下载慢、SSH 断开等问题。最终通过 <code>nohup</code> 后台下载完成安装。</p>
+</blockquote>
+<h3 id="43-第三阶段：尝试全量校验（遇到新问题）">4.3 第三阶段：尝试全量校验（遇到新问题）</h3>
+<pre><code class="language-bash">pt-table-checksum --host=主库IP --user=xxx --ask-pass --recursion-method=hosts
+</code></pre>
+<p><strong>卡住了</strong>，原因是：</p>
+<ol>
+<li><strong>从库配置了 <code>replicate_do_db</code> 白名单</strong>，只同步指定的数据库</li>
+<li>pt-table-checksum 默认在主库创建 <code>percona.checksums</code> 结果表</li>
+<li>但 <code>percona</code> 库不在 <code>replicate_do_db</code> 白名单中</li>
+<li>结果表无法同步到从库，工具一直等待</li>
+</ol>
+<p>解决方案：将结果表建在白名单内的库中，使用 DSN 模式手动指定从库连接。</p>
+<pre><code class="language-bash">pt-table-checksum --host=主库IP --user=xxx --ask-pass \
+  --recursion-method=dsn=D=percona,t=dsns \
+  --replicate=db_9buqi_coupon.checksums
+</code></pre>
+<p>但此时 <code>Slave_SQL_Running=No</code>，工具仍无法正常工作。</p>
+<h3 id="44-第四阶段：直接修复单张表">4.4 第四阶段：直接修复单张表</h3>
+<p>跳过复杂的全量校验流程，直接用 <code>pt-table-sync</code> 修复问题表：</p>
+<pre><code class="language-bash">pt-table-sync --ask-pass \
+  h=主库IP,u=xxx h=127.0.0.1,u=xxx \
+  --databases=db_9buqi --tables=local_goods_sku \
+  --execute --no-check-slave
+</code></pre>
+<p>这条命令直接对比主从 <code>local_goods_sku</code> 表，找出从库缺失的行并 INSERT 进去。</p>
+<p><strong>修复成功，复制恢复！</strong></p>
+<h3 id="45-第五阶段：处理-relay-log-积压">4.5 第五阶段：处理 relay log 积压</h3>
+<p>修复了当前错误，但由于从库 SQL 线程中断了很久（<strong>125 天</strong>），relay log 里积压了大量事件，其中包含重复的 DDL（错误码 1060/1061）、重复的 INSERT（1062）、以及找不到行的 UPDATE/DELETE（1032）。</p>
+<p>使用 <code>pt-slave-restart</code> 自动跳过这些已知错误：</p>
+<pre><code class="language-bash">pt-slave-restart --user=xxx --ask-pass \
+  --error-numbers=1032,1054,1060,1061,1062,1146
+</code></pre>
+<p><strong>追赶速度</strong>：从 <code>Seconds_Behind_Master = 10,827,922 秒</code>（约 125 天），以约每分钟追上 11,784 秒数据的速度，最终耗时约 2 天追完所有积压。</p>
+<h3 id="46-第六阶段：全量校验与修复">4.6 第六阶段：全量校验与修复</h3>
+<p>复制追上后，进行全量校验：</p>
+<pre><code class="language-bash">pt-table-checksum --host=主库IP --user=xxx --ask-pass \
+  --recursion-method=dsn=D=percona,t=dsns \
+  --replicate=db_9buqi_coupon.checksums
+</code></pre>
+<p>发现 <strong>227 张表</strong>存在主从数据差异。使用 <code>pt-table-sync</code> 修复：</p>
+<pre><code class="language-bash">pt-table-sync --sync-to-master h=127.0.0.1,u=xxx --ask-pass \
+  --replicate=db_9buqi_coupon.checksums --execute
+</code></pre>
+<p><strong>遇到新问题</strong>：部分表没有主键或唯一索引，pt-table-sync 拒绝执行。最终采用 <strong>mysqldump 增量导出+导入</strong> 的方式修复剩余的差异表。</p>
+<h3 id="47-最终结果">4.7 最终结果</h3>
+<table>
+<thead>
+<tr>
+<th align="left">指标</th>
+<th align="left">修复前</th>
+<th align="left">修复后</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Slave_IO_Running</td>
+<td align="left">Yes</td>
+<td align="left">Yes ✅</td>
+</tr>
+<tr>
+<td align="left">Slave_SQL_Running</td>
+<td align="left"><strong>No</strong></td>
+<td align="left"><strong>Yes</strong> ✅</td>
+</tr>
+<tr>
+<td align="left">Last_Error</td>
+<td align="left">1032 / HA_ERR_KEY_NOT_FOUND</td>
+<td align="left">空 ✅</td>
+</tr>
+<tr>
+<td align="left">Seconds_Behind_Master</td>
+<td align="left">10,827,922 秒（125 天）</td>
+<td align="left"><strong>0</strong> ✅</td>
+</tr>
+<tr>
+<td align="left">数据一致性</td>
+<td align="left">227 张表有差异</td>
+<td align="left"><strong>全部修复</strong> ✅</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="五、关键技术点总结">五、关键技术点总结</h2>
+<h3 id="51-关于-1032-错误">5.1 关于 1032 错误</h3>
+<p><strong>核心原因</strong>：从库缺失了主库存在的行。</p>
+<p><strong>根治方法</strong>：把缺失的数据补上（<code>pt-table-sync</code> 或 <code>mysqldump</code>），而不是跳过错误。</p>
+<h3 id="52-关于-percona-toolkit">5.2 关于 Percona Toolkit</h3>
+<table>
+<thead>
+<tr>
+<th align="left">工具</th>
+<th align="left">用途</th>
+<th align="left">注意事项</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left"><code>pt-table-checksum</code></td>
+<td align="left">找出主从差异</td>
+<td align="left">复制正常运行才能用 <code>--recursion-method=hosts</code>；否则用 <code>dsn</code> 模式</td>
+</tr>
+<tr>
+<td align="left"><code>pt-table-sync</code></td>
+<td align="left">修复差异</td>
+<td align="left">没有主键的表需单独处理</td>
+</tr>
+<tr>
+<td align="left"><code>pt-slave-restart</code></td>
+<td align="left">自动跳过已知错误</td>
+<td align="left">配合 <code>--error-numbers</code> 快速追赶积压</td>
+</tr>
+</tbody></table>
+<h3 id="53-关于-replicate_do_db">5.3 关于 <code>replicate_do_db</code></h3>
+<p>白名单机制会影响工具的运行。校验结果表的数据库必须在白名单中，否则工具会卡死。</p>
+<p>解决方案：</p>
+<ul>
+<li>用 <code>--replicate=白名单内库名.checksums</code> 指定结果表位置</li>
+<li>或者使用 DSN 模式直接写入从库</li>
+</ul>
+<h3 id="54-关于-relay-log-积压">5.4 关于 relay log 积压</h3>
+<ul>
+<li>IO 线程停止时，如果 relay log 持续堆积，恢复后需要很长时间追赶</li>
+<li><code>pt-slave-restart</code> 可以自动跳过重复的错误，加快追赶速度</li>
+<li>追赶速度取决于：错误数量、表大小、是否开启二进制日志等</li>
+</ul>
+<hr>
+<h2 id="六、重要的发现">六、重要的发现</h2>
+<h3 id="61-seconds_behind_master-的解读">6.1 Seconds_Behind_Master 的解读</h3>
+<pre><code>第一次查看：10,827,922 秒 ≈ 125 天
+     ↓
+     ↓ 经过约 48 小时追赶
+     ↓
+最终结果： 0 秒（完全追上）
+</code></pre>
+<p>追赶速度并非恒定，前期大量 DDL 错误被跳过时较慢，后期正常数据执行时变快。</p>
+<h3 id="62-表结构差异的连锁反应">6.2 表结构差异的连锁反应</h3>
+<p>主库执行了 ALTER TABLE 加字段，但从库没有同步执行。导致：</p>
+<ol>
+<li>relay log 中的 DDL 在从库报 <strong>1060（Duplicate column）</strong></li>
+<li>relay log 中的 DML 在从库报 <strong>1054（Unknown column）</strong></li>
+<li>复制彻底卡死</li>
+</ol>
+<p><strong>教训</strong>：DDL 变更必须主从同步执行，或者使用 Gh-ost / pt-online-schema-change 等工具统一管理。</p>
+<h3 id="63-没有主键的表">6.3 没有主键的表</h3>
+<p>没有主键的表在 ROW 格式复制下风险极高：</p>
+<ul>
+<li>UPDATE 时无法精确定位行</li>
+<li>DELETE 时可能误删多行</li>
+<li>pt-table-sync 无法自动修复</li>
+</ul>
+<p><strong>建议</strong>：所有业务表都必须有主键。</p>
+<hr>
+<h2 id="七、预防措施清单">七、预防措施清单</h2>
+<h3 id="71-必须做的">7.1 必须做的</h3>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <strong>开启从库只读</strong>：<code>super_read_only = 1</code></li>
+<li><input checked="" disabled="" type="checkbox"> <strong>所有表加主键</strong>：尤其是业务表</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>DDL 变更统一管理</strong>：主从同步执行</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>定期一致性检查</strong>：建议每周/每月一次 pt-table-checksum</li>
+</ul>
+<h3 id="72-建议做的">7.2 建议做的</h3>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <strong>监控复制状态</strong>：Slave_IO_Running、Slave_SQL_Running、Seconds_Behind_Master</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>提前安装 Percona Toolkit</strong>：不要等出问题了再装</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>配置 binlog 保留策略</strong>：根据磁盘空间设置合理的过期时间</li>
+<li><input checked="" disabled="" type="checkbox"> <strong>备份时记录准确的 binlog 位置</strong>：使用 <code>--master-data=2 --single-transaction</code></li>
+</ul>
+<h3 id="73-定期检查-sql">7.3 定期检查 SQL</h3>
+<pre><code class="language-sql">-- 检查复制状态
+SHOW SLAVE STATUS\G
+
+-- 检查没有主键的表
+SELECT TABLE_SCHEMA, TABLE_NAME
+FROM information_schema.TABLES T
+WHERE TABLE_TYPE = &#39;BASE TABLE&#39;
+  AND NOT EXISTS (
+    SELECT 1 FROM information_schema.TABLE_CONSTRAINTS TC
+    WHERE TC.TABLE_SCHEMA = T.TABLE_SCHEMA
+      AND TC.TABLE_NAME = T.TABLE_NAME
+      AND TC.CONSTRAINT_TYPE = &#39;PRIMARY&#39;
+  );
+
+-- 检查从库是否只读
+SHOW VARIABLES LIKE &#39;super_read_only&#39;;
+</code></pre>
+<hr>
+<h2 id="八、常用命令速查">八、常用命令速查</h2>
+<pre><code class="language-bash"># 查看从库状态
+mysql -e &quot;SHOW SLAVE STATUS\G&quot;
+
+# 跳过当前错误
+mysql -e &quot;STOP SLAVE; SET GLOBAL sql_slave_skip_counter = 1; START SLAVE;&quot;
+
+# 安装 Percona Toolkit
+yum install -y https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+percona-release enable tools release
+yum install -y percona-toolkit
+
+# 全量校验（复制正常时）
+pt-table-checksum --host=主库IP --user=用户名 --ask-pass --recursion-method=hosts
+
+# 全量校验（复制中断时，DSN 模式）
+pt-table-checksum --host=主库IP --user=用户名 --ask-pass \
+  --recursion-method=dsn=D=percona,t=dsns \
+  --replicate=白名单库.checksums
+
+# 修复单表差异
+pt-table-sync --ask-pass h=主库IP,u=用户名 h=从库IP,u=用户名 \
+  --databases=库名 --tables=表名 --execute
+
+# 根据校验结果修复所有差异
+pt-table-sync --sync-to-master h=127.0.0.1,u=用户名 --ask-pass \
+  --replicate=库名.checksums --execute
+
+# 自动跳过已知错误，追赶积压
+pt-slave-restart --user=用户名 --ask-pass \
+  --error-numbers=1032,1054,1060,1061,1062,1146
+
+# mysqldump 增量修复（替换已存在的行）
+mysqldump -h 主库IP -u 用户名 -p --no-create-info --single-transaction --replace \
+  库名 表名 | mysql -h 从库IP -u 用户名 -p 库名
+
+# 开启从库只读
+mysql -e &quot;SET GLOBAL super_read_only = 1; SET GLOBAL read_only = 1;&quot;
+</code></pre>
+<hr>
+<h2 id="九、写在最后">九、写在最后</h2>
+<p>MySQL 主从复制的问题，90% 都是<strong>数据一致性</strong>的问题。而数据一致性问题的根源，往往是<strong>人为操作不当</strong>——DDL 只改了主库、从库被写入、备份不完整、没有主键……</p>
+<p><strong>工具是辅助，规范才是根本。</strong></p>
+<p>一个健康的主从架构，需要：</p>
+<ol>
+<li><strong>从库只读</strong>（<code>super_read_only = 1</code>）</li>
+<li><strong>所有表有主键</strong></li>
+<li><strong>DDL 变更流程化</strong></li>
+<li><strong>定期一致性校验</strong></li>
+</ol>
+<p>做到这四点，1032 基本不会再来找你。</p>
+</div>
+    </article>
+  </div>
+  <aside class="toc-sidebar" id="toc-sidebar">
+    <div class="toc-header">
+      <h3>文章目录</h3>
+    </div>
+    <nav class="toc-nav" id="toc-nav">
+      <!-- 目录内容将通过JavaScript自动生成 -->
+    </nav>
+  </aside>
+</div>
+
+<script>
+  // Add copy buttons to code blocks
+  function addCopyButtons() {
+    const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+    sourceCodeBlocks.forEach(function (block) {
+      if (block.querySelector(".copy-button")) return;
+      const preElement = block.querySelector("pre");
+      if (!preElement) return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = preElement.querySelector("code");
+        const text = code ? code.innerText : preElement.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+
+    const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+    allPreBlocks.forEach(function (block) {
+      if (block.closest(".sourceCode") || block.querySelector(".copy-button"))
+        return;
+
+      const button = document.createElement("button");
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.setAttribute("aria-label", "复制代码");
+
+      button.addEventListener("click", function () {
+        const code = block.querySelector("code");
+        const text = code ? code.innerText : block.innerText;
+
+        navigator.clipboard
+          .writeText(text)
+          .then(function () {
+            button.textContent = "已复制";
+            button.classList.add("copied");
+
+            setTimeout(function () {
+              button.textContent = "复制";
+              button.classList.remove("copied");
+            }, 3000);
+          })
+          .catch(function (err) {
+            console.error("复制失败: ", err);
+            button.textContent = "失败";
+            setTimeout(function () {
+              button.textContent = "复制";
+            }, 3000);
+          });
+      });
+
+      block.appendChild(button);
+    });
+  }
+
+  // 生成文章目录
+  function generateTableOfContents() {
+    const postContent = document.getElementById("post-content");
+    const tocNav = document.getElementById("toc-nav");
+
+    if (!postContent || !tocNav) {
+      console.log("Missing postContent or tocNav element");
+      return;
+    }
+
+    // 查找所有标题元素
+    const headings = postContent.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    console.log("Found headings:", headings.length);
+
+    if (headings.length === 0) {
+      // 如果没有标题，隐藏目录
+      console.log("No headings found, hiding TOC");
+      const tocSidebar = document.getElementById("toc-sidebar");
+      if (tocSidebar) tocSidebar.style.display = "none";
+      return;
+    }
+
+    // 清空目录容器
+    tocNav.innerHTML = "";
+
+    // 创建目录结构
+    const tocList = document.createElement("ul");
+    tocList.className = "toc-list";
+
+    let currentLevel = 1;
+    let currentList = tocList;
+    let listStack = [tocList];
+
+    headings.forEach((heading, index) => {
+      // 强制为每个标题设置标准化的ID（始终重写现有ID）
+      const normalizedId = "heading-" + index;
+      heading.id = normalizedId;
+
+      const level = parseInt(heading.tagName.charAt(1));
+      const title = heading.textContent.trim();
+
+      // 创建目录项
+      const tocItem = document.createElement("li");
+      tocItem.className = "toc-item toc-level-" + level;
+
+      const tocLink = document.createElement("a");
+      tocLink.href = "javascript:void(0)"; // 避免触发路由
+      tocLink.setAttribute("data-target", heading.id); // 存储目标ID
+      tocLink.textContent = title;
+      tocLink.className = "toc-link";
+
+      tocItem.appendChild(tocLink);
+
+      // 处理层级关系
+      if (level > currentLevel) {
+        // 创建新的子列表
+        const newList = document.createElement("ul");
+        newList.className = "toc-sublist";
+        // 检查是否有父元素
+        const parentList = listStack[listStack.length - 1];
+        if (parentList.lastElementChild) {
+          parentList.lastElementChild.appendChild(newList);
+        } else {
+          // 如果没有父元素，直接添加到当前列表
+          parentList.appendChild(newList);
+        }
+        listStack.push(newList);
+        currentList = newList;
+      } else if (level < currentLevel) {
+        // 返回到上一级
+        while (listStack.length > level) {
+          listStack.pop();
+        }
+        currentList = listStack[listStack.length - 1];
+      }
+
+      currentList.appendChild(tocItem);
+      currentLevel = level;
+    });
+
+    tocNav.appendChild(tocList);
+    console.log("TOC generated successfully");
+
+    // 高亮当前章节
+    highlightCurrentSection();
+
+    // 滚动监听
+    window.addEventListener("scroll", highlightCurrentSection);
+
+    // 为目录链接添加点击事件
+    setTimeout(() => {
+      const tocLinks = document.querySelectorAll(".toc-link");
+      tocLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute("data-target");
+          if (targetId) {
+            const targetElement = document.getElementById(targetId);
+            if (targetElement) {
+              targetElement.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "nearest",
+              });
+            }
+          }
+        });
+      });
+    }, 200); // 延迟确保目录已生成
+  }
+
+  // 高亮当前阅读的章节
+  function highlightCurrentSection() {
+    const headings = document.querySelectorAll(
+      ".post-content h1, .post-content h2, .post-content h3, .post-content h4, .post-content h5, .post-content h6"
+    );
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeading = null;
+    const scrollPosition = window.pageYOffset + 100;
+
+    // 找到当前可见的标题
+    for (let i = headings.length - 1; i >= 0; i--) {
+      if (headings[i].offsetTop <= scrollPosition) {
+        currentHeading = headings[i];
+        break;
+      }
+    }
+
+    // 清除所有活动状态
+    tocLinks.forEach((link) => link.classList.remove("active"));
+
+    // 高亮当前章节
+    if (currentHeading) {
+      const activeLink = document.querySelector(
+        '.toc-link[data-target="' + currentHeading.id + '"]'
+      );
+      if (activeLink) {
+        activeLink.classList.add("active");
+      }
+    }
+  }
+
+  // Initialize mermaid diagrams - 只在直接访问 fragment 时运行
+  async function initMermaid() {
+    // 检查是否在 SPA 环境中
+    if (window.IN_SPA_MODE === true) {
+      console.log(
+        "[Mermaid Fragment] In SPA mode, skipping fragment initialization"
+      );
+      return;
+    }
+
+    if (typeof mermaid === "undefined") {
+      console.log("[Mermaid Fragment] Library not loaded");
+      return;
+    }
+
+    const mermaidPreElements = document.querySelectorAll(
+      "pre.mermaid, div.mermaid"
+    );
+    if (mermaidPreElements.length === 0) {
+      console.log("[Mermaid Fragment] No diagrams found");
+      return;
+    }
+
+    console.log(
+      "[Mermaid Fragment] 找到",
+      mermaidPreElements.length,
+      "个 Mermaid 图表，准备渲染..."
+    );
+
+    // 处理 DOM 结构
+    const elementsToRun = [];
+
+    mermaidPreElements.forEach((element) => {
+      // 获取原始图表代码
+      const graphDefinition = element.textContent.trim();
+      console.log(
+        "[Mermaid Fragment] First 100 chars:",
+        graphDefinition.substring(0, 100)
+      );
+
+      // 创建一个新的 div 来替换旧的 pre/div，确保它是"干净"的
+      const newDiv = document.createElement("div");
+      newDiv.className = "mermaid";
+      newDiv.textContent = graphDefinition;
+      newDiv.setAttribute("data-mermaid-code", graphDefinition);
+
+      element.parentNode.replaceChild(newDiv, element);
+      elementsToRun.push(newDiv);
+    });
+
+    // 手动触发渲染
+    try {
+      await mermaid.run({
+        nodes: elementsToRun,
+      });
+      console.log("[Mermaid Fragment] 渲染完成");
+    } catch (err) {
+      console.error("[Mermaid Fragment] 渲染失败:", err);
+      // 出错时显示原始代码，避免白屏
+      elementsToRun.forEach((el) => {
+        el.style.whiteSpace = "pre";
+        el.style.border = "1px solid red";
+      });
+    }
+  }
+
+  // Initialize copy buttons and TOC after content loads
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () {
+      console.log("DOM loading, initializing...");
+      addCopyButtons();
+      setTimeout(generateTableOfContents, 100);
+      setTimeout(initMermaid, 200);
+    });
+  } else {
+    console.log("DOM already loaded, initializing...");
+    addCopyButtons();
+    setTimeout(generateTableOfContents, 100);
+    setTimeout(initMermaid, 200);
+  }
+</script>

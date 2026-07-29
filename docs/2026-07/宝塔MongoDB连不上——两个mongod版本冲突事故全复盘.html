@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/ai-blog/favicon.svg?v=3">
+    <title>宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘</title>
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘
+
+一句话梗概： 宝塔的 MongoDB 突然宕机，手动启动时报 exit code 14，折腾半天发现系统里藏着两个不同版本的 mongod 二进制——宝塔 v3.6 的数据文件被手误用系统 v6.0 去启动，版本不兼容直接 abort。本文还原完整..." />
+    <meta name="keywords" content="宝塔, MongoDB, 连不上, 两个, mongod, 版本冲突事故全复盘" />
+    <meta name="author" content="AI 个人笔记" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘" />
+    <meta property="og:description" content="宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘
+
+一句话梗概： 宝塔的 MongoDB 突然宕机，手动启动时报 exit code 14，折腾半天发现系统里藏着两个不同版本的 mongod 二进制——宝塔 v3.6 的数据文件被手误用系统 v6.0 去启动，版本不兼容直接 abort。本文还原完整..." />
+    <meta property="og:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+    <meta property="og:url" content="https://cxy1984.github.io/ai-blog/docs/2026-07/宝塔MongoDB连不上——两个mongod版本冲突事故全复盘.html" />
+    <meta property="og:site_name" content="AI 个人笔记" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘" />
+    <meta property="twitter:description" content="宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘
+
+一句话梗概： 宝塔的 MongoDB 突然宕机，手动启动时报 exit code 14，折腾半天发现系统里藏着两个不同版本的 mongod 二进制——宝塔 v3.6 的数据文件被手误用系统 v6.0 去启动，版本不兼容直接 abort。本文还原完整..." />
+    <meta property="twitter:image" content="https://cxy1984.github.io/ai-blog/images/og-image.png" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://cxy1984.github.io/ai-blog/docs/2026-07/宝塔MongoDB连不上——两个mongod版本冲突事故全复盘.html" />
+
+    <!-- Favicon -->
+
+    <style>
+      /* Google Fonts for better typography */
+      @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap");
+
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #f8f9fa;
+        --text-color: #34495e;
+        --border-color: #e9ecef;
+        --card-bg: #ffffff;
+        --hover-color: #f8f9fa;
+      }
+
+      :root.dark-mode {
+        --primary-color: #ecf0f1;
+        --secondary-color: #3498db;
+        --accent-color: #e74c3c;
+        --bg-color: #1a1a1a;
+        --text-color: #e0e0e0;
+        --border-color: #333333;
+        --card-bg: #2d2d2d;
+        --hover-color: #3a3a3a;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", "Noto Sans SC", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+        display: flex;
+        gap: 30px;
+      }
+
+      .header {
+        /* display: flex; */
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 0;
+        margin-bottom: 30px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .github-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #24292e;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 30px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background 0.3s;
+      }
+
+      .github-link:hover {
+        background: #000;
+      }
+
+      .theme-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+      }
+
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: scale(1.1);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .theme-toggle svg {
+        width: 24px;
+        height: 24px;
+        color: #ce3321;
+        transition: transform 0.3s ease;
+      }
+
+      .theme-toggle:hover svg {
+        transform: rotate(20deg);
+      }
+
+      :root.dark-mode .theme-toggle {
+        background: rgba(45, 45, 45, 0.95);
+        border-color: rgba(200, 200, 200, 0.3);
+      }
+
+      :root.dark-mode .theme-toggle svg {
+        color: #ffc107;
+      }
+
+      :root.dark-mode .theme-toggle:hover {
+        background: rgba(60, 60, 60, 1);
+      }
+
+      .main-content {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .post {
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+      }
+
+      .post-header {
+        margin-bottom: 25px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-title {
+        color: var(--primary-color);
+        font-size: 2rem;
+        margin-bottom: 15px;
+      }
+
+      .post-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #6c757d;
+        font-size: 0.95rem;
+      }
+
+      :root.dark-mode .post-meta {
+        color: #a0a0a0;
+      }
+
+      .post-date {
+        background-color: #e3f2fd;
+        color: var(--secondary-color);
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-date {
+        background-color: rgba(52, 152, 219, 0.2);
+        color: #64b5f6;
+      }
+
+      .post-category {
+        background-color: #e8f5e9;
+        color: #4caf50;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: 500;
+      }
+
+      :root.dark-mode .post-category {
+        background-color: rgba(76, 175, 80, 0.2);
+        color: #81c784;
+      }
+
+      .post-content {
+        font-size: 1.05rem;
+        line-height: 1.7;
+      }
+
+      .post-content h1 {
+        color: var(--primary-color);
+        font-size: 1.8rem;
+        margin: 35px 0 25px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      /* Table of Contents */
+      .toc-container {
+        width: 300px;
+        flex-shrink: 0;
+      }
+
+      .toc {
+        position: sticky;
+        top: 135px;
+        background: var(--card-bg);
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border: 1px solid var(--border-color);
+        max-height: calc(100vh - 150px);
+        overflow-y: auto;
+      }
+
+      .toc h2 {
+        color: var(--primary-color);
+        font-size: 1.4rem;
+        margin-top: 0;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .toc ul {
+        list-style: none;
+        padding-left: 0;
+      }
+
+      .toc ul ul {
+        padding-left: 20px;
+      }
+
+      .toc li {
+        margin-bottom: 8px;
+      }
+
+      .toc a {
+        text-decoration: none;
+        color: var(--text-color);
+        font-size: 0.95rem;
+        transition: color 0.2s;
+      }
+
+      .toc a:hover {
+        color: var(--secondary-color);
+      }
+
+      .toc a.active {
+        color: var(--secondary-color);
+        font-weight: 500;
+      }
+
+      .post-content h2 {
+        color: var(--primary-color);
+        font-size: 1.5rem;
+        margin: 30px 0 20px 0;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content h3 {
+        color: #2980b9;
+        font-size: 1.3rem;
+        margin: 25px 0 15px 0;
+      }
+
+      .post-content p {
+        margin-bottom: 18px;
+      }
+
+      .post-content ul,
+      .post-content ol {
+        margin: 20px 0;
+        padding-left: 35px;
+      }
+
+      .post-content li {
+        margin-bottom: 10px;
+      }
+
+      .post-content code {
+        background-color: #e8eaed;
+        padding: 3px 7px;
+        border-radius: 4px;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        color: #c0392b;
+        font-size: 0.9em;
+      }
+
+      :root.dark-mode .post-content code {
+        background-color: #e8eaed;
+        color: #ff7043;
+      }
+
+      .post-content pre {
+        background-color: #f6f8fa;
+        color: #24292e;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 25px 0;
+        font-size: 0.9em;
+        line-height: 1.5;
+        position: relative;
+        overflow: visible;
+        border: 1px solid #e1e4e8;
+      }
+
+      :root.dark-mode .post-content pre {
+        background-color: #1e1e1e;
+        color: #f8f8f2;
+        border-color: #333333;
+      }
+
+      :root.dark-mode .post-content pre code {
+        color: #f8f8f2;
+        background-color: transparent;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+          Courier, monospace;
+        font-size: 0.9em;
+      }
+
+      .copy-button {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #1f2020;
+        border: 1px solid #1f2020;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+      }
+
+      .copy-button:hover {
+        background: #4caf50;
+        border-color: #4caf50;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .copy-button.copied {
+        background-color: #27ae60;
+      }
+
+      .post-content pre code {
+        background-color: transparent;
+        padding: 0;
+        color: inherit;
+      }
+
+      .post-content blockquote {
+        background-color: #eaf2f8;
+        border-left: 5px solid var(--secondary-color);
+        padding: 20px;
+        margin: 25px 0;
+        border-radius: 0 5px 5px 0;
+      }
+
+      :root.dark-mode .post-content blockquote {
+        background-color: rgba(52, 152, 219, 0.15);
+        color: #b3e5fc;
+      }
+
+      .post-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 25px 0;
+        font-size: 0.95rem;
+        text-align: left;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        table-layout: auto; /* 让列宽根据内容自动调整 */
+      }
+
+      .post-content th,
+      .post-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid var(--border-color);
+        word-wrap: break-word; /* 确保长内容可以换行 */
+      }
+
+      .post-content th {
+        background: linear-gradient(135deg, var(--secondary-color), #2980b9);
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      .post-content tbody tr {
+        background-color: var(--card-bg);
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+
+      :root.dark-mode .post-content tbody tr:nth-of-type(even) {
+        background-color: rgba(255, 255, 255, 0.05);
+      }
+
+      .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+
+      :root.dark-mode .post-content tbody tr:hover {
+        background-color: rgba(52, 152, 219, 0.2);
+      }
+
+      :root.dark-mode .post-content th,
+      :root.dark-mode .post-content td {
+        border: 1px solid var(--border-color);
+      }
+
+      .post-content a {
+        color: var(--secondary-color);
+        text-decoration: none;
+      }
+
+      .post-content a:hover {
+        text-decoration: underline;
+      }
+
+      .warning {
+        background-color: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 5px;
+        margin: 25px 0;
+        text-align: center;
+        font-size: 0.9rem;
+      }
+
+      :root.dark-mode .warning {
+        background-color: rgba(255, 193, 7, 0.15);
+        border: 1px solid rgba(255, 193, 7, 0.3);
+        color: #ffd54f;
+      }
+
+      .footer {
+        text-align: center;
+        padding: 30px 20px;
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-top: 40px;
+      }
+
+      .back-to-top {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: var(--secondary-color);
+        color: white;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+
+      .back-to-top.visible {
+        opacity: 1;
+      }
+
+      /* Mermaid 图表样式 */
+      .mermaid {
+        background-color: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 20px;
+        margin: 25px 0;
+        text-align: center;
+      }
+
+      :root.dark-mode .mermaid {
+        background-color: #2d2d2d;
+        border: 1px solid #444;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+        }
+
+        .post {
+          padding: 20px;
+        }
+
+        .post-title {
+          font-size: 1.6rem;
+        }
+
+        .header {
+          flex-direction: column;
+          gap: 15px;
+        }
+
+        .post-content {
+          font-size: 1rem;
+        }
+
+        .post-content h1 {
+          font-size: 1.5rem;
+        }
+
+        .post-content h2 {
+          font-size: 1.3rem;
+        }
+
+        .post-content h3 {
+          font-size: 1.1rem;
+        }
+
+        .toc-container {
+          display: none;
+        }
+      }
+    </style>
+    <!-- 引入本地 Mermaid 库 -->
+    <script src="../../js/mermaid.min.js"></script>
+    <script>
+      // 初始化 Mermaid
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "default",
+        // 可以根据需要添加更多配置选项
+        securityLevel: "loose",
+      });
+
+      // 处理 Pandoc 生成的 Mermaid 代码块
+      // Pandoc 将 Mermaid 代码块转换为 <pre class="mermaid"><code>... 格式
+      // 我们需要将其转换为 <div class="mermaid">... 格式以便 Mermaid 渲染
+      document.addEventListener("DOMContentLoaded", function () {
+        const mermaidBlocks = document.querySelectorAll("pre.mermaid code");
+        mermaidBlocks.forEach(function (codeElement) {
+          // 创建新的 div 元素
+          const mermaidDiv = document.createElement("div");
+          mermaidDiv.className = "mermaid";
+          // 将代码内容移到 div 中
+          mermaidDiv.textContent = codeElement.textContent;
+          // 替换原来的 pre 元素
+          codeElement.parentNode.parentNode.replaceChild(
+            mermaidDiv,
+            codeElement.parentNode
+          );
+        });
+
+        // 重新启动 Mermaid 渲染
+        mermaid.init(undefined, document.querySelectorAll(".mermaid"));
+      });
+
+      // 为代码块添加复制按钮
+      function addCopyButtons() {
+        // 处理 Pandoc 生成的代码块结构 (<div class="sourceCode"><pre><code>)
+        const sourceCodeBlocks = document.querySelectorAll(".sourceCode");
+        sourceCodeBlocks.forEach(function (block) {
+          // 检查是否已经有复制按钮
+          if (block.querySelector(".copy-button")) return;
+
+          // 获取 pre 元素
+          const preElement = block.querySelector("pre");
+          if (!preElement) return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = preElement.querySelector("code");
+            const text = code ? code.innerText : preElement.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到 sourceCode div 中
+          block.appendChild(button);
+        });
+
+        // 处理普通的 pre 代码块 (非 Pandoc 生成的)
+        // 先获取所有非 mermaid 的 pre 元素
+        const allPreBlocks = document.querySelectorAll("pre:not(.mermaid)");
+        allPreBlocks.forEach(function (block) {
+          // 检查是否已经在 sourceCode div 中（Pandoc 生成的）或者已经有复制按钮
+          if (
+            block.closest(".sourceCode") ||
+            block.querySelector(".copy-button")
+          )
+            return;
+
+          // 创建复制按钮
+          const button = document.createElement("button");
+          button.className = "copy-button";
+          button.textContent = "复制";
+          button.setAttribute("aria-label", "复制代码");
+
+          // 添加点击事件
+          button.addEventListener("click", function () {
+            // 获取代码文本
+            const code = block.querySelector("code");
+            const text = code ? code.innerText : block.innerText;
+
+            // 复制到剪贴板
+            navigator.clipboard
+              .writeText(text)
+              .then(function () {
+                // 更新按钮状态
+                button.textContent = "已复制";
+                button.classList.add("copied");
+
+                // 3秒后恢复原始状态
+                setTimeout(function () {
+                  button.textContent = "复制";
+                  button.classList.remove("copied");
+                }, 3000);
+              })
+              .catch(function (err) {
+                console.error("复制失败: ", err);
+                button.textContent = "失败";
+                setTimeout(function () {
+                  button.textContent = "复制";
+                }, 3000);
+              });
+          });
+
+          // 将按钮添加到代码块
+          block.appendChild(button);
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="main-content">
+        <article class="post">
+          <header class="post-header">
+            <h1 class="post-title">宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘</h1>
+            <div class="post-meta">
+              <div class="post-date">2026/7/29</div>
+              <div class="post-category">2026-07</div>
+            </div>
+          </header>
+          <div class="warning">
+            ⚠️ 注意：此内容由 AI 协助生成，准确性未经验证，请谨慎使用
+          </div>
+          <div class="post-content" id="post-content"><h1 id="宝塔-mongodb-连不上？两个-mongod-版本冲突事故全复盘">宝塔 MongoDB 连不上？两个 mongod 版本冲突事故全复盘</h1>
+<blockquote>
+<p><strong>一句话梗概：</strong> 宝塔的 MongoDB 突然宕机，手动启动时报 <code>exit code 14</code>，折腾半天发现系统里藏着两个不同版本的 mongod 二进制——宝塔 v3.6 的数据文件被手误用系统 v6.0 去启动，版本不兼容直接 abort。本文还原完整排查链路、误解与弯路、以及治本方案。</p>
+</blockquote>
+<hr>
+<h2 id="一、现象">一、现象</h2>
+<p>早上到公司，收到告警：服务器上宝塔面板的 MongoDB 起不来了，业务全部连不上数据库。</p>
+<hr>
+<h2 id="二、排查过程（按时间线）">二、排查过程（按时间线）</h2>
+<h3 id="1️⃣-检查配置文件">1️⃣ 检查配置文件</h3>
+<p>路径：<code>/www/server/mongodb/config.conf</code></p>
+<p>配置看起来一切正常：</p>
+<ul>
+<li>端口：<code>2708</code></li>
+<li>bindIp：<code>0.0.0.0</code></li>
+<li>认证：开启</li>
+<li>数据目录：<code>/data/mongodb/data</code></li>
+<li>日志路径：<code>/data/mongodb/log/config.log</code></li>
+</ul>
+<h3 id="2️⃣-首次启动--神秘退出码-14">2️⃣ 首次启动 —— 神秘退出码 14</h3>
+<pre><code class="language-bash">/usr/bin/mongod -f /www/server/mongodb/config.conf
+# ERROR: child process failed, exited with 14
+</code></pre>
+<p>退出码 14，但<strong>终端没有打印任何具体错误信息</strong>。排查在此陷入第一个迷雾。</p>
+<h3 id="3️⃣-错误方向：怀疑-lock-文件">3️⃣ 错误方向：怀疑 lock 文件</h3>
+<p>按常见经验，先清理可能残留的锁文件：</p>
+<pre><code class="language-bash">rm -f /data/mongodb/data/mongod.lock
+</code></pre>
+<p>再次启动，<strong>依然退出码 14</strong>。说明根因不是锁文件——方向错了。</p>
+<h3 id="4️⃣-想前台启动看报错，反而更绕">4️⃣ 想前台启动看报错，反而更绕</h3>
+<p>尝试 <code>--no-fork</code> 前台运行，结果新版 mongod 已移除该选项。于是改配置去掉 <code>fork: true</code>，但启动后&quot;看起来没报错就退出了&quot;——</p>
+<blockquote>
+<p><strong>误区：</strong> 日志配置为写文件模式，错误信息全部输出到了日志文件而非终端。改配置去 fork 的方式不仅没解决&quot;看不到错误&quot;的问题，还引入了配置文件被改动的风险。</p>
+</blockquote>
+<h3 id="5️⃣-🔑-关键一步：看日志文件">5️⃣ 🔑 关键一步：看日志文件</h3>
+<pre><code class="language-bash">tail /data/mongodb/log/config.log
+</code></pre>
+<p>终于看到致命错误：</p>
+<pre><code>This version of MongoDB is too recent to start up on the existing data files.
+Try MongoDB 4.2 or earlier.
+</code></pre>
+<blockquote>
+<p>翻译：<strong>当前 mongod 版本太新，读不了现有数据文件。数据是用老版本写的。</strong></p>
+</blockquote>
+<h3 id="6️⃣-核心疑问">6️⃣ 核心疑问</h3>
+<p>&quot;没人更新过 MongoDB，怎么会版本不兼容？&quot;</p>
+<h3 id="7️⃣-💡-破局点：到底用的是哪个-mongod？">7️⃣ 💡 破局点：到底用的是哪个 mongod？</h3>
+<p>分别检查两个 mongod 的版本：</p>
+<table>
+<thead>
+<tr>
+<th>路径</th>
+<th>版本</th>
+<th>来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>/www/server/mongodb/bin/mongod --version</code></td>
+<td><strong>v3.6.2</strong></td>
+<td>宝塔自带，数据由它写入</td>
+</tr>
+<tr>
+<td><code>/usr/bin/mongod --version</code></td>
+<td><strong>v6.0.12</strong></td>
+<td>系统其他来源（yum/手动安装）</td>
+</tr>
+</tbody></table>
+<p><strong>真相大白：</strong> 今天手动启动时一直用的是 <code>/usr/bin/mongod</code>（v6.0），但数据是宝塔 v3.6.2 写入的。大版本跨越（3.6 → 6.0），MongoDB 的向前兼容保护机制直接 abort，抛出退出码 14。</p>
+<p><strong>不是有人升级了 MongoDB，是排查时用错了二进制。</strong></p>
+<hr>
+<h2 id="三、根因总结">三、根因总结</h2>
+<pre><code>系统存在两个 mongod 二进制
+  → 排障时误用 /usr/bin/mongod (v6.0) 启动
+    → 6.0 读取 3.6 的数据文件，版本不兼容
+      → MongoDB 自我保护，abort 退出，exit code 14
+</code></pre>
+<h3 id="误解与弯路回顾">误解与弯路回顾</h3>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>为什么无效</th>
+<th>本该怎么做</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>只查配置文件</td>
+<td>配置无问题，排障方向偏离</td>
+<td>—</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>exit code 14</code> 屏幕无详情</td>
+<td>错误写到了日志文件，而非 stderr</td>
+<td><strong>第一时间 tail 日志文件</strong></td>
+</tr>
+<tr>
+<td>3</td>
+<td>删 <code>mongod.lock</code></td>
+<td>根因不是非正常关闭，删除无效</td>
+<td>区分&quot;打不开&quot;和&quot;启动后崩溃&quot;</td>
+</tr>
+<tr>
+<td>4</td>
+<td>改配置去 fork</td>
+<td>日志仍写文件，终端还是看不到报错</td>
+<td><strong>查看日志文件，检查 mongod 路径</strong></td>
+</tr>
+<tr>
+<td>5</td>
+<td>查两个 mongod 版本</td>
+<td>—</td>
+<td>✅ <strong>真正的破局点</strong></td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="四、解决方案">四、解决方案</h2>
+<p>用与数据匹配的宝塔二进制启动：</p>
+<pre><code class="language-bash">/www/server/mongodb/bin/mongod -f /www/server/mongodb/config.conf
+</code></pre>
+<p>验证监听状态：</p>
+<pre><code class="language-bash">ss -tnlp | grep 2708
+</code></pre>
+<p><strong>服务恢复，数据完好无损，无需迁移、无需降级、无需丢数据。</strong> 整个过程 0 数据损失。</p>
+<hr>
+<h2 id="五、技术深度：为什么大版本不兼容？">五、技术深度：为什么大版本不兼容？</h2>
+<p>MongoDB 的数据文件格式（WireTiger 存储引擎）在不同大版本间<strong>并非向前兼容</strong>。MongoDB 的设计哲学是：</p>
+<ol>
+<li>新版本可以读<strong>同级或上一级</strong>版本的数据（例如 6.0 可读 5.0 的数据）</li>
+<li>跨大版本（如 3.6 → 6.0）则直接拒绝启动</li>
+<li>升级必须<strong>逐级进行</strong>：3.6 → 4.0 → 4.2 → 4.4 → 5.0 → 6.0，每级启动后执行 <code>setFeatureCompatibilityVersion</code></li>
+</ol>
+<p>保护机制的数据：</p>
+<pre><code class="language-bash"># 升级到新版本后，必须显式设置特性兼容版本
+db.adminCommand({ setFeatureCompatibilityVersion: &quot;新版本&quot; })
+# 例如从 4.0 升到 4.2 后：
+db.adminCommand({ setFeatureCompatibilityVersion: &quot;4.2&quot; })
+</code></pre>
+<blockquote>
+<p><strong>核心教训：</strong> MongoDB 的启动保护机制（版本不兼容直接 abort）是为了防止数据损坏，不是 bug，是 <strong>feature</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="六、后续建议与规范">六、后续建议与规范</h2>
+<h3 id="61-固定启动入口">6.1 固定启动入口</h3>
+<p>只用宝塔的启动方式，杜绝混用：</p>
+<pre><code class="language-bash"># ✅ 正确
+/etc/init.d/mongodb start
+/www/server/mongodb/bin/mongod -f /www/server/mongodb/config.conf
+
+# ❌ 避免
+/usr/bin/mongod -f /www/server/mongodb/config.conf
+</code></pre>
+<h3 id="62-清理冗余二进制">6.2 清理冗余二进制</h3>
+<p>移除或重命名多余的 mongod，从根源上消除混淆：</p>
+<pre><code class="language-bash">mv /usr/bin/mongod /usr/bin/mongod.6.0.bak
+# 先确认没有其他服务依赖 /usr/bin/mongod
+</code></pre>
+<h3 id="63-查清-mongodb-宕机的真正原因">6.3 查清 MongoDB 宕机的真正原因</h3>
+<pre><code class="language-bash"># 检查系统重启记录
+uptime; last reboot | head
+
+# 检查磁盘
+df -h
+
+# 检查 OOM killer 记录
+dmesg | grep -i &quot;killed process&quot;
+
+# 检查 MongoDB 自身日志中的异常信号
+tail -100 /data/mongodb/log/config.log | grep -E &quot;F|E|signal|shutting&quot;
+</code></pre>
+<p>常见原因：</p>
+<ul>
+<li><strong>机器重启后未自启</strong>（最频繁）</li>
+<li><strong>OOM killer 杀掉了 mongod 进程</strong></li>
+<li><strong>磁盘满导致无法写入日志</strong>（触发了本故障的&quot;兄弟&quot;场景）</li>
+</ul>
+<h3 id="64-设置开机自启">6.4 设置开机自启</h3>
+<pre><code class="language-bash">chkconfig --add mongodb
+chkconfig mongodb on
+</code></pre>
+<p>或直接在宝塔面板中勾选开机自启。</p>
+<h3 id="65-版本升级路线图">6.5 版本升级路线图</h3>
+<p>MongoDB 3.6 已于 2021 年 EOL（停止维护），建议按规范阶梯升级：</p>
+<pre><code>3.6  →  4.0  →  4.2  →  4.4  →  5.0  →  6.0  →  7.0
+ ↑       ↑       ↑       ↑       ↑       ↑
+ 每步: 启动 → setFeatureCompatibilityVersion → 重启 → 下一步
+</code></pre>
+<blockquote>
+<p>⚠️ 不要跳版本，否则会再次触发与本事故相同的版本不兼容 abort。</p>
+</blockquote>
+<hr>
+<h2 id="七、事故启示">七、事故启示</h2>
+<h3 id="71-排查第一原则：先确认用的是哪个">7.1 排查第一原则：先确认&quot;用的是哪个&quot;</h3>
+<p>当服务器上存在多个同类型工具的不同版本时，第一件事就是确认<strong>当前真正在调用的二进制是哪个</strong>。<code>which</code>、<code>type</code>、<code>--version</code> 应该成为肌肉记忆。</p>
+<h3 id="72-日志文件--终端输出">7.2 日志文件 &gt; 终端输出</h3>
+<p>把日志写入文件是生产环境的常见配置。当终端没有报错信息时，<strong>第一时间看日志文件</strong>，而不是费劲去改配置让终端显示。</p>
+<h3 id="73-三位一体验证">7.3 三位一体验证</h3>
+<p>对于数据库类服务，出现异常时应同时检查：</p>
+<pre><code>服务进程状态（ps / systemctl）
+  → 使用的二进制路径（which / ls -l /proc/PID/exe）
+    → 对应的数据文件版本（与二进制是否匹配）
+</code></pre>
+<p>这三者缺一不可。本次事故正是<strong>遗漏了第二步</strong>——用了错误的二进制路径。</p>
+<hr>
+<h2 id="八、总结">八、总结</h2>
+<pre><code>MongoDB 宕机
+  → exit code 14，终端无详细信息
+    → 删 lock 无效（方向错误）
+      → 改配置去 fork 仍看不到错误（又绕一圈）
+        → tail 日志文件找到版本不兼容报错 ✅
+          → 发现两个 mongod 二进制（3.6 vs 6.0）
+            → 用宝塔自带的 v3.6 启动
+              → 服务恢复，零数据损失
+</code></pre>
+<p><strong>故障本身不可怕，可怕的是排查时引入新的变量。</strong> 本次事故中，MongoDB 原本只是宕机待重启，但排障时误用高版本 mongod 让问题看起来更复杂了。</p>
+<p><strong>排查的每一步，都应该问自己：</strong> <em>&quot;我现在操作的是正确的东西吗？&quot;</em></p>
+</div>
+        </article>
+      </div>
+
+      <div class="toc-container">
+        <nav class="toc" id="table-of-contents">
+          <h2>目录</h2>
+          <div id="toc-content"></div>
+        </nav>
+      </div>
+    </div>
+
+    <button class="theme-toggle" id="themeToggle" title="切换暗色模式">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <circle cx="12" cy="12" r="5"></circle>
+        <line x1="12" y1="1" x2="12" y2="3"></line>
+        <line x1="12" y1="21" x2="12" y2="23"></line>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+        <line x1="1" y1="12" x2="3" y2="12"></line>
+        <line x1="21" y1="12" x2="23" y2="12"></line>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+      </svg>
+    </button>
+
+    <a href="#" class="back-to-top" id="backToTop">↑</a>
+
+    <script>
+      // Dark mode toggle
+      const themeToggle = document.getElementById("themeToggle");
+      const html = document.documentElement;
+
+      // Load saved theme preference
+      const savedTheme = localStorage.getItem("theme-mode");
+      if (savedTheme === "dark") {
+        html.classList.add("dark-mode");
+      }
+
+      // Theme toggle click handler
+      themeToggle.addEventListener("click", () => {
+        html.classList.toggle("dark-mode");
+        const isDarkMode = html.classList.contains("dark-mode");
+        localStorage.setItem("theme-mode", isDarkMode ? "dark" : "light");
+        console.log("主题切换为:", isDarkMode ? "暗色模式" : "亮色模式");
+      });
+
+      // Generate Table of Contents
+      function generateTOC() {
+        const tocContainer = document.getElementById("toc-content");
+        const content = document.querySelector(".post-content");
+        const headers = content.querySelectorAll("h1, h2, h3");
+
+        if (headers.length === 0) {
+          tocContainer.innerHTML = "<p>暂无目录</p>";
+          return;
+        }
+
+        const toc = document.createElement("ul");
+
+        headers.forEach((header, index) => {
+          // Add an id to the header if it doesn't have one
+          if (!header.id) {
+            header.id = "heading-" + index;
+          }
+
+          const li = document.createElement("li");
+          li.className = "toc-item";
+
+          const link = document.createElement("a");
+          link.href = "#" + header.id;
+          link.textContent = header.textContent;
+          link.className = "toc-link";
+
+          // Set indentation based on header level
+          const level = parseInt(header.tagName.charAt(1)) - 1;
+          li.style.marginLeft = level * 20 + "px";
+
+          li.appendChild(link);
+          toc.appendChild(li);
+        });
+
+        tocContainer.appendChild(toc);
+      }
+
+      // Adjust TOC height to match content
+      function adjustTOCHeight() {
+        const toc = document.getElementById("table-of-contents");
+        const post = document.querySelector(".post");
+
+        if (toc && post) {
+          // Get the height of the post area
+          const postHeight = post.offsetHeight;
+
+          // Set the max-height of the TOC to match the post height
+          // Leave some space for top margin and padding
+          toc.style.maxHeight =
+            Math.min(postHeight - 30, window.innerHeight * 0.8) + "px";
+        }
+      }
+
+      // Back to top button
+      const backToTopButton = document.getElementById("backToTop");
+
+      window.addEventListener("scroll", () => {
+        if (window.pageYOffset > 300) {
+          backToTopButton.classList.add("visible");
+        } else {
+          backToTopButton.classList.remove("visible");
+        }
+      });
+
+      backToTopButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // Initialize TOC when page loads and adjust height
+      document.addEventListener("DOMContentLoaded", function () {
+        generateTOC();
+        adjustTOCHeight();
+
+        // Adjust height on window resize
+        window.addEventListener("resize", adjustTOCHeight);
+      });
+
+      // 页面加载完成后添加复制按钮
+      window.addEventListener("load", function () {
+        addCopyButtons();
+      });
+
+      // 监听可能的动态内容加载
+      const observer = new MutationObserver(function (mutations) {
+        let shouldAddButtons = false;
+        mutations.forEach(function (mutation) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) {
+              // 检查添加的节点是否是代码块或包含代码块
+              if (
+                (node.classList && node.classList.contains("sourceCode")) ||
+                (node.tagName === "PRE" &&
+                  !node.classList.contains("mermaid")) ||
+                node.querySelector(".sourceCode, pre:not(.mermaid)")
+              ) {
+                shouldAddButtons = true;
+              }
+            }
+          });
+        });
+        if (shouldAddButtons) {
+          // 延迟执行以确保DOM完全更新
+          setTimeout(addCopyButtons, 100);
+        }
+      });
+
+      // 开始监听DOM变化
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      console.log("页面加载完成，AI 技术笔记已就绪");
+    </script>
+  </body>
+</html>
